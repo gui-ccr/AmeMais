@@ -1,0 +1,17 @@
+{
+  "name": "@amemais/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "base.js",
+  "exports": {
+    ".": "./base.js",
+    "./next": "./next.js"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.0",
+    "typescript-eslint": "^8.19.0"
+  }
+}
