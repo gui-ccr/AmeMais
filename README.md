@@ -1,12 +1,21 @@
 # AmeMais
 
-Monorepo do projeto AmeMais.
+Monorepo do projeto de extensão universitária **AmeMais**, em parceria com a ONG AmeMais (Teófilo Otoni - MG).
+
+## Sobre o projeto
+
+O site atual da ONG ([amemais.ueniweb.com](https://amemais.ueniweb.com/)) é engessado, tem formulários confusos e não informa pontos de coleta, forma de entrega de animais resgatados nem o histórico de ações — isso gera desconfiança e prejudica doações e resgates.
+
+Este projeto substitui esse site por uma plataforma dividida em duas frentes:
+
+- **Portal Público**: home moderna, mural de animais disponíveis para adoção (com filtros) e central de ajuda (PIX, QR Code, lista de urgências da semana).
+- **Painel Administrativo**: controle de animais (ficha médica, status, fotos), rede de lares temporários e gestão de eventos (feirinhas, bazares) — restrito a colaboradores e administradores via RBAC/RLS.
 
 ## Stack
 
 - **Frontend**: Next.js (App Router), Tailwind CSS, shadcn/ui, GSAP, TanStack Query, Axios
 - **Backend**: Next.js (App Router, Route Handlers), Zod, Supabase Auth
-- **Banco de dados**: Supabase
+- **Banco de dados**: Supabase (Postgres + Storage), com RLS
 - **Gerenciador de pacotes**: Yarn (workspaces)
 - **Orquestração do monorepo**: Turborepo
 - **Hospedagem**: Vercel (um projeto para `apps/web`, outro para `apps/api`)
@@ -24,20 +33,26 @@ packages/
 docs/
   decisions/  # registro das decisões de arquitetura (ADRs)
 supabase/
-  migrations/ # schema do banco, versionado (ver seção "Banco de dados" abaixo)
+  migrations/ # schema do banco, versionado
 ```
 
-`apps/web` e `apps/api` são dois apps Next.js separados (não um único app com front e back juntos). Veja o porquê dessa e das outras decisões de arquitetura em [`docs/`](./docs/README.md).
+`apps/web` e `apps/api` são dois apps Next.js separados. Detalhes das decisões de arquitetura em [`docs/`](./docs/README.md).
 
-## Como rodar (passo a passo)
+## Como contribuir (fluxo de branches e PR)
 
-### 1. Instalar os pré-requisitos (só na primeira vez, uma vez por máquina)
+A `main` é protegida — ninguém dá `push` ou merge direto nela, só o tech lead. Toda mudança precisa ir por uma branch própria e um Pull Request revisado antes de entrar.
 
-- **Node.js**: instale a versão indicada em [`.nvmrc`](./.nvmrc). Baixe em https://nodejs.org (pegue a versão "LTS"). Para conferir se já está instalado: `node -v` no terminal.
-- **Yarn**: com o Node já instalado, rode `corepack enable` no terminal (isso já deixa o Yarn disponível). Para conferir: `yarn -v`.
-- **Editor**: recomendado VS Code, com a extensão "ESLint" instalada (ajuda a ver os erros de lint direto no editor).
+📄 Passo a passo completo, explicado para quem nunca fez isso: [`docs/github-workflow.md`](./docs/github-workflow.md).
 
-### 2. Clonar o repositório e instalar as dependências
+## Como configurar o ambiente local
+
+### 1. Pré-requisitos (uma vez por máquina)
+
+- **Node.js** na versão do [`.nvmrc`](./.nvmrc) — baixe em https://nodejs.org (LTS). Checar: `node -v`.
+- **Yarn**: rode `corepack enable`. Checar: `yarn -v`.
+- **VS Code** (recomendado) com a extensão "ESLint".
+
+### 2. Clonar e instalar dependências
 
 ```bash
 git clone <url-do-repositorio>
@@ -45,81 +60,73 @@ cd AmeMais
 yarn install
 ```
 
-`yarn install` lê os `package.json` de `apps/web`, `apps/api` e `packages/*` e baixa tudo de uma vez só (é assim que o monorepo funciona — não precisa rodar `yarn install` dentro de cada pasta separadamente).
+Isso instala as dependências de `apps/web`, `apps/api` e `packages/*` de uma vez (não precisa repetir em cada pasta).
 
-### 3. Configurar as variáveis de ambiente
-
-Cada app precisa de um arquivo `.env.local` com as credenciais do Supabase (esse arquivo é local, nunca vai pro Git — por isso não existe pronto no repositório, só o exemplo).
+### 3. Variáveis de ambiente
 
 ```bash
-# na raiz do projeto:
 cp apps/web/.env.local.example apps/web/.env.local
 cp apps/api/.env.local.example apps/api/.env.local
 ```
 
-Depois abra os dois arquivos `.env.local` criados e preencha os valores (peça as chaves do projeto Supabase para o tech lead). Sem isso, o `apps/api` sobe mas as chamadas que usam o Supabase vão dar erro.
+Preencha os dois `.env.local` com as chaves do Supabase (peça ao tech lead). Sem isso o `apps/api` sobe, mas as chamadas ao Supabase falham.
 
-### 4. Rodar o projeto em desenvolvimento
+### 4. Rodar em desenvolvimento
 
 ```bash
 yarn dev
 ```
 
-Esse único comando sobe os dois apps ao mesmo tempo (é o Turborepo fazendo isso por baixo dos panos — veja a explicação no início da conversa/no `docs/`):
+Sobe os dois apps ao mesmo tempo (via Turborepo):
 
 - Frontend: http://localhost:3000
-- Backend (API): http://localhost:3001 — teste se está no ar abrindo http://localhost:3001/api/health, deve responder `{"status":"ok"}`
+- Backend: http://localhost:3001 (teste em http://localhost:3001/api/health)
 
-Para parar, `Ctrl+C` no terminal onde rodou `yarn dev`.
+`Ctrl+C` para parar.
 
 ### 5. Outros comandos úteis
 
 ```bash
-yarn build        # gera o build de produção dos dois apps (roda antes de deploy, ou pra checar se está tudo ok)
-yarn lint         # checa problemas de estilo/código nos dois apps
-yarn type-check   # checa erros de tipo do TypeScript nos dois apps
+yarn build        # build de produção
+yarn lint         # checa lint
+yarn type-check   # checa tipos
 ```
 
-Rode `yarn lint` e `yarn type-check` antes de abrir um Pull Request — evita que erros óbvios cheguem na revisão de código.
+Rode `yarn lint` e `yarn type-check` antes de abrir um Pull Request.
 
 ### 6. Banco de dados (migrations do Supabase)
 
-A estrutura do banco (tabelas, colunas, políticas de RLS) fica versionada em `supabase/migrations/`, no repositório — assim ninguém precisa criar tabela manualmente pelo dashboard do Supabase, e todo mundo do time roda exatamente o mesmo schema.
-
-**Pré-requisito**: ter o [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) instalado (`npm install -g supabase`) e estar logado (`supabase login`, abre o navegador uma vez só).
+O schema do banco fica versionado em `supabase/migrations/`. Pré-requisito: [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) instalado (`npm install -g supabase`) e logado (`supabase login`).
 
 ```bash
-# uma vez por pessoa, pra conectar o projeto local ao projeto remoto do Supabase:
-supabase link --project-ref <ref-do-projeto>   # o ref está na URL do projeto no dashboard
-
-# sempre que existirem migrations novas que você ainda não aplicou:
-supabase db push
+supabase link --project-ref <ref-do-projeto>   # uma vez por pessoa
+supabase db push                                # aplica migrations pendentes
 ```
 
-Para criar uma migration nova (ex.: uma tabela nova pra sua feature):
+Para criar uma migration nova:
 
 ```bash
 supabase migration new nome_da_migration
-# edite o arquivo .sql gerado em supabase/migrations/ com o SQL da mudança
-supabase db push   # aplica no banco remoto
+# edite o .sql gerado em supabase/migrations/
+supabase db push
 ```
 
-Regra: nunca edite uma migration que já foi aplicada e já está no Git (outra pessoa do time já pode ter rodado). Se precisar corrigir algo, crie uma migration nova.
+Nunca edite uma migration já aplicada/commitada — crie uma nova para corrigir algo.
 
-### 7. VS Code: usar a versão do TypeScript do projeto
+### 7. VS Code: TypeScript do projeto
 
-O VS Code tem uma versão de TypeScript "embutida" no editor, diferente da versão instalada no projeto (`node_modules/typescript`). Se o editor usar a versão errada, ele pode não reconhecer configurações do projeto e mostrar erros que não existem de verdade (ex.: erro de JSX em todo arquivo `.tsx`, mesmo o projeto compilando certinho pelo terminal).
+Se o editor mostrar erros que o build não mostra (ex.: erro de JSX em `.tsx`), o `.vscode/settings.json` já resolve isso. Ao abrir o projeto:
 
-O arquivo `.vscode/settings.json` já resolve isso automaticamente. Só confira, ao abrir o projeto pela primeira vez:
-
-1. Abra qualquer arquivo `.ts` ou `.tsx`.
-2. Se aparecer um aviso no canto inferior direito perguntando sobre a versão do TypeScript do workspace, clique em **"Allow"**/**"Usar versão do workspace"**.
-3. Se não aparecer nada e mesmo assim tiver erro estranho de JSX/tipos: `Ctrl+Shift+P` → digite `TypeScript: Restart TS Server` → Enter.
-
-Isso resolve praticamente todo erro de "editor mostra erro mas o build passa".
+1. Abra um arquivo `.ts`/`.tsx`.
+2. Se aparecer aviso sobre versão do TypeScript do workspace, clique em **"Allow"**.
+3. Se persistir: `Ctrl+Shift+P` → `TypeScript: Restart TS Server`.
 
 ### Problemas comuns
 
-- **"porta já em uso" ao rodar `yarn dev`**: algum processo antigo ficou rodando. Feche o terminal anterior ou mate o processo que está usando a porta 3000/3001.
-- **Erro relacionado a variável de ambiente/Supabase**: confira se copiou e preencheu o `.env.local` (passo 3) — é o erro mais comum ao rodar pela primeira vez.
-- **Mudei algo em `packages/shared-types` e não refletiu no app**: pare o `yarn dev` e rode de novo — mudanças em pacotes compartilhados às vezes exigem reiniciar o processo.
+- **Porta já em uso**: feche o terminal anterior ou mate o processo usando a porta 3000/3001.
+- **Erro de Supabase/env**: confira se preencheu o `.env.local` (passo 3).
+- **Mudança em `packages/shared-types` não refletiu**: reinicie o `yarn dev`.
+
+## Licença
+
+Este projeto foi feito para uso da **ONG AmeMais**, sem fins lucrativos. O código **não pode ser vendido nem usado comercialmente** — pode ser usado, estudado e modificado livremente para fins não comerciais. Detalhes em [`LICENSE.md`](./LICENSE.md).
