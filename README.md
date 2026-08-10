@@ -36,7 +36,20 @@ supabase/
   migrations/ # schema do banco, versionado
 ```
 
-`apps/web` e `apps/api` são dois apps Next.js separados. Detalhes das decisões de arquitetura em [`docs/`](./docs/README.md).
+`apps/web` e `apps/api` são dois apps Next.js separados.
+
+## Documentação
+
+| Documento | Sobre |
+| --- | --- |
+| [`docs/README.md`](./docs/README.md) | Índice das decisões de arquitetura (ADRs) — o *porquê* de cada escolha técnica |
+| [`docs/decisions/0001-separacao-web-api.md`](./docs/decisions/0001-separacao-web-api.md) | Por que `apps/web` e `apps/api` são separados |
+| [`docs/decisions/0002-arquitetura-backend-layered-feature-based.md`](./docs/decisions/0002-arquitetura-backend-layered-feature-based.md) | Arquitetura do backend |
+| [`docs/decisions/0003-frontend-feature-based.md`](./docs/decisions/0003-frontend-feature-based.md) | Organização do frontend |
+| [`docs/decisions/0004-turborepo-yarn-workspaces.md`](./docs/decisions/0004-turborepo-yarn-workspaces.md) | Turborepo + Yarn workspaces |
+| [`docs/decisions/0005-stack-principal.md`](./docs/decisions/0005-stack-principal.md) | Stack principal do projeto |
+| [`docs/github-workflow.md`](./docs/github-workflow.md) | **Como contribuir**: passo a passo de branch, commit e Pull Request |
+| [`LICENSE.md`](./LICENSE.md) | Licença do projeto (uso não comercial) |
 
 ## Como contribuir (fluxo de branches e PR)
 
