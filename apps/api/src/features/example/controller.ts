@@ -1,7 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ZodError } from "zod";
-import { requireUser, UnauthorizedError } from "@/middleware/auth";
-import { withCors } from "@/middleware/cors";
+import { NextRequest } from "next/server";
+import { ok, created, fail } from "@/core/http";
 import { exampleService } from "./service";
 import { createExampleSchema } from "./schema";
 
@@ -10,39 +8,28 @@ import { createExampleSchema } from "./schema";
  * Não contém regra de negócio nem acesso a dados diretamente.
  *
  * Esta feature ("example") é só uma demonstração de conectividade
- * front -> API -> Supabase e por isso NÃO chama requireUser(). Toda
- * feature de negócio real deve chamar requireUser(request) logo no
- * início do controller, como mostrado (comentado) abaixo.
+ * front -> API -> Supabase e por isso NÃO chama requireUser()/requireRole().
+ * Toda feature de negócio real deve chamar uma delas logo no início do
+ * controller, como mostrado (comentado) abaixo.
  */
 export async function listExamplesController(_request: NextRequest) {
   try {
     // await requireUser(request); // features reais devem exigir isso
     const examples = await exampleService.listExamples();
-    return withCors(NextResponse.json({ data: examples }));
+    return ok(examples);
   } catch (error) {
-    return handleError(error);
+    return fail(error);
   }
 }
 
 export async function createExampleController(request: NextRequest) {
   try {
-    // await requireUser(request); // features reais devem exigir isso
+    // await requireRole(request, ["admin", "colaborador"]); // features administrativas devem exigir isso
     const body = await request.json();
     const input = createExampleSchema.parse(body);
     const example = await exampleService.createExample(input);
-    return withCors(NextResponse.json({ data: example }, { status: 201 }));
+    return created(example);
   } catch (error) {
-    return handleError(error);
+    return fail(error);
   }
-}
-
-function handleError(error: unknown) {
-  if (error instanceof UnauthorizedError) {
-    return withCors(NextResponse.json({ error: error.message }, { status: 401 }));
-  }
-  if (error instanceof ZodError) {
-    return withCors(NextResponse.json({ error: "Dados inválidos", issues: error.issues }, { status: 400 }));
-  }
-  console.error(error);
-  return withCors(NextResponse.json({ error: "Erro interno" }, { status: 500 }));
 }
