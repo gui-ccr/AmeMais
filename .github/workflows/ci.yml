@@ -1,4 +1,4 @@
-name: CI
+name: CI - Integracao Continua
 
 on:
   pull_request:
@@ -7,22 +7,39 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-type-check:
+  pipeline-de-validacao:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: ⚙️ Setup Node.js (via .nvmrc)
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
+          cache: 'yarn' # Já cria um cache automático para deixar mais rápido!
 
-      - run: corepack enable
+      - name: 📦 Ativar Corepack e Instalar Dependências
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      # ---------------------------------------------------------
+      # AQUI COMEÇA O SEU FUNIL DE TESTES (Um depende do outro)
+      # ---------------------------------------------------------
 
-      - name: Lint
+      - name: 🧹 1. Linter (Código fora do padrão quebra aqui)
         run: yarn lint
 
-      - name: Type check
+      - name: 🏷️ 2. Type Check (Erros de TypeScript quebram aqui)
         run: yarn type-check
+
+      - name: 🧪 3. Testes Unitários (Regras de negócio falham aqui)
+        run: yarn test
+
+      - name: 🏗️ 4. Build (Se a Vercel não for conseguir compilar, quebra aqui)
+        run: yarn build
+        env:
+          # Váriaveis fake só pro Next.js conseguir fazer o build no CI
+          NEXT_PUBLIC_SUPABASE_URL: "https://fake-project.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "fake-anon-key"

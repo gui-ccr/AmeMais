@@ -28,24 +28,24 @@ Usado para clonar o repositório e controlar versão do código.
 
 Runtime que executa o projeto (frontend e backend são apps Next.js).
 
-- **Versão exigida:** a que está fixada em [`.nvmrc`](../.nvmrc) na raiz do projeto (hoje, Node 20 — sempre confira o arquivo, pois pode mudar).
+- **Versão exigida:** a que está fixada em [`.nvmrc`](../.nvmrc) na raiz do projeto (hoje, Node 22 — sempre confira o arquivo, pois pode mudar).
 - **Instalar (recomendado — via gerenciador de versões, evita conflito com outros projetos que usem outra versão de Node):**
   - Windows: instale o [nvm-windows](https://github.com/coreybutler/nvm-windows/releases) (baixe o `nvm-setup.exe` do release mais recente).
     ```powershell
-    nvm install 20
-    nvm use 20
+    nvm install 22
+    nvm use 22
     ```
   - macOS/Linux: instale o [nvm](https://github.com/nvm-sh/nvm#installing-and-updating):
     ```bash
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-    nvm install 20
-    nvm use 20
+    nvm install 22
+    nvm use 22
     ```
 - **Alternativa mais simples (sem gerenciador de versões):** baixe o instalador LTS direto em https://nodejs.org — só recomendado se você não trabalha com outros projetos Node que exijam outra versão.
 - **Confirmar instalação:**
   ```bash
   node -v
-  # esperado: v20.x.x (compatível com o .nvmrc)
+  # esperado: v22.x.x (compatível com o .nvmrc)
   ```
 
 ## 3. Yarn (via Corepack)
