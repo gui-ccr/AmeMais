@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCreateExample, useExamples } from "../hooks/use-examples";
 
 export function ExampleList() {
-  const { data: examples, isLoading, isError } = useExamples();
+  const { data: examples, isLoading, isError, } = useExamples();
   const createExample = useCreateExample();
 
   if (isLoading) return <p>Carregando...</p>;

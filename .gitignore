@@ -36,3 +36,5 @@ Thumbs.db
 
 # typescript
 *.tsbuildinfo
+
+/docs/controle_projeto

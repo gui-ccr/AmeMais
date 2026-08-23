@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { UnauthorizedError } from "@/core/errors";
 
 export interface AuthenticatedUser {
   id: string;
   email: string | null;
 }
 
-export class UnauthorizedError extends Error {}
+export { UnauthorizedError };
 
 /**
  * Valida o access_token do Supabase Auth enviado pelo apps/web

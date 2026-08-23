@@ -10,5 +10,5 @@ export const exampleService = {
   async create(name: string): Promise<ExampleItem> {
     const { data } = await api.post<{ data: ExampleItem }>("/api/example", { name });
     return data.data;
-  },
+  },  
 };

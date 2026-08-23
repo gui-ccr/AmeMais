@@ -42,6 +42,9 @@ supabase/
 
 | Documento | Sobre |
 | --- | --- |
+| [`docs/pre-requisitos.md`](./docs/pre-requisitos.md) | **Antes de começar**: o que instalar no computador (Git, Node, Yarn, Supabase CLI) e como |
+| [`docs/prd.md`](./docs/prd.md) | PRD do produto: problema, personas, escopo do MVP e critérios de aceite |
+| [`docs/arquitetura-e-roadmap.md`](./docs/arquitetura-e-roadmap.md) | Arquitetura alvo, lacunas técnicas e roteiro de tarefas |
 | [`docs/README.md`](./docs/README.md) | Índice das decisões de arquitetura (ADRs) — o *porquê* de cada escolha técnica |
 | [`docs/decisions/0001-separacao-web-api.md`](./docs/decisions/0001-separacao-web-api.md) | Por que `apps/web` e `apps/api` são separados |
 | [`docs/decisions/0002-arquitetura-backend-layered-feature-based.md`](./docs/decisions/0002-arquitetura-backend-layered-feature-based.md) | Arquitetura do backend |
@@ -59,74 +62,112 @@ A `main` é protegida — ninguém dá `push` ou merge direto nela, só o tech l
 
 ## Como configurar o ambiente local
 
+Passo a passo completo, do zero até o projeto rodando no navegador.
+
 ### 1. Pré-requisitos (uma vez por máquina)
 
-- **Node.js** na versão do [`.nvmrc`](./.nvmrc) — baixe em https://nodejs.org (LTS). Checar: `node -v`.
-- **Yarn**: rode `corepack enable`. Checar: `yarn -v`.
-- **VS Code** (recomendado) com a extensão "ESLint".
+Antes de tudo, instale Git, Node.js e ative o Yarn (via Corepack). Guia detalhado, com link de download e como confirmar cada instalação: [`docs/pre-requisitos.md`](./docs/pre-requisitos.md).
 
-### 2. Clonar e instalar dependências
+Resumo rápido, se você já sabe o que está fazendo:
+
+```bash
+git --version                 # já deve estar instalado
+node -v                       # precisa bater com a versão em .nvmrc
+corepack enable && yarn -v    # ativa o Yarn na versão travada no package.json
+```
+
+### 2. Clonar o repositório
 
 ```bash
 git clone <url-do-repositorio>
 cd AmeMais
+```
+
+> Peça a URL do repositório para o tech lead se ainda não tiver acesso ao GitHub do projeto.
+
+### 3. Instalar as dependências
+
+```bash
 yarn install
 ```
 
-Isso instala as dependências de `apps/web`, `apps/api` e `packages/*` de uma vez (não precisa repetir em cada pasta).
+Isso instala as dependências de `apps/web`, `apps/api` e `packages/*` de uma vez só (é um monorepo com Yarn workspaces — não precisa (e não deve) rodar `yarn install` dentro de cada pasta separadamente). Pode demorar alguns minutos na primeira vez.
 
-### 3. Variáveis de ambiente
+### 4. Criar os arquivos de variáveis de ambiente
+
+O projeto usa duas aplicações separadas (`apps/web` e `apps/api`), cada uma com seu próprio `.env.local`:
 
 ```bash
 cp apps/web/.env.local.example apps/web/.env.local
 cp apps/api/.env.local.example apps/api/.env.local
 ```
 
-Preencha os dois `.env.local` com as chaves do Supabase (peça ao tech lead). Sem isso o `apps/api` sobe, mas as chamadas ao Supabase falham.
+Depois, abra os dois arquivos criados e preencha os valores:
 
-### 4. Rodar em desenvolvimento
+- **`apps/web/.env.local`**: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` — chaves públicas do projeto Supabase. `NEXT_PUBLIC_API_URL` já vem preenchido com `http://localhost:3001` (não precisa mudar em dev local).
+- **`apps/api/.env.local`**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `SUPABASE_JWT_SECRET` — chaves privadas do backend (**nunca commitar nem compartilhar fora da equipe**). `ALLOWED_ORIGIN` já vem preenchido com `http://localhost:3000`.
+
+Peça essas chaves ao tech lead (elas ficam no painel do projeto no Supabase, em *Project Settings → API*). Sem elas, o `apps/api` sobe normalmente, mas qualquer chamada que dependa do Supabase falha.
+
+> Os arquivos `.env.local` nunca vão para o Git (estão no `.gitignore`) — cada pessoa da equipe mantém o seu localmente.
+
+### 5. Rodar o projeto em desenvolvimento
 
 ```bash
 yarn dev
 ```
 
-Sobe os dois apps ao mesmo tempo (via Turborepo):
+Isso sobe os dois apps ao mesmo tempo (via Turborepo), cada um na sua porta fixa:
 
-- Frontend: http://localhost:3000
-- Backend: http://localhost:3001 (teste em http://localhost:3001/api/health)
+- **Frontend** (`apps/web`): http://localhost:3000
+- **Backend** (`apps/api`): http://localhost:3001 — confirme que está no ar acessando http://localhost:3001/api/health, deve retornar um JSON de sucesso.
 
-`Ctrl+C` para parar.
+Para parar os dois processos, use `Ctrl+C` no terminal.
 
-### 5. Outros comandos úteis
+**Como saber se deu tudo certo:** abra http://localhost:3000 no navegador — a página deve carregar sem erro. Se abrir o console do navegador (F12) e não houver erros de rede batendo em `localhost:3001`, o frontend e o backend estão conversando corretamente.
 
-```bash
-yarn build        # build de produção
-yarn lint         # checa lint
-yarn type-check   # checa tipos
-```
+### 6. Outros comandos úteis
 
-Rode `yarn lint` e `yarn type-check` antes de abrir um Pull Request.
-
-### 6. Banco de dados (migrations do Supabase)
-
-O schema do banco fica versionado em `supabase/migrations/`. Pré-requisito: [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) instalado (`npm install -g supabase`) e logado (`supabase login`).
+Rodados a partir da raiz do projeto (o Turborepo já aplica o comando nos dois apps):
 
 ```bash
-supabase link --project-ref <ref-do-projeto>   # uma vez por pessoa
-supabase db push                                # aplica migrations pendentes
+yarn build        # build de produção dos dois apps
+yarn lint         # checa lint (ESLint) em tudo
+yarn type-check   # checa tipos (TypeScript) em tudo
+yarn test         # roda os testes automatizados (Vitest, hoje só em apps/api)
 ```
+
+**Rode `yarn lint`, `yarn type-check` e `yarn test` antes de abrir um Pull Request** — o CI do GitHub Actions roda essas mesmas checagens automaticamente em todo PR, então rodar local primeiro evita ida e volta.
+
+Se quiser rodar um comando só em um app específico (em vez dos dois), use o workspace do Yarn:
+
+```bash
+yarn workspace @amemais/web dev
+yarn workspace @amemais/api test
+```
+
+### 7. Banco de dados (migrations do Supabase)
+
+O schema do banco fica versionado em `supabase/migrations/`, e o projeto usa um banco Supabase remoto compartilhado pela equipe (não é preciso rodar Postgres localmente). Pré-requisito: Supabase CLI instalado e logado — veja [`docs/pre-requisitos.md`](./docs/pre-requisitos.md#4-supabase-cli).
+
+```bash
+supabase link --project-ref <ref-do-projeto>   # uma vez por pessoa, nesta máquina
+supabase db push                                # aplica migrations pendentes no banco remoto
+```
+
+O `<ref-do-projeto>` você pega com o tech lead (é o identificador do projeto no painel do Supabase).
 
 Para criar uma migration nova:
 
 ```bash
 supabase migration new nome_da_migration
-# edite o .sql gerado em supabase/migrations/
+# edite o arquivo .sql gerado em supabase/migrations/
 supabase db push
 ```
 
 Nunca edite uma migration já aplicada/commitada — crie uma nova para corrigir algo.
 
-### 7. VS Code: TypeScript do projeto
+### 8. VS Code: TypeScript do projeto
 
 Se o editor mostrar erros que o build não mostra (ex.: erro de JSX em `.tsx`), o `.vscode/settings.json` já resolve isso. Ao abrir o projeto:
 
@@ -137,8 +178,11 @@ Se o editor mostrar erros que o build não mostra (ex.: erro de JSX em `.tsx`), 
 ### Problemas comuns
 
 - **Porta já em uso**: feche o terminal anterior ou mate o processo usando a porta 3000/3001.
-- **Erro de Supabase/env**: confira se preencheu o `.env.local` (passo 3).
+- **Erro de Supabase/env**: confira se preencheu os dois `.env.local` (passo 4).
+- **`yarn -v` mostra versão diferente da esperada**: feche e reabra o terminal depois de `corepack enable`, ou rode `corepack prepare yarn@1.22.22 --activate` dentro da pasta do projeto.
+- **`supabase db push` pede senha do banco / dá 403**: confirme que rodou `supabase login` e `supabase link --project-ref <ref>` primeiro (passo 7).
 - **Mudança em `packages/shared-types` não refletiu**: reinicie o `yarn dev`.
+- **Editor aponta erro de tipo que o `yarn type-check` não mostra (ou vice-versa)**: veja a seção de VS Code acima — geralmente é o TS Server do editor desatualizado.
 
 ## Licença
 
