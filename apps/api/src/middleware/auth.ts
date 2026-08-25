@@ -10,7 +10,7 @@ export interface AuthenticatedUser {
 export { UnauthorizedError };
 
 /**
- * Valida o access_token do Supabase Auth enviado pelo apps/web
+ * Valida o access_token do Supabase Auth enviado pelo frontend (ex.: apps/web-admin)
  * no header "Authorization: Bearer <token>".
  */
 export async function requireUser(request: NextRequest): Promise<AuthenticatedUser> {
