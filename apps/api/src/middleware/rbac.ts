@@ -5,13 +5,17 @@ import { ForbiddenError } from "@/core/errors";
 import { requireUser, type AuthenticatedUser } from "./auth";
 
 export interface AuthenticatedProfile extends AuthenticatedUser {
-  role: UserRole;
+  cargo: UserRole;
 }
 
 /**
- * Autentica o usuário (requireUser) e garante que o papel dele (tabela
- * "profiles") está entre os permitidos. Use em toda feature restrita ao
- * Painel Administrativo.
+ * Autentica o usuário (requireUser) e garante que o cargo dele (tabela
+ * "usuarios") está entre os permitidos. Use em toda feature restrita a
+ * papéis específicos (ex.: só Admin pode deletar usuário, mas Voluntário
+ * já pode cadastrar animal).
+ *
+ * Consulta via supabaseAdmin (service role) para pular o RLS de
+ * "usuarios" — aqui é o backend decidindo quem pode o quê, não o Postgres.
  */
 export async function requireRole(
   request: NextRequest,
@@ -20,20 +24,20 @@ export async function requireRole(
   const user = await requireUser(request);
 
   const { data, error } = await supabaseAdmin
-    .from("profiles")
-    .select("role")
+    .from("usuarios")
+    .select("cargo")
     .eq("id", user.id)
     .single();
 
   if (error || !data) {
-    throw new ForbiddenError("Perfil de usuário não encontrado");
+    throw new ForbiddenError("Usuário não encontrado");
   }
 
-  const role = data.role as UserRole;
+  const cargo = data.cargo as UserRole;
 
-  if (!allowedRoles.includes(role)) {
+  if (!allowedRoles.includes(cargo)) {
     throw new ForbiddenError("Você não tem permissão para esta ação");
   }
 
-  return { ...user, role };
+  return { ...user, cargo };
 }

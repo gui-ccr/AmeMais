@@ -7,9 +7,9 @@ import { useSession } from "../hooks/use-session";
 
 /**
  * Guarda de rota do Painel Admin: redireciona para /login se não houver
- * sessão, e bloqueia quem não tem role "admin"/"colaborador" (ver
- * apps/api/src/middleware/rbac.ts, que é quem de fato garante isso na API —
- * este guard só evita o usuário errado de ver a UI do painel).
+ * sessão. A checagem de cargo (Admin/Voluntário/Adotante) é feita pela API
+ * (ver apps/api/src/middleware/rbac.ts, requireRole) — este guard só evita
+ * o usuário deslogado de ver a UI do painel.
  */
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();

@@ -1,7 +1,8 @@
-export type UserRole = "admin" | "colaborador";
+export type UserRole = "Admin" | "Voluntário" | "Adotante";
 
 export interface Profile {
   id: string;
-  role: UserRole;
   nome: string;
+  email: string;
+  cargo: UserRole;
 }
