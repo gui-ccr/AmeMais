@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-muted: var(--card-muted);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted-dark: var(--muted-dark);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-muted: var(--border-muted);
+  --color-border-light: var(--border-light);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand Palette Direct Tokens */
+  --color-brand-terracotta: #b4543f;
+  --color-brand-terracotta-dark: #8d3a28;
+  --color-brand-terracotta-light: #fdf6f4;
+  --color-brand-terracotta-subtle: #f0c9a8;
+  --color-brand-charcoal: #2e2a26;
+  --color-brand-charcoal-light: #4a443c;
+  --color-brand-sand: #f3ead9;
+  --color-brand-cream: #faf6ef;
+  --color-brand-muted: #8a8073;
+  --color-brand-muted-dark: #5c554c;
+  --color-brand-border-subtle: #e0d7c8;
+  --color-brand-border-muted: #a89f94;
+  --color-brand-border-light: #eee7db;
+  --color-brand-cream-muted: #c9bfae;
+
+  /* Status Tokens */
+  --color-status-urgent-bg: #fdf6f4;
+  --color-status-urgent-fg: #b4543f;
+  --color-status-warning-bg: #fff8e8;
+  --color-status-warning-fg: #a07414;
+  --color-status-success-bg: #eef4ee;
+  --color-status-success-fg: #3d7a4a;
+  --color-status-neutral-bg: #eeeeee;
+  --color-status-neutral-fg: #5c554c;
+
+  /* Sidebar Tokens */
+  --color-sidebar-bg: #2e2a26;
+  --color-sidebar-fg: #f3ead9;
+  --color-sidebar-border: #4a443c;
+  --color-sidebar-muted: #c9bfae;
+  --color-sidebar-active-bg: #b4543f;
+  --color-sidebar-active-fg: #ffffff;
+
+  /* Fonts */
+  --font-caveat: var(--font-caveat), "Caveat", cursive;
+  --font-patrick: var(--font-patrick), "Patrick Hand", cursive, sans-serif;
+  --font-sans: var(--font-patrick), "Patrick Hand", system-ui, sans-serif;
+  --font-display: var(--font-caveat), "Caveat", cursive;
+
+  /* Border Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+}
+
+:root {
+  /* Canvas & Base */
+  --background: #f3ead9;
+  --foreground: #2e2a26;
+
+  /* Surfaces & Cards */
+  --card: #ffffff;
+  --card-foreground: #2e2a26;
+  --card-muted: #faf6ef;
+
+  /* Popovers */
+  --popover: #ffffff;
+  --popover-foreground: #2e2a26;
+
+  /* Primary (AmeMais Terracotta) */
+  --primary: #b4543f;
+  --primary-hover: #8d3a28;
+  --primary-foreground: #ffffff;
+  --primary-light: #fdf6f4;
+  --primary-border: #f0c9a8;
+
+  /* Secondary / Charcoal */
+  --secondary: #2e2a26;
+  --secondary-foreground: #f3ead9;
+  --secondary-hover: #4a443c;
+
+  /* Muted */
+  --muted: #faf6ef;
+  --muted-foreground: #8a8073;
+  --muted-dark: #5c554c;
+
+  /* Accent */
+  --accent: #fdf6f4;
+  --accent-foreground: #b4543f;
+
+  /* Destructive */
+  --destructive: #b4543f;
+  --destructive-foreground: #ffffff;
+
+  /* Borders & Inputs */
+  --border: #2e2a26;
+  --border-subtle: #e0d7c8;
+  --border-muted: #a89f94;
+  --border-light: #eee7db;
+  --input: #2e2a26;
+  --ring: #b4543f;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+}
+
+:where(a) {
+  color: var(--primary);
+}
+
+:where(a:hover) {
+  color: var(--primary-hover);
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}

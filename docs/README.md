@@ -13,6 +13,9 @@ Objetivo: qualquer pessoa do time (principalmente quem está entrando agora) con
 | [0003](./decisions/0003-frontend-feature-based.md) | Organização do frontend: feature-based |
 | [0004](./decisions/0004-turborepo-yarn-workspaces.md) | Turborepo + Yarn workspaces para o monorepo |
 | [0005](./decisions/0005-stack-principal.md) | Stack principal do projeto |
+| [0006](./decisions/0006-storage-fotos-animais.md) | Supabase Storage para fotos de animais |
+| [0007](./decisions/0007-separacao-frontend-publico-admin.md) | Separar o frontend em `apps/web-public` e `apps/web-admin` |
+| [0008](./decisions/0008-apps-web-vira-web-example.md) | Migrar auth/admin para `apps/web-admin` e renomear `apps/web` → `apps/web-example` |
 
 ## Como adicionar um novo ADR
 

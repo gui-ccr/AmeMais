@@ -18,16 +18,18 @@ Este projeto substitui esse site por uma plataforma dividida em duas frentes:
 - **Banco de dados**: Supabase (Postgres + Storage), com RLS
 - **Gerenciador de pacotes**: Yarn (workspaces)
 - **Orquestração do monorepo**: Turborepo
-- **Hospedagem**: Vercel (um projeto para `apps/web`, outro para `apps/api`)
+- **Hospedagem**: Vercel (um projeto por app)
 
 ## Estrutura
 
 ```
 apps/
-  web/      # frontend (Next.js)
-  api/      # backend (Next.js, só API — sem UI)
+  web-public/   # Portal Público (Next.js)
+  web-admin/    # Painel Administrativo (Next.js)
+  api/          # backend (Next.js, só API — sem UI)
+  web-example/  # app de exemplo/estudo, não é um dos sites reais (ver apps/web-example/README.md)
 packages/
-  shared-types/       # tipos/DTOs compartilhados entre web e api
+  shared-types/       # tipos/DTOs compartilhados entre os apps
   eslint-config/       # config de lint compartilhada
   typescript-config/   # config de TS compartilhada
 docs/
@@ -36,7 +38,7 @@ supabase/
   migrations/ # schema do banco, versionado
 ```
 
-`apps/web` e `apps/api` são dois apps Next.js separados.
+`apps/web-public`, `apps/web-admin`, `apps/web-example` e `apps/api` são quatro apps Next.js separados (ver ADR [0007](./docs/decisions/0007-separacao-frontend-publico-admin.md) sobre a divisão do frontend).
 
 ## Documentação
 
@@ -51,6 +53,8 @@ supabase/
 | [`docs/decisions/0003-frontend-feature-based.md`](./docs/decisions/0003-frontend-feature-based.md) | Organização do frontend |
 | [`docs/decisions/0004-turborepo-yarn-workspaces.md`](./docs/decisions/0004-turborepo-yarn-workspaces.md) | Turborepo + Yarn workspaces |
 | [`docs/decisions/0005-stack-principal.md`](./docs/decisions/0005-stack-principal.md) | Stack principal do projeto |
+| [`docs/decisions/0006-storage-fotos-animais.md`](./docs/decisions/0006-storage-fotos-animais.md) | Supabase Storage para fotos de animais |
+| [`docs/decisions/0007-separacao-frontend-publico-admin.md`](./docs/decisions/0007-separacao-frontend-publico-admin.md) | Separar o frontend em `apps/web-public` e `apps/web-admin` |
 | [`docs/github-workflow.md`](./docs/github-workflow.md) | **Como contribuir**: passo a passo de branch, commit e Pull Request |
 | [`LICENSE.md`](./LICENSE.md) | Licença do projeto (uso não comercial) |
 
@@ -91,21 +95,23 @@ cd AmeMais
 yarn install
 ```
 
-Isso instala as dependências de `apps/web`, `apps/api` e `packages/*` de uma vez só (é um monorepo com Yarn workspaces — não precisa (e não deve) rodar `yarn install` dentro de cada pasta separadamente). Pode demorar alguns minutos na primeira vez.
+Isso instala as dependências de todos os apps (`apps/web-public`, `apps/web-admin`, `apps/web-example`, `apps/api`) e `packages/*` de uma vez só (é um monorepo com Yarn workspaces — não precisa (e não deve) rodar `yarn install` dentro de cada pasta separadamente). Pode demorar alguns minutos na primeira vez.
 
 ### 4. Criar os arquivos de variáveis de ambiente
 
-O projeto usa duas aplicações separadas (`apps/web` e `apps/api`), cada uma com seu próprio `.env.local`:
+O projeto tem quatro aplicações separadas, cada uma com seu próprio `.env.local`:
 
 ```bash
-cp apps/web/.env.local.example apps/web/.env.local
+cp apps/web-public/.env.local.example apps/web-public/.env.local
+cp apps/web-admin/.env.local.example apps/web-admin/.env.local
+cp apps/web-example/.env.local.example apps/web-example/.env.local
 cp apps/api/.env.local.example apps/api/.env.local
 ```
 
-Depois, abra os dois arquivos criados e preencha os valores:
+Depois, abra os arquivos criados e preencha os valores:
 
-- **`apps/web/.env.local`**: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` — chaves públicas do projeto Supabase. `NEXT_PUBLIC_API_URL` já vem preenchido com `http://localhost:3001` (não precisa mudar em dev local).
-- **`apps/api/.env.local`**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `SUPABASE_JWT_SECRET` — chaves privadas do backend (**nunca commitar nem compartilhar fora da equipe**). `ALLOWED_ORIGIN` já vem preenchido com `http://localhost:3000`.
+- **`apps/web-public/.env.local`**, **`apps/web-admin/.env.local`**, **`apps/web-example/.env.local`**: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` — chaves públicas do projeto Supabase (a mesma para os três). `NEXT_PUBLIC_API_URL` já vem preenchido com `http://localhost:3001` (não precisa mudar em dev local).
+- **`apps/api/.env.local`**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `SUPABASE_JWT_SECRET` — chaves privadas do backend (**nunca commitar nem compartilhar fora da equipe**). `ALLOWED_ORIGIN` já vem preenchido com `http://localhost:3000` (origem do `apps/web-example` em dev).
 
 Peça essas chaves ao tech lead (elas ficam no painel do projeto no Supabase, em *Project Settings → API*). Sem elas, o `apps/api` sobe normalmente, mas qualquer chamada que dependa do Supabase falha.
 
@@ -117,12 +123,14 @@ Peça essas chaves ao tech lead (elas ficam no painel do projeto no Supabase, em
 yarn dev
 ```
 
-Isso sobe os dois apps ao mesmo tempo (via Turborepo), cada um na sua porta fixa:
+Isso sobe todos os apps ao mesmo tempo (via Turborepo), cada um na sua porta fixa:
 
-- **Frontend** (`apps/web`): http://localhost:3000
+- **Portal Público** (`apps/web-public`): http://localhost:3002
+- **Painel Admin** (`apps/web-admin`): http://localhost:3003
+- **App de exemplo** (`apps/web-example`): http://localhost:3000
 - **Backend** (`apps/api`): http://localhost:3001 — confirme que está no ar acessando http://localhost:3001/api/health, deve retornar um JSON de sucesso.
 
-Para parar os dois processos, use `Ctrl+C` no terminal.
+Para parar os processos, use `Ctrl+C` no terminal.
 
 **Como saber se deu tudo certo:** abra http://localhost:3000 no navegador — a página deve carregar sem erro. Se abrir o console do navegador (F12) e não houver erros de rede batendo em `localhost:3001`, o frontend e o backend estão conversando corretamente.
 
@@ -131,7 +139,7 @@ Para parar os dois processos, use `Ctrl+C` no terminal.
 Rodados a partir da raiz do projeto (o Turborepo já aplica o comando nos dois apps):
 
 ```bash
-yarn build        # build de produção dos dois apps
+yarn build        # build de produção de todos os apps
 yarn lint         # checa lint (ESLint) em tudo
 yarn type-check   # checa tipos (TypeScript) em tudo
 yarn test         # roda os testes automatizados (Vitest, hoje só em apps/api)
@@ -139,10 +147,10 @@ yarn test         # roda os testes automatizados (Vitest, hoje só em apps/api)
 
 **Rode `yarn lint`, `yarn type-check` e `yarn test` antes de abrir um Pull Request** — o CI do GitHub Actions roda essas mesmas checagens automaticamente em todo PR, então rodar local primeiro evita ida e volta.
 
-Se quiser rodar um comando só em um app específico (em vez dos dois), use o workspace do Yarn:
+Se quiser rodar um comando só em um app específico (em vez de todos), use o workspace do Yarn:
 
 ```bash
-yarn workspace @amemais/web dev
+yarn workspace @amemais/web-admin dev
 yarn workspace @amemais/api test
 ```
 
@@ -177,7 +185,7 @@ Se o editor mostrar erros que o build não mostra (ex.: erro de JSX em `.tsx`), 
 
 ### Problemas comuns
 
-- **Porta já em uso**: feche o terminal anterior ou mate o processo usando a porta 3000/3001.
+- **Porta já em uso**: feche o terminal anterior ou mate o processo usando a porta 3000/3001/3002/3003.
 - **Erro de Supabase/env**: confira se preencheu os dois `.env.local` (passo 4).
 - **`yarn -v` mostra versão diferente da esperada**: feche e reabra o terminal depois de `corepack enable`, ou rode `corepack prepare yarn@1.22.22 --activate` dentro da pasta do projeto.
 - **`supabase db push` pede senha do banco / dá 403**: confirme que rodou `supabase login` e `supabase link --project-ref <ref>` primeiro (passo 7).
