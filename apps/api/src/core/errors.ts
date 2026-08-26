@@ -26,3 +26,12 @@ export class NotFoundError extends AppError {
 export class ValidationError extends AppError {
   readonly statusCode = 400;
 }
+
+export class StorageError extends AppError {
+  readonly statusCode = 500;
+
+  constructor(message = "Erro no armazenamento de arquivos") {
+    super(message);
+  }
+}
+
