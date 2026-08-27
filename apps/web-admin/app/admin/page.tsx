@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/features/auth/services/auth-service";
 import { useProfile } from "@/features/auth/hooks/use-profile";
@@ -13,9 +14,14 @@ export default function AdminHomePage() {
       <p className="text-sm text-neutral-600">
         Logado como {profile?.nome || profile?.role} ({profile?.role}).
       </p>
-      <Button variant="outline" className="w-fit" onClick={() => authService.signOut().then(() => location.assign("/login"))}>
-        Sair
-      </Button>
+      <div className="flex gap-3">
+        <Link href="/design-system">
+          <Button variant="default">Ver Design System (Componentes)</Button>
+        </Link>
+        <Button variant="outline" className="w-fit" onClick={() => authService.signOut().then(() => location.assign("/login"))}>
+          Sair
+        </Button>
+      </div>
     </main>
   );
 }
