@@ -24,7 +24,7 @@ export async function listExamplesController(_request: NextRequest) {
 
 export async function createExampleController(request: NextRequest) {
   try {
-    // await requireRole(request, ["admin", "colaborador"]); // features administrativas devem exigir isso
+    // await requireRole(request, ["Admin", "Voluntário"]); // features administrativas devem exigir isso
     const body = await request.json();
     const input = createExampleSchema.parse(body);
     const example = await exampleService.createExample(input);

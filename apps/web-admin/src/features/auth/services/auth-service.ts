@@ -27,8 +27,8 @@ export const authService = {
     if (!userData.user) return null;
 
     const { data, error } = await supabase
-      .from("profiles")
-      .select("id, role, nome")
+      .from("usuarios")
+      .select("id, nome, email, cargo")
       .eq("id", userData.user.id)
       .single();
 
