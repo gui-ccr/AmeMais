@@ -6,9 +6,14 @@ export default function HomePage() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
       <h1 className="text-2xl font-semibold text-foreground">AmeMais Admin</h1>
       <p className="text-sm text-muted-foreground">Painel administrativo — em construção.</p>
-      <Link href="/login">
-        <Button>Entrar</Button>
-      </Link>
+      <div className="flex gap-3">
+        <Link href="/login">
+          <Button>Entrar</Button>
+        </Link>
+        <Link href="/design-system">
+          <Button variant="outline">Design System</Button>
+        </Link>
+      </div>
     </main>
   );
 }

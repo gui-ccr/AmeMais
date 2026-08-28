@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { authService } from "../services/auth-service";
 
 export function LoginForm() {
@@ -28,31 +30,40 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm">
-        E-mail
-        <input
+    <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="email" required>
+          E-mail
+        </Label>
+        <Input
+          id="email"
           type="email"
           required
+          placeholder="seu-email@exemplo.com"
           value={email}
+          hasError={!!error}
           onChange={(event) => setEmail(event.target.value)}
-          className="rounded-md border border-neutral-300 px-3 py-2"
         />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Senha
-        <input
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="password" required>
+          Senha
+        </Label>
+        <Input
+          id="password"
           type="password"
           required
+          placeholder="••••••••"
           value={password}
+          hasError={!!error}
           onChange={(event) => setPassword(event.target.value)}
-          className="rounded-md border border-neutral-300 px-3 py-2"
         />
-      </label>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <Button type="submit" disabled={loading}>
+      </div>
+      {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+      <Button type="submit" disabled={loading} className="w-full mt-2">
         {loading ? "Entrando..." : "Entrar"}
       </Button>
     </form>
   );
 }
+
