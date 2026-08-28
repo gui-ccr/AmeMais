@@ -19,41 +19,22 @@ sequenceDiagram
     participant Schema as schema.ts (Zod)
     participant Service as service.ts
     participant Repository as repository.ts
-    database DB as Supabase
+    participant DB as Supabase
 
     Cliente->>Route: Requisição HTTP (ex: POST /api/example-demo)
     Route->>Controller: Encaminha NextRequest
-    Note over Controller: Executa Autenticação / RBAC<br/>(requireUser / requireRole)
-    Controller->>Schema: Valida Body / Query Params (schema.parse)
-    alt Payload Inválido (ZodError)
-        Schema-->>Controller: Lança ZodError
-        Controller-->>Route: Retorna fail(error) -> HTTP 400
-        Route-->>Cliente: Resposta HTTP 400 (Dados inválidos)
-    else Payload Válido
-        Schema-->>Controller: Retorna Dados Tipados
-        Controller->>Service: Chama método do Service com dados tipados
-        Note over Service: Executa Regras de Negócio<br/>& Validações de Domínio
-        alt Regra de Negócio Falha
-            Service-->>Controller: Lança AppError (ex: ValidationError)
-            Controller-->>Route: Retorna fail(error) -> HTTP 400/404/etc.
-            Route-->>Cliente: Resposta HTTP de Erro
-        else Sucesso
-            Service->>Repository: Chama método do Repository
-            Repository->>DB: Query / Insert / Update (supabaseAdmin)
-            DB-->>Repository: Retorna Linhas/Erro do Banco
-            alt Erro no Banco
-                Repository-->>Service: Lança erro do Banco
-                Service-->>Controller: Repassa erro
-                Controller-->>Route: Retorna fail(error) -> HTTP 500
-                Route-->>Cliente: Resposta HTTP 500 (Erro interno)
-            else Dados Encontrados
-                Repository-->>Service: Retorna Dados Mapeados (camelCase)
-                Service-->>Controller: Retorna Resultado da Operação
-                Controller-->>Route: Retorna ok(dados) / created(dados)
-                Route-->>Cliente: Resposta HTTP 200/201 (JSON)
-            end
-        end
-    end
+    Note over Controller: Autenticação/RBAC (requireUser/requireRole)
+    Controller->>Schema: Valida payload (schema.parse)
+    Schema-->>Controller: Dados validados e tipados
+    Controller->>Service: Chama o Service
+    Note over Service: Executa Regras de Negócio e Validações
+    Service->>Repository: Chama o Repository
+    Repository->>DB: Query / Insert / Update (supabaseAdmin)
+    DB-->>Repository: Retorna dados brutos (snake_case)
+    Repository-->>Service: Retorna dados mapeados (camelCase)
+    Service-->>Controller: Retorna resultado do negócio
+    Controller-->>Route: Retorna ok(dados) / created(dados) / fail(error)
+    Route-->>Cliente: Resposta HTTP final (JSON)
 ```
 
 ---
