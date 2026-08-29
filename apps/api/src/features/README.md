@@ -13,13 +13,13 @@ Toda requisição HTTP recebida pela API segue um caminho unidirecional e rígid
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Cliente as Cliente (Frontend)
-    participant Route as route.ts (Next.js)
-    participant Controller as controller.ts
-    participant Schema as schema.ts (Zod)
-    participant Service as service.ts
-    participant Repository as repository.ts
-    participant DB as Supabase
+    actor Cliente as "Cliente (Frontend)"
+    participant Route as "route.ts (Next.js)"
+    participant Controller as "controller.ts"
+    participant Schema as "schema.ts (Zod)"
+    participant Service as "service.ts"
+    participant Repository as "repository.ts"
+    participant DB as "Supabase"
 
     Cliente->>Route: Requisição HTTP (ex: POST /api/example-demo)
     Route->>Controller: Encaminha NextRequest
