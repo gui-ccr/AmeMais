@@ -18,6 +18,9 @@
     },
     "test": {
       "dependsOn": ["^build"]
+    },
+    "cypress:run": {
+      "dependsOn": ["^build"]
     }
   }
 }
