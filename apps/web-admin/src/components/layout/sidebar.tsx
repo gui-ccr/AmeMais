@@ -2,23 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  PawPrint,
-  Home,
-  Calendar,
-  AlertTriangle,
-  Heart,
-  Users,
-} from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const navigation = [
-  { name: "Animais", href: "/admin/animais", icon: PawPrint },
-  { name: "Lares", href: "/admin/lares", icon: Home },
-  { name: "Eventos", href: "/admin/eventos", icon: Calendar },
-  { name: "Urgências", href: "/admin/urgencias", icon: AlertTriangle },
-  { name: "Interesses", href: "/admin/interesses", icon: Heart },
-  { name: "Usuários", href: "/admin/usuarios", icon: Users },
+  { name: "Animais", href: "/admin/animais", icon: "🐾" },
+  { name: "Lares", href: "/admin/lares", icon: "🏠" },
+  { name: "Eventos", href: "/admin/eventos", icon: "📅" },
+  { name: "Urgências", href: "/admin/urgencias", icon: "🚨" },
+  { name: "Interesses", href: "/admin/interesses", icon: "❤️" },
+  { name: "Usuários", href: "/admin/usuarios", icon: "👥" },
 ];
 
 export function Sidebar() {
@@ -33,7 +25,6 @@ export function Sidebar() {
         <ul className="flex flex-1 flex-col gap-2">
           {navigation.map((item) => {
             const isActive = pathname.startsWith(item.href);
-            const Icon = item.icon;
 
             return (
               <li key={item.name}>
@@ -46,13 +37,9 @@ export function Sidebar() {
                       : "text-sidebar-muted hover:bg-secondary-hover hover:text-sidebar-fg"
                   )}
                 >
-                  <Icon
-                    className={cn(
-                      "h-5 w-5 shrink-0",
-                      isActive ? "text-sidebar-active-fg" : "text-sidebar-muted group-hover:text-sidebar-fg"
-                    )}
-                    aria-hidden="true"
-                  />
+                  <span className="h-5 w-5 shrink-0 flex items-center justify-center text-lg">
+                    {item.icon}
+                  </span>
                   {item.name}
                 </Link>
               </li>
