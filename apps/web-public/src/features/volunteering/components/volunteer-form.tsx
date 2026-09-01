@@ -33,24 +33,32 @@ export function VolunteerForm() {
       <p className="mb-4 text-lg text-muted-dark">Preencha e a gente te chama no WhatsApp em até 2 dias.</p>
       <div className="flex flex-col gap-3">
         <input
+          aria-label="Nome"
+          autoComplete="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Seu nome"
           className="rounded-lg border-2 border-border bg-brand-cream px-3.5 py-2.5 text-lg"
         />
         <input
+          aria-label="WhatsApp"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
           placeholder="Seu WhatsApp — (33) 9 ...."
           className="rounded-lg border-2 border-border bg-brand-cream px-3.5 py-2.5 text-lg"
         />
         <input
+          aria-label="Bairro"
           value={neighborhood}
           onChange={(event) => setNeighborhood(event.target.value)}
           placeholder="Seu bairro"
           className="rounded-lg border-2 border-border bg-brand-cream px-3.5 py-2.5 text-lg"
         />
         <select
+          aria-label="Como quer ajudar"
           value={interest}
           onChange={(event) => setInterest(event.target.value)}
           className="rounded-lg border-2 border-border bg-brand-cream px-3.5 py-2.5 text-lg text-foreground"
