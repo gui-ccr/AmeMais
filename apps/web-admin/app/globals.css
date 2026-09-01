@@ -140,11 +140,11 @@ body {
 }
 
 @layer base {
-  a {
+  :where(a) {
     color: var(--primary);
   }
 
-  a:hover {
+  :where(a:hover) {
     color: var(--primary-hover);
   }
 }
