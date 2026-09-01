@@ -6,6 +6,7 @@ export function MapEmbed({ height = 210 }: { height?: number }) {
         style={{ height }}
         className="block w-full border-0"
         title="Mapa de Teófilo Otoni"
+        loading="lazy"
       />
     </div>
   );
