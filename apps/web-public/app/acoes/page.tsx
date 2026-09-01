@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { Reveal } from "@/components/ui/reveal";
+import { buildPageMetadata } from "@/lib/site";
 import { ActionCard } from "@/features/actions/components/action-card";
 import { ExpensesBreakdown } from "@/features/actions/components/expenses-breakdown";
 import { ACTIONS } from "@/features/actions/data/actions";
 import { EXPENSES } from "@/features/actions/data/expenses";
 
-export const metadata: Metadata = { title: "Mural de Ações — AmeMais" };
+export const metadata: Metadata = buildPageMetadata({
+  title: "Mural de Ações",
+  description:
+    "Veja os resgates, mutirões de castração e eventos já realizados pela AmeMais em Teófilo Otoni, com local, data e prestação de contas de para onde vai cada doação.",
+  path: "/acoes",
+});
 
 export default function AcoesPage() {
   return (

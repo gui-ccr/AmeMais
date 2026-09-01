@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
+import { buildPageMetadata } from "@/lib/site";
 import { PixCard } from "@/features/donations/components/pix-card";
 import { UrgencyList } from "@/features/donations/components/urgency-list";
 import { MapEmbed } from "@/features/donations/components/map-embed";
@@ -7,7 +8,12 @@ import { CollectionPointsList } from "@/features/donations/components/collection
 import { URGENCIES } from "@/features/donations/data/urgencies";
 import { COLLECTION_POINTS } from "@/features/donations/data/collection-points";
 
-export const metadata: Metadata = { title: "Central de Ajuda — AmeMais" };
+export const metadata: Metadata = buildPageMetadata({
+  title: "Central de Ajuda",
+  description:
+    "Doe para a AmeMais via PIX com cópia rápida e QR Code, veja as urgências da semana e os pontos de coleta de ração, cobertores e remédios em Teófilo Otoni.",
+  path: "/doe",
+});
 
 export default function DoePage() {
   return (
