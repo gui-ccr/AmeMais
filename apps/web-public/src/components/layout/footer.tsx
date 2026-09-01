@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, Instagram, Mail, MessageCircle } from "lucide-react";
 import { CopyPixButton } from "@/features/donations/components/copy-pix-button";
+import { WHATSAPP_DISPLAY } from "@/lib/whatsapp";
 
 export function Footer() {
   return (
