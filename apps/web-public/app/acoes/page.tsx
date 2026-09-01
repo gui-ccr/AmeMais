@@ -23,14 +23,25 @@ export default function AcoesPage() {
         description="Registro público de resgates, mutirões e eventos — com local e data. É assim que você sabe para onde vai cada doação."
       />
 
-      <Reveal
-        selector="[data-reveal-item]"
-        className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5"
+      <div
+        className="rounded-3xl border-2 border-border p-6 md:p-10"
+        style={{
+          backgroundColor: "#c9a876",
+          backgroundImage:
+            "radial-gradient(rgba(0,0,0,.14) 1px, transparent 1.4px), radial-gradient(rgba(255,255,255,.08) 1px, transparent 1.4px)",
+          backgroundSize: "18px 18px, 22px 22px",
+          backgroundPosition: "0 0, 9px 11px",
+        }}
       >
-        {ACTIONS.map((action) => (
-          <ActionCard key={action.id} action={action} />
-        ))}
-      </Reveal>
+        <Reveal
+          selector="[data-reveal-item]"
+          className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-6 gap-y-10"
+        >
+          {ACTIONS.map((action, index) => (
+            <ActionCard key={action.id} action={action} index={index} />
+          ))}
+        </Reveal>
+      </div>
 
       <ExpensesBreakdown expenses={EXPENSES} />
     </div>

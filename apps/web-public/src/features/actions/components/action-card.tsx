@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PolaroidFrame } from "@/components/ui/polaroid-frame";
+import { tiltForIndex } from "@/lib/tilt";
 import type { Action } from "../types";
 
-export function ActionCard({ action }: { action: Action }) {
+export function ActionCard({ action, index = 0 }: { action: Action; index?: number }) {
   return (
-    <div data-reveal-item className="flex flex-col overflow-hidden rounded-2xl border-2 border-border bg-white">
-      <div className="relative h-42.5 w-full border-b-2 border-border">
+    <PolaroidFrame rotate={tiltForIndex(index, 1.7)} className="flex h-full flex-col">
+      <div className="relative h-42.5 w-full">
         <Image
           src={action.photo}
           alt={action.title}
@@ -15,7 +17,7 @@ export function ActionCard({ action }: { action: Action }) {
           className="object-cover"
         />
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="flex flex-1 flex-col gap-2 pt-3">
         <b className="text-xl leading-tight">{action.title}</b>
         <p className="flex-1 text-lg leading-snug text-muted-dark">{action.description}</p>
         <div className="flex flex-wrap gap-1.5">
@@ -31,6 +33,6 @@ export function ActionCard({ action }: { action: Action }) {
           </Badge>
         </div>
       </div>
-    </div>
+    </PolaroidFrame>
   );
 }

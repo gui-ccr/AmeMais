@@ -1,3 +1,4 @@
+import { CursorPawTrail } from "@/components/ui/cursor-paw-trail";
 import { Hero } from "@/features/home/components/hero";
 import { Stats } from "@/features/home/components/stats";
 import { Story } from "@/features/home/components/story";
@@ -7,6 +8,7 @@ import { UrgenciesAndCollection } from "@/features/home/components/urgencies-and
 export default function HomePage() {
   return (
     <>
+      <CursorPawTrail />
       <Hero />
       <Stats />
       <Story />

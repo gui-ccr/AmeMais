@@ -1,16 +1,18 @@
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PolaroidFrame } from "@/components/ui/polaroid-frame";
 import { whatsappLink } from "@/lib/whatsapp";
+import { tiltForIndex } from "@/lib/tilt";
 import type { Pet } from "../types";
 
-export function PetCard({ pet }: { pet: Pet }) {
+export function PetCard({ pet, index = 0 }: { pet: Pet; index?: number }) {
   return (
-    <div data-reveal-item className="flex flex-col overflow-hidden rounded-2xl border-2 border-border bg-white">
-      <div className="relative h-50 w-full border-b-2 border-border">
+    <PolaroidFrame rotate={tiltForIndex(index)} className="flex h-full flex-col">
+      <div className="relative h-50 w-full">
         <Image src={pet.photo} alt={pet.name} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 p-3.5">
+      <div className="flex flex-1 flex-col gap-1.5 pt-3">
         <div className="flex flex-wrap items-center gap-2">
           <b className="text-xl">{pet.name}</b>
           <Badge variant="outline" size="sm" className="border-primary bg-transparent text-primary">
@@ -27,6 +29,6 @@ export function PetCard({ pet }: { pet: Pet }) {
           quero conhecer <MessageCircle className="size-4.5" />
         </a>
       </div>
-    </div>
+    </PolaroidFrame>
   );
 }
