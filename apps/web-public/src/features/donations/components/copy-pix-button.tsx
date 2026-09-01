@@ -10,9 +10,14 @@ export function CopyPixButton({ compact = false }: { compact?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(PIX_KEY);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (!navigator.clipboard || !window.isSecureContext) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(PIX_KEY);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copie a chave PIX:", PIX_KEY);
+    }
   }
 
   return (
