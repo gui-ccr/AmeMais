@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PawPrint } from "lucide-react";
+import { MagneticButton } from "@/components/ui/magnetic-button";
 import { gsap } from "@/lib/gsap";
 
 export function Hero() {
@@ -51,13 +52,14 @@ export function Hero() {
           nossa cidade.
         </p>
         <div className="flex flex-wrap gap-3.5">
-          <Link
-            data-hero-cta
-            href="/adote"
-            className="flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-xl text-white no-underline hover:bg-primary-hover hover:text-white"
-          >
-            Quero adotar <PawPrint className="size-5" />
-          </Link>
+          <MagneticButton data-hero-cta>
+            <Link
+              href="/adote"
+              className="flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-xl text-white no-underline hover:bg-primary-hover hover:text-white"
+            >
+              Quero adotar <PawPrint className="size-5" />
+            </Link>
+          </MagneticButton>
           <Link
             data-hero-cta
             href="/doe"

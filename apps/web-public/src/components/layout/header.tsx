@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart } from "lucide-react";
+import { MagneticButton } from "@/components/ui/magnetic-button";
 import { cn } from "@/lib/cn";
 import { NAV_ITEMS } from "@/lib/nav";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -43,14 +44,16 @@ export function Header() {
           })}
         </nav>
 
-        <a
-          href={whatsappLink("Oi! Quero ajudar a AmeMais com uma doação 💚")}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-lg text-white no-underline hover:bg-primary-hover hover:text-white"
-        >
-          <Heart className="size-4.5 fill-current" /> Doar PIX
-        </a>
+        <MagneticButton strength={0.25}>
+          <a
+            href={whatsappLink("Oi! Quero ajudar a AmeMais com uma doação 💚")}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-lg text-white no-underline hover:bg-primary-hover hover:text-white"
+          >
+            <Heart className="size-4.5 fill-current" /> Doar PIX
+          </a>
+        </MagneticButton>
       </div>
     </header>
   );

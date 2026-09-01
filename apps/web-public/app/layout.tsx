@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Caveat, Patrick_Hand } from "next/font/google";
+import { CursorPawTrail } from "@/components/ui/cursor-paw-trail";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { SITE_DESCRIPTION, SITE_LOCALE, SITE_NAME, SITE_URL, SOCIAL } from "@/lib/site";
@@ -96,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${caveat.variable} ${patrickHand.variable}`}>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <CursorPawTrail />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
