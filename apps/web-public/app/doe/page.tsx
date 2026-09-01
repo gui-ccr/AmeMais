@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
 import { buildPageMetadata } from "@/lib/site";
 import { PixCard } from "@/features/donations/components/pix-card";
-import { UrgencyList } from "@/features/donations/components/urgency-list";
+import { UrgencyJars } from "@/features/donations/components/urgency-jars";
 import { MapEmbed } from "@/features/donations/components/map-embed";
-import { CollectionPointsList } from "@/features/donations/components/collection-points-list";
+import { CollectionPointTags } from "@/features/donations/components/collection-point-tags";
 import { URGENCIES } from "@/features/donations/data/urgencies";
 import { COLLECTION_POINTS } from "@/features/donations/data/collection-points";
 
@@ -24,17 +24,17 @@ export default function DoePage() {
         description="Somos mantidos 100% por doações. Escolha a forma que funciona melhor para você."
       />
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-7">
-        <PixCard />
+      <PixCard />
 
-        <div>
-          <h2 className="mb-1.5 font-display text-4xl font-bold">Urgências da semana</h2>
-          <p className="mb-3.5 text-lg text-muted-dark">Atualizado pela equipe toda segunda-feira.</p>
-          <UrgencyList urgencies={URGENCIES} />
-        </div>
+      <div className="mt-14 text-center">
+        <h2 className="font-display text-4xl font-bold">Urgências da semana</h2>
+        <p className="mx-auto mb-7 max-w-md text-lg text-muted-dark">
+          Atualizado pela equipe toda segunda-feira — cada potinho enche conforme as doações chegam.
+        </p>
+        <UrgencyJars urgencies={URGENCIES} />
       </div>
 
-      <div className="mt-9">
+      <div className="mt-16">
         <h2 className="mb-1.5 font-display text-4xl font-bold">Doações físicas — pontos de coleta</h2>
         <p className="mb-4 text-lg text-muted-dark">
           Ração, cobertores, jornal, remédios e caixas de transporte. Deixe em qualquer parceiro abaixo, no horário
@@ -43,7 +43,7 @@ export default function DoePage() {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
           <MapEmbed height={260} />
           <div className="flex flex-col gap-2.5">
-            <CollectionPointsList points={COLLECTION_POINTS} showHours />
+            <CollectionPointTags points={COLLECTION_POINTS} />
             <p className="-rotate-1 font-display text-2xl text-primary">
               quer ser um ponto de coleta? chama a gente no WhatsApp!
             </p>

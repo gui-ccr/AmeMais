@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import { PawPrint } from "lucide-react";
 import { gsap } from "@/lib/gsap";
 
-const POOL_SIZE = 14;
-const MIN_INTERVAL_MS = 220;
+const POOL_SIZE = 26;
+const MIN_INTERVAL_MS = 90;
 
 /**
  * Faint paw prints that fade in near the cursor as it moves — a whisper of
@@ -40,8 +40,8 @@ export function CursorPawTrail() {
       gsap.killTweensOf(paw);
       gsap.fromTo(
         paw,
-        { x: event.clientX + 9 * side, y: event.clientY, opacity: 0.5, scale: 0.6, rotate: side * 22 },
-        { opacity: 0, scale: 1, duration: 1.2, ease: "power1.out" },
+        { x: event.clientX + 10 * side, y: event.clientY, opacity: 0.9, scale: 0.7, rotate: side * 22 },
+        { opacity: 0, scale: 1.15, duration: 1, ease: "power1.out" },
       );
     }
 
@@ -52,7 +52,7 @@ export function CursorPawTrail() {
   return (
     <div ref={containerRef} className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
       {Array.from({ length: POOL_SIZE }).map((_, index) => (
-        <PawPrint key={index} className="cursor-paw absolute top-0 left-0 size-4 text-primary opacity-0" />
+        <PawPrint key={index} className="cursor-paw absolute top-0 left-0 size-5 text-primary opacity-0" />
       ))}
     </div>
   );

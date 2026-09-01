@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PawPrint } from "lucide-react";
-import { LottiePaw } from "@/components/ui/lottie-paw";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { gsap } from "@/lib/gsap";
 
@@ -38,7 +37,6 @@ export function Hero() {
         className="object-cover object-[center_40%]"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,14,10,.78)] via-[rgba(20,14,10,.25)] to-[rgba(20,14,10,.1)]" />
-      <LottiePaw className="absolute top-8 right-6 size-24 opacity-90 md:top-12 md:right-14 md:size-32" />
       <div className="relative mx-auto w-full max-w-6xl px-6 pb-13.5 text-white">
         <p data-hero-eyebrow className="font-display text-3xl text-brand-terracotta-subtle">
           Teófilo Otoni · MG
