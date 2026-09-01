@@ -139,12 +139,14 @@ body {
   font-family: var(--font-sans);
 }
 
-:where(a) {
-  color: var(--primary);
-}
+@layer base {
+  :where(a) {
+    color: var(--primary);
+  }
 
-:where(a:hover) {
-  color: var(--primary-hover);
+  :where(a:hover) {
+    color: var(--primary-hover);
+  }
 }
 
 input,
