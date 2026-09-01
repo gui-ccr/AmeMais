@@ -45,7 +45,7 @@ export function Footer() {
         <div className="flex flex-col gap-1.5 text-lg">
           <b className="text-lg text-white">Contato</b>
           <span className="flex items-center gap-1.5">
-            <MessageCircle className="size-4.5 shrink-0" /> (33) 9 9999-0000
+            <MessageCircle className="size-4.5 shrink-0" /> {WHATSAPP_DISPLAY}
           </span>
           <span className="flex items-center gap-1.5">
             <Instagram className="size-4.5 shrink-0" /> @amemais.to

@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeader } from "@/components/ui/page-header";
+import { buildPageMetadata } from "@/lib/site";
 import { RescueSteps } from "@/features/about/components/rescue-steps";
 import { AdoptionProcess } from "@/features/about/components/adoption-process";
 
-export const metadata: Metadata = { title: "Sobre — AmeMais" };
+export const metadata: Metadata = buildPageMetadata({
+  title: "Sobre",
+  description:
+    "Conheça a história da AmeMais: uma rede de voluntários e lares temporários que resgata, cuida e encontra famílias para animais abandonados em Teófilo Otoni desde 2019.",
+  path: "/sobre",
+});
 
 export default function SobrePage() {
   return (

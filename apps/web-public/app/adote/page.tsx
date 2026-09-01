@@ -2,9 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
+import { buildPageMetadata } from "@/lib/site";
 import { AdoptionExplorer } from "@/features/adoption/components/adoption-explorer";
 
-export const metadata: Metadata = { title: "Adote um amigo — AmeMais" };
+export const metadata: Metadata = buildPageMetadata({
+  title: "Adote um Amigo",
+  description:
+    "Conheça cães e gatos resgatados pela AmeMais e disponíveis para adoção em Teófilo Otoni, MG. Filtre por espécie, porte e idade — todos castrados, vacinados e vermifugados.",
+  path: "/adote",
+});
 
 export default function AdotePage() {
   return (

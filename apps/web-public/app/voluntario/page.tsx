@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/ui/page-header";
+import { buildPageMetadata } from "@/lib/site";
 import { HelpOptionsGrid } from "@/features/volunteering/components/help-options-grid";
 import { VolunteerForm } from "@/features/volunteering/components/volunteer-form";
 
-export const metadata: Metadata = { title: "Seja Voluntário — AmeMais" };
+export const metadata: Metadata = buildPageMetadata({
+  title: "Seja Voluntário",
+  description:
+    "Seja um lar temporário ou ajude a AmeMais com transporte de resgates, eventos e divulgação. Preencha o formulário e a equipe chama você no WhatsApp.",
+  path: "/voluntario",
+});
 
 export default function VoluntarioPage() {
   return (
