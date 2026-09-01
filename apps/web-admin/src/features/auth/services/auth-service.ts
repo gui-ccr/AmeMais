@@ -1,5 +1,5 @@
 import type { Profile } from "@amemais/shared-types";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export const authService = {
   async signIn(email: string, password: string) {

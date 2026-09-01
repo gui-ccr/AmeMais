@@ -2,7 +2,7 @@
 
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 /**
  * Sessão do Supabase Auth reativa: atualiza sozinha em login/logout/refresh

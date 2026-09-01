@@ -1,5 +1,5 @@
 import axios from "axios";
-import { createSupabaseBrowserClient, createSupabaseServerClient } from "./supabase";
+import { createSupabaseBrowserClient } from "./supabase-browser";
 
 /**
  * Instância centralizada do Axios apontando para o apps/api.
@@ -25,8 +25,10 @@ api.interceptors.request.use(async (config) => {
   try {
     if (typeof window === "undefined") {
       // --- Ambiente de servidor (Server Component, Route Handler, etc.) ---
-      // cookies() do Next.js só pode ser chamado em contexto de server;
-      // createSupabaseServerClient() é async por isso.
+      // Import dinâmico de propósito: supabase-server.ts usa next/headers, que
+      // não pode ser importado estaticamente por um arquivo que também roda
+      // no client (o bundler tentaria empacotar next/headers para o browser).
+      const { createSupabaseServerClient } = await import("./supabase-server");
       const supabase = await createSupabaseServerClient();
       const { data } = await supabase.auth.getSession();
       token = data.session?.access_token;
