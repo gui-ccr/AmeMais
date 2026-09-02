@@ -1,10 +1,10 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // 1. Schema do Zod
 const petSchema = z.object({
@@ -18,6 +18,7 @@ export default function ExemploFormPage() {
   // 2. Integração React Hook Form
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<PetFormData>({
@@ -50,11 +51,21 @@ export default function ExemploFormPage() {
         {/* Campo Select */}
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium">Espécie</label>
-          <Select {...register("especie")} hasError={Boolean(errors.especie)}>
-            <option value="">Selecione uma opção...</option>
-            <option value="cachorro">Cachorro</option>
-            <option value="gato">Gato</option>
-          </Select>
+          <Controller
+            control={control}
+            name="especie"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger hasError={Boolean(errors.especie)}>
+                  <SelectValue placeholder="Selecione uma opção..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cachorro">Cachorro</SelectItem>
+                  <SelectItem value="gato">Gato</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.especie && (
             <span className="text-xs text-destructive">{errors.especie.message}</span>
           )}

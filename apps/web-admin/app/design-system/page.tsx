@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function DesignSystemPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -182,52 +182,64 @@ export default function DesignSystemPage() {
             3. Selects (Seleção com Chevron Integrado)
           </h2>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Seleção nativa acessível com ícone chevron customizado e harmonia visual com os inputs.
+            Seleção acessível (Radix UI) com ícone chevron customizado e harmonia visual com os inputs.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
             <Label htmlFor="select-especie" required>Espécie do Animal</Label>
-            <Select
-              id="select-especie"
-              value={animalEspecie}
-              onChange={(e) => setAnimalEspecie(e.target.value)}
-            >
-              <option value="cachorro">🐶 Cachorro</option>
-              <option value="gato">🐱 Gato</option>
-              <option value="outro">🐾 Outro animal</option>
+            <Select value={animalEspecie} onValueChange={setAnimalEspecie}>
+              <SelectTrigger id="select-especie">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cachorro">🐶 Cachorro</SelectItem>
+                <SelectItem value="gato">🐱 Gato</SelectItem>
+                <SelectItem value="outro">🐾 Outro animal</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="select-status" required>Status de Adoção</Label>
-            <Select
-              id="select-status"
-              value={animalStatus}
-              onChange={(e) => setAnimalStatus(e.target.value)}
-            >
-              <option value="adocao">🟢 Disponível para adoção</option>
-              <option value="tratamento">🟡 Em tratamento</option>
-              <option value="resgatado">🔴 Recém resgatado</option>
-              <option value="adotado">⚪ Adotado</option>
+            <Select value={animalStatus} onValueChange={setAnimalStatus}>
+              <SelectTrigger id="select-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="adocao">🟢 Disponível para adoção</SelectItem>
+                <SelectItem value="tratamento">🟡 Em tratamento</SelectItem>
+                <SelectItem value="resgatado">🔴 Recém resgatado</SelectItem>
+                <SelectItem value="adotado">⚪ Adotado</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="select-pill">Select Variante Pill</Label>
-            <Select id="select-pill" variant="pill">
-              <option value="todos">Todos os portes</option>
-              <option value="pequeno">Porte Pequeno</option>
-              <option value="medio">Porte Médio</option>
-              <option value="grande">Porte Grande</option>
+            <Select defaultValue="todos">
+              <SelectTrigger id="select-pill" variant="pill">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os portes</SelectItem>
+                <SelectItem value="pequeno">Porte Pequeno</SelectItem>
+                <SelectItem value="medio">Porte Médio</SelectItem>
+                <SelectItem value="grande">Porte Grande</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="select-disabled">Select Desabilitado</Label>
-            <Select id="select-disabled" disabled value="fixo">
-              <option value="fixo">Opção bloqueada</option>
+            <Select disabled defaultValue="fixo">
+              <SelectTrigger id="select-disabled">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixo">Opção bloqueada</SelectItem>
+              </SelectContent>
             </Select>
           </div>
         </div>
@@ -264,28 +276,30 @@ export default function DesignSystemPage() {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="form-especie" required>Espécie</Label>
-            <Select
-              id="form-especie"
-              value={animalEspecie}
-              onChange={(e) => setAnimalEspecie(e.target.value)}
-            >
-              <option value="cachorro">Cachorro</option>
-              <option value="gato">Gato</option>
-              <option value="outro">Outro</option>
+            <Select value={animalEspecie} onValueChange={setAnimalEspecie}>
+              <SelectTrigger id="form-especie">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cachorro">Cachorro</SelectItem>
+                <SelectItem value="gato">Gato</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="form-status" required>Status Inicial</Label>
-            <Select
-              id="form-status"
-              value={animalStatus}
-              onChange={(e) => setAnimalStatus(e.target.value)}
-            >
-              <option value="adocao">Disponível para Adoção</option>
-              <option value="tratamento">Em Tratamento</option>
-              <option value="resgatado">Recém Resgatado</option>
-              <option value="adotado">Adotado</option>
+            <Select value={animalStatus} onValueChange={setAnimalStatus}>
+              <SelectTrigger id="form-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="adocao">Disponível para Adoção</SelectItem>
+                <SelectItem value="tratamento">Em Tratamento</SelectItem>
+                <SelectItem value="resgatado">Recém Resgatado</SelectItem>
+                <SelectItem value="adotado">Adotado</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 

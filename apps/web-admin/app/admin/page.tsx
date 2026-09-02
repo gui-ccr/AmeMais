@@ -15,8 +15,11 @@ export default function AdminHomePage() {
         Logado como {profile?.nome || profile?.email} ({profile?.cargo}).
       </p>
       <div className="flex gap-3">
+        <Link href="/admin/eventos">
+          <Button variant="default">Eventos e Urgências</Button>
+        </Link>
         <Link href="/design-system">
-          <Button variant="default">Ver Design System (Componentes)</Button>
+          <Button variant="outline">Ver Design System (Componentes)</Button>
         </Link>
         <Button variant="outline" className="w-fit" onClick={() => authService.signOut().then(() => location.assign("/login"))}>
           Sair
