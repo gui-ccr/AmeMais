@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ForbiddenError, NotFoundError, UnauthorizedError, ValidationError } from "./errors";
+import { ForbiddenError, NotFoundError, UnauthorizedError, ValidationError } from "../src/core/errors";
 
 describe("AppError", () => {
   it("UnauthorizedError usa statusCode 401", () => {
