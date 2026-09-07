@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "./errors";
-import { created, fail, ok } from "./http";
+import { NotFoundError } from "../src/core/errors";
+import { created, fail, ok } from "../src/core/http";
 
 describe("ok/created", () => {
   it("ok responde 200 com { data }", async () => {
