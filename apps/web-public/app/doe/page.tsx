@@ -1,0 +1,55 @@
+import type { Metadata } from "next";
+import { PageHeader } from "@/components/ui/page-header";
+import { buildPageMetadata } from "@/lib/site";
+import { PixCard } from "@/features/donations/components/pix-card";
+import { UrgencyJars } from "@/features/donations/components/urgency-jars";
+import { MapEmbed } from "@/features/donations/components/map-embed";
+import { CollectionPointTags } from "@/features/donations/components/collection-point-tags";
+import { URGENCIES } from "@/features/donations/data/urgencies";
+import { COLLECTION_POINTS } from "@/features/donations/data/collection-points";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Central de Ajuda",
+  description:
+    "Doe para a AmeMais via PIX com cópia rápida e QR Code, veja as urgências da semana e os pontos de coleta de ração, cobertores e remédios em Teófilo Otoni.",
+  path: "/doe",
+});
+
+export default function DoePage() {
+  return (
+    <div className="mx-auto max-w-6xl px-6 pt-11 pb-15">
+      <PageHeader
+        eyebrow="Central de ajuda"
+        title="Cada real vira ração, vacina e resgate."
+        description="Somos mantidos 100% por doações. Escolha a forma que funciona melhor para você."
+      />
+
+      <PixCard />
+
+      <div className="mt-14 text-center">
+        <h2 className="font-display text-4xl font-bold">Urgências da semana</h2>
+        <p className="mx-auto mb-7 max-w-md text-lg text-muted-dark">
+          Atualizado pela equipe toda segunda-feira — cada potinho enche conforme as doações chegam.
+        </p>
+        <UrgencyJars urgencies={URGENCIES} />
+      </div>
+
+      <div className="mt-16">
+        <h2 className="mb-1.5 font-display text-4xl font-bold">Doações físicas — pontos de coleta</h2>
+        <p className="mb-4 text-lg text-muted-dark">
+          Ração, cobertores, jornal, remédios e caixas de transporte. Deixe em qualquer parceiro abaixo, no horário
+          comercial:
+        </p>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
+          <MapEmbed height={260} />
+          <div className="flex flex-col gap-2.5">
+            <CollectionPointTags points={COLLECTION_POINTS} />
+            <p className="-rotate-1 font-display text-2xl text-primary">
+              quer ser um ponto de coleta? chama a gente no WhatsApp!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

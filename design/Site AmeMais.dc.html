@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#faf6ef;font-family:'Patrick Hand',system-ui,sans-serif;color:#2e2a26}
+a{color:#b4543f}a:hover{color:#8d3a28}
+*{box-sizing:border-box}
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-direction:column">
+
+<!-- ============ NAV ============ -->
+<header style="position:sticky;top:0;z-index:50;background:#faf6ef;border-bottom:2px solid #2e2a26">
+  <div style="max-width:1140px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+    <a onClick="{{ goInicio }}" style="display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none;color:#2e2a26">
+      <img src="assets/logo-amemais.jpg" alt="Logo AmeMais" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #2e2a26">
+      <span style="font-family:'Caveat',cursive;font-size:30px;font-weight:700;line-height:1">AmeMais</span>
+    </a>
+    <nav style="display:flex;gap:18px;align-items:center;flex:1;flex-wrap:wrap;font-size:19px">
+      <sc-for list="{{ navItems }}" as="ni" hint-placeholder-count="6">
+        <a onClick="{{ ni.go }}" style="{{ ni.style }}">{{ ni.label }}</a>
+      </sc-for>
+    </nav>
+    <a onClick="{{ goDoe }}" style="cursor:pointer;background:#b4543f;color:#fff;border-radius:999px;padding:8px 20px;font-size:19px;text-decoration:none" style-hover="background:#8d3a28;color:#fff">♥ Doar PIX</a>
+  </div>
+</header>
+
+<main style="flex:1">
+
+<!-- ============ HOME ============ -->
+<sc-if value="{{ isInicio }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Home">
+  <!-- hero -->
+  <section style="position:relative;min-height:520px;display:flex;align-items:flex-end;background:url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1800&q=70') center 40%/cover no-repeat">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(20,14,10,.78) 0%,rgba(20,14,10,.25) 55%,rgba(20,14,10,.1) 100%)"></div>
+    <div style="position:relative;max-width:1140px;margin:0 auto;width:100%;padding:0 24px 54px;color:#fff">
+      <div style="font-family:'Caveat',cursive;font-size:30px;color:#f0c9a8">Teófilo Otoni · MG</div>
+      <h1 style="margin:4px 0 10px;font-family:'Caveat',cursive;font-weight:700;font-size:clamp(42px,6vw,72px);line-height:1.02;max-width:640px">Todo animal merece um lar que o ame mais.</h1>
+      <p style="margin:0 0 22px;font-size:21px;max-width:520px;line-height:1.4;color:#f3ead9">Somos uma ONG de proteção animal que resgata, cuida e encontra famílias para cães e gatos abandonados na nossa cidade.</p>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a onClick="{{ goAdote }}" style="cursor:pointer;background:#b4543f;color:#fff;border-radius:999px;padding:12px 28px;font-size:21px;text-decoration:none" style-hover="background:#8d3a28;color:#fff">Quero adotar 🐾</a>
+        <a onClick="{{ goDoe }}" style="cursor:pointer;background:#fff;color:#2e2a26;border-radius:999px;padding:12px 28px;font-size:21px;text-decoration:none" style-hover="background:#f3ead9;color:#2e2a26">Quero ajudar</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- contadores -->
+  <section style="border-bottom:2px solid #2e2a26;background:#f3ead9">
+    <div style="max-width:1140px;margin:0 auto;padding:26px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:18px;text-align:center">
+      <div><div style="font-family:'Caveat',cursive;font-size:52px;font-weight:700;color:#b4543f;line-height:1">128</div><div style="font-size:19px">animais resgatados</div></div>
+      <div><div style="font-family:'Caveat',cursive;font-size:52px;font-weight:700;color:#b4543f;line-height:1">96</div><div style="font-size:19px">adoções realizadas</div></div>
+      <div><div style="font-family:'Caveat',cursive;font-size:52px;font-weight:700;color:#b4543f;line-height:1">14</div><div style="font-size:19px">lares temporários ativos</div></div>
+      <div><div style="font-family:'Caveat',cursive;font-size:52px;font-weight:700;color:#b4543f;line-height:1">6</div><div style="font-size:19px">bairros atendidos</div></div>
+    </div>
+  </section>
+
+  <!-- história -->
+  <section style="max-width:1140px;margin:0 auto;padding:60px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:44px;align-items:center">
+    <div>
+      <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Nossa história</div>
+      <h2 style="margin:4px 0 14px;font-family:'Caveat',cursive;font-weight:700;font-size:46px;line-height:1.05">Começamos com uma caixa de papelão e muito amor.</h2>
+      <p style="margin:0 0 12px;font-size:20px;line-height:1.5">Em 2019, um grupo de vizinhos do bairro Ipiranga se juntou para cuidar de uma ninhada abandonada perto do córrego. O que era um gesto pontual virou a AmeMais: uma rede de voluntários que resgata, trata e encontra famílias para animais em situação de rua em Teófilo Otoni.</p>
+      <p style="margin:0 0 20px;font-size:20px;line-height:1.5">Não temos um abrigo físico — trabalhamos com <b>lares temporários</b>: casas de voluntários que acolhem cada animal até a adoção. Assim, cada resgatado recebe atenção de verdade.</p>
+      <a onClick="{{ goSobre }}" style="cursor:pointer;display:inline-block;border:2px solid #2e2a26;color:#2e2a26;border-radius:999px;padding:9px 24px;font-size:20px;text-decoration:none" style-hover="background:#2e2a26;color:#fff">Conheça nosso trabalho →</a>
+    </div>
+    <div style="position:relative">
+      <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=900&q=70" alt="Voluntária passeando com cães resgatados" style="width:100%;border-radius:14px;border:2px solid #2e2a26;display:block">
+      <div style="position:absolute;bottom:-16px;right:18px;background:#fff;border:2px solid #2e2a26;border-radius:10px;padding:8px 16px;font-family:'Caveat',cursive;font-size:24px;transform:rotate(-2deg)">desde 2019 ♥</div>
+    </div>
+  </section>
+
+  <!-- animais em destaque -->
+  <section style="background:#fff;border-top:2px solid #2e2a26;border-bottom:2px solid #2e2a26">
+    <div style="max-width:1140px;margin:0 auto;padding:54px 24px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <h2 style="margin:0;font-family:'Caveat',cursive;font-weight:700;font-size:46px">Eles estão esperando por você</h2>
+        <a onClick="{{ goAdote }}" style="cursor:pointer;font-size:20px">ver todos →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;margin-top:24px">
+        <sc-for list="{{ destaques }}" as="pet" hint-placeholder-count="4">
+          <div style="border:2px solid #2e2a26;border-radius:14px;overflow:hidden;background:#faf6ef;display:flex;flex-direction:column">
+            <img src="{{ pet.photo }}" alt="{{ pet.name }}" style="width:100%;height:190px;object-fit:cover;display:block;border-bottom:2px solid #2e2a26">
+            <div style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <b style="font-size:22px">{{ pet.name }}</b>
+                <span style="border:1.5px solid #b4543f;color:#b4543f;border-radius:999px;padding:1px 10px;font-size:15px">{{ pet.tag }}</span>
+              </div>
+              <div style="font-size:18px;line-height:1.35;color:#5c554c;flex:1">{{ pet.desc }}</div>
+              <a href="{{ pet.wa }}" target="_blank" style="background:#2e2a26;color:#fff;border-radius:999px;padding:8px 0;text-align:center;font-size:19px;text-decoration:none" style-hover="background:#b4543f;color:#fff">quero conhecer 💬</a>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- urgências + pontos de coleta -->
+  <section style="background:#f3ead9">
+    <div style="max-width:1140px;margin:0 auto;padding:54px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:36px">
+      <div>
+        <h2 style="margin:0 0 6px;font-family:'Caveat',cursive;font-weight:700;font-size:42px">Urgências da semana</h2>
+        <p style="margin:0 0 16px;font-size:19px;color:#5c554c">O que estamos precisando agora — atualizado pela equipe.</p>
+        <sc-for list="{{ urgencias }}" as="u" hint-placeholder-count="3">
+          <div style="background:#fff;border:2px solid #2e2a26;border-radius:12px;padding:14px 16px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <b style="font-size:20px">⚠ {{ u.titulo }}</b>
+              <span style="border:1.5px solid #b4543f;color:#b4543f;border-radius:999px;padding:1px 10px;font-size:15px">{{ u.tag }}</span>
+            </div>
+            <div style="height:10px;background:#eee7db;border-radius:6px;margin-top:10px;overflow:hidden"><div style="{{ u.barStyle }}"></div></div>
+            <div style="font-size:16px;color:#8a8073;margin-top:5px">{{ u.progresso }}</div>
+          </div>
+        </sc-for>
+        <a onClick="{{ goDoe }}" style="cursor:pointer;display:inline-block;background:#b4543f;color:#fff;border-radius:999px;padding:10px 26px;font-size:20px;text-decoration:none" style-hover="background:#8d3a28;color:#fff">Quero ajudar com isso</a>
+      </div>
+      <div>
+        <h2 style="margin:0 0 6px;font-family:'Caveat',cursive;font-weight:700;font-size:42px">Pontos de coleta</h2>
+        <p style="margin:0 0 16px;font-size:19px;color:#5c554c">Deixe ração, cobertores e remédios em qualquer um destes parceiros:</p>
+        <div style="border:2px solid #2e2a26;border-radius:12px;overflow:hidden;background:#fff">
+          <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-41.55%2C-17.89%2C-41.46%2C-17.82&amp;layer=mapnik&amp;marker=-17.8595%2C-41.5087" style="width:100%;height:210px;border:0;display:block" title="Mapa de Teófilo Otoni"></iframe>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          <sc-for list="{{ pontosColeta }}" as="p" hint-placeholder-count="3">
+            <div style="background:#fff;border:2px solid #2e2a26;border-radius:10px;padding:9px 14px;display:flex;gap:10px;align-items:baseline">
+              <span>📍</span><div><b style="font-size:19px">{{ p.nome }}</b><div style="font-size:17px;color:#8a8073">{{ p.end }}</div></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</sc-if>
+
+<!-- ============ ADOTE ============ -->
+<sc-if value="{{ isAdote }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Adote um Amigo" style="max-width:1140px;margin:0 auto;padding:44px 24px 60px">
+  <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Adote um amigo</div>
+  <h1 style="margin:4px 0 8px;font-family:'Caveat',cursive;font-weight:700;font-size:54px;line-height:1">Eles já passaram pelo pior. Falta só a melhor parte: você.</h1>
+  <p style="margin:0 0 24px;font-size:20px;color:#5c554c;max-width:640px">Todos os animais são castrados, vacinados e vermifugados antes da adoção. Use os filtros para encontrar seu companheiro.</p>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:2px solid #2e2a26;border-bottom:2px solid #2e2a26;padding:14px 0;align-items:center">
+    <span style="font-size:17px;color:#8a8073;margin-right:2px">espécie:</span>
+    <sc-for list="{{ chipsEspecie }}" as="c" hint-placeholder-count="3"><a onClick="{{ c.on }}" style="{{ c.style }}">{{ c.label }}</a></sc-for>
+    <span style="width:14px"></span>
+    <span style="font-size:17px;color:#8a8073;margin-right:2px">porte:</span>
+    <sc-for list="{{ chipsPorte }}" as="c" hint-placeholder-count="4"><a onClick="{{ c.on }}" style="{{ c.style }}">{{ c.label }}</a></sc-for>
+    <span style="width:14px"></span>
+    <span style="font-size:17px;color:#8a8073;margin-right:2px">idade:</span>
+    <sc-for list="{{ chipsIdade }}" as="c" hint-placeholder-count="4"><a onClick="{{ c.on }}" style="{{ c.style }}">{{ c.label }}</a></sc-for>
+  </div>
+
+  <div style="font-size:18px;color:#8a8073;margin:14px 0 10px">{{ resultadoTexto }}</div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px">
+    <sc-for list="{{ filtrados }}" as="pet" hint-placeholder-count="6">
+      <div style="border:2px solid #2e2a26;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column">
+        <img src="{{ pet.photo }}" alt="{{ pet.name }}" style="width:100%;height:200px;object-fit:cover;display:block;border-bottom:2px solid #2e2a26">
+        <div style="padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <b style="font-size:22px">{{ pet.name }}</b>
+            <span style="border:1.5px solid #b4543f;color:#b4543f;border-radius:999px;padding:1px 10px;font-size:15px">{{ pet.tag }}</span>
+          </div>
+          <div style="font-size:18px;line-height:1.35;color:#5c554c;flex:1">{{ pet.desc }}</div>
+          <a href="{{ pet.wa }}" target="_blank" style="background:#2e2a26;color:#fff;border-radius:999px;padding:8px 0;text-align:center;font-size:19px;text-decoration:none" style-hover="background:#b4543f;color:#fff">quero conhecer 💬</a>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="margin-top:28px;background:#f3ead9;border:2px solid #2e2a26;border-radius:14px;padding:18px 22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+    <span style="font-size:34px">💬</span>
+    <div style="flex:1;min-width:260px">
+      <b style="font-size:21px">"Quero conhecer" abre nosso WhatsApp</b>
+      <div style="font-size:18px;color:#5c554c">Com mensagem pronta. A adoção tem entrevista simples e termo de responsabilidade — tudo para o bem do animal.</div>
+    </div>
+    <a onClick="{{ goSobre }}" style="cursor:pointer;border:2px solid #2e2a26;border-radius:999px;padding:9px 22px;font-size:19px;color:#2e2a26;text-decoration:none" style-hover="background:#2e2a26;color:#fff">como funciona a adoção</a>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ DOE ============ -->
+<sc-if value="{{ isDoe }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Central de Ajuda" style="max-width:1140px;margin:0 auto;padding:44px 24px 60px">
+  <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Central de ajuda</div>
+  <h1 style="margin:4px 0 8px;font-family:'Caveat',cursive;font-weight:700;font-size:54px;line-height:1">Cada real vira ração, vacina e resgate.</h1>
+  <p style="margin:0 0 28px;font-size:20px;color:#5c554c;max-width:640px">Somos mantidos 100% por doações. Escolha a forma que funciona melhor para você.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px">
+    <div style="border:2px solid #b4543f;background:#fdf6f4;border-radius:16px;padding:26px;text-align:center">
+      <h2 style="margin:0;font-family:'Caveat',cursive;font-weight:700;font-size:40px">Doe via PIX</h2>
+      <img src="{{ qrUrl }}" alt="QR Code do PIX da AmeMais" style="width:180px;height:180px;margin:16px auto;display:block;border:2px solid #2e2a26;border-radius:10px;background:#fff;padding:8px">
+      <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;background:#fff;border:2px solid #2e2a26;border-radius:10px;padding:10px 14px;max-width:360px;margin:0 auto">
+        <span style="font-size:18px;color:#5c554c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">pix@amemais.org.br</span>
+        <a onClick="{{ copyPix }}" style="cursor:pointer;background:#b4543f;color:#fff;border-radius:999px;padding:6px 16px;font-size:18px;white-space:nowrap;text-decoration:none" style-hover="background:#8d3a28;color:#fff">{{ pixLabel }}</a>
+      </div>
+      <div style="font-size:16px;color:#8a8073;margin-top:10px">chave e-mail · CNPJ 00.000.000/0001-00 · AmeMais Proteção Animal</div>
+    </div>
+
+    <div>
+      <h2 style="margin:0 0 6px;font-family:'Caveat',cursive;font-weight:700;font-size:40px">Urgências da semana</h2>
+      <p style="margin:0 0 14px;font-size:19px;color:#5c554c">Atualizado pela equipe toda segunda-feira.</p>
+      <sc-for list="{{ urgencias }}" as="u" hint-placeholder-count="3">
+        <div style="background:#fff;border:2px solid #2e2a26;border-radius:12px;padding:14px 16px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <b style="font-size:20px">⚠ {{ u.titulo }}</b>
+            <span style="border:1.5px solid #b4543f;color:#b4543f;border-radius:999px;padding:1px 10px;font-size:15px">{{ u.tag }}</span>
+          </div>
+          <div style="height:10px;background:#eee7db;border-radius:6px;margin-top:10px;overflow:hidden"><div style="{{ u.barStyle }}"></div></div>
+          <div style="font-size:16px;color:#8a8073;margin-top:5px">{{ u.progresso }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin-top:36px">
+    <h2 style="margin:0 0 6px;font-family:'Caveat',cursive;font-weight:700;font-size:40px">Doações físicas — pontos de coleta</h2>
+    <p style="margin:0 0 16px;font-size:19px;color:#5c554c">Ração, cobertores, jornal, remédios e caixas de transporte. Deixe em qualquer parceiro abaixo, no horário comercial:</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start">
+      <div style="border:2px solid #2e2a26;border-radius:12px;overflow:hidden;background:#fff">
+        <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-41.55%2C-17.89%2C-41.46%2C-17.82&amp;layer=mapnik&amp;marker=-17.8595%2C-41.5087" style="width:100%;height:260px;border:0;display:block" title="Mapa dos pontos de coleta"></iframe>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ pontosColeta }}" as="p" hint-placeholder-count="3">
+          <div style="background:#fff;border:2px solid #2e2a26;border-radius:10px;padding:12px 16px;display:flex;gap:10px;align-items:baseline">
+            <span>📍</span><div><b style="font-size:20px">{{ p.nome }}</b><div style="font-size:18px;color:#8a8073">{{ p.end }} · {{ p.horario }}</div></div>
+          </div>
+        </sc-for>
+        <div style="font-family:'Caveat',cursive;font-size:24px;color:#b4543f;transform:rotate(-1deg)">quer ser um ponto de coleta? chama a gente no WhatsApp!</div>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ AÇÕES ============ -->
+<sc-if value="{{ isAcoes }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Mural de Ações" style="max-width:1140px;margin:0 auto;padding:44px 24px 60px">
+  <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Transparência</div>
+  <h1 style="margin:4px 0 8px;font-family:'Caveat',cursive;font-weight:700;font-size:54px;line-height:1">Mural de ações: o que já fizemos</h1>
+  <p style="margin:0 0 26px;font-size:20px;color:#5c554c;max-width:640px">Registro público de resgates, mutirões e eventos — com local e data. É assim que você sabe para onde vai cada doação.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+    <sc-for list="{{ acoes }}" as="a" hint-placeholder-count="4">
+      <div style="border:2px solid #2e2a26;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column">
+        <img src="{{ a.photo }}" alt="{{ a.titulo }}" style="width:100%;height:170px;object-fit:cover;display:block;border-bottom:2px solid #2e2a26">
+        <div style="padding:12px 16px 16px;flex:1;display:flex;flex-direction:column;gap:8px">
+          <b style="font-size:21px;line-height:1.2">{{ a.titulo }}</b>
+          <div style="font-size:18px;line-height:1.4;color:#5c554c;flex:1">{{ a.desc }}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="border:1.5px solid #a89f94;color:#5c554c;border-radius:999px;padding:1px 10px;font-size:15px">📍 {{ a.local }}</span>
+            <span style="border:1.5px solid #a89f94;color:#5c554c;border-radius:999px;padding:1px 10px;font-size:15px">{{ a.data }}</span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="margin-top:36px;background:#f3ead9;border:2px solid #2e2a26;border-radius:14px;padding:22px 26px">
+    <h2 style="margin:0 0 10px;font-family:'Caveat',cursive;font-weight:700;font-size:38px">Para onde vai o dinheiro</h2>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:560px">
+      <sc-for list="{{ gastos }}" as="g" hint-placeholder-count="4">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:19px"><span>{{ g.nome }}</span><b>{{ g.pct }}</b></div>
+          <div style="height:12px;background:#fff;border:1.5px solid #2e2a26;border-radius:6px;overflow:hidden;margin-top:3px"><div style="{{ g.barStyle }}"></div></div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size:17px;color:#8a8073;margin-top:12px">Média mensal de 2026 · prestação de contas completa disponível a pedido, no nosso WhatsApp.</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ SOBRE ============ -->
+<sc-if value="{{ isSobre }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Sobre" style="max-width:1140px;margin:0 auto;padding:44px 24px 60px">
+  <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Quem somos</div>
+  <h1 style="margin:4px 0 8px;font-family:'Caveat',cursive;font-weight:700;font-size:54px;line-height:1">Uma rede de vizinhos que decidiu agir.</h1>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:40px;align-items:start;margin-top:18px">
+    <div>
+      <p style="margin:0 0 12px;font-size:20px;line-height:1.5">A AmeMais nasceu em 2019, no bairro Ipiranga, quando um grupo de moradores resgatou uma ninhada de filhotes abandonada perto do córrego. Hoje somos <b>22 voluntários fixos</b> e uma rede de <b>14 lares temporários</b> espalhados pela cidade.</p>
+      <p style="margin:0 0 12px;font-size:20px;line-height:1.5">Atendemos os bairros <b>Centro, Ipiranga, São Cristóvão, Grão Pará, Matinha e Marajoara</b> — e, quando conseguimos transporte, casos graves em toda Teófilo Otoni.</p>
+      <p style="margin:0;font-size:20px;line-height:1.5">Não recebemos verba pública. Tudo vem de doações da comunidade, bazares e feirinhas de adoção.</p>
+    </div>
+    <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=900&q=70" alt="Voluntária cuidando de cão resgatado" style="width:100%;border-radius:14px;border:2px solid #2e2a26;display:block">
+  </div>
+
+  <h2 style="margin:44px 0 16px;font-family:'Caveat',cursive;font-weight:700;font-size:42px">Como funciona um resgate</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+    <sc-for list="{{ passos }}" as="p" hint-placeholder-count="4">
+      <div style="border:2px solid #2e2a26;border-radius:14px;background:#fff;padding:18px">
+        <div style="font-family:'Caveat',cursive;font-size:40px;font-weight:700;color:#b4543f;line-height:1">{{ p.n }}</div>
+        <b style="font-size:21px">{{ p.titulo }}</b>
+        <div style="font-size:18px;color:#5c554c;line-height:1.4;margin-top:4px">{{ p.desc }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <h2 style="margin:44px 0 16px;font-family:'Caveat',cursive;font-weight:700;font-size:42px">Como funciona a adoção</h2>
+  <div style="background:#f3ead9;border:2px solid #2e2a26;border-radius:14px;padding:22px 26px;max-width:760px">
+    <ol style="margin:0;padding-left:22px;font-size:20px;line-height:1.7">
+      <li>Você chama no WhatsApp dizendo qual animal quer conhecer;</li>
+      <li>Fazemos uma conversa rápida (entrevista) para entender a rotina da casa;</li>
+      <li>Marcamos a visita no lar temporário onde o animal está;</li>
+      <li>Assinatura do termo de adoção responsável e... pronto, ele é seu! 🐾</li>
+    </ol>
+    <div style="font-size:18px;color:#8a8073;margin-top:10px">Acompanhamos os primeiros 60 dias com check-ins pelo WhatsApp.</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ VOLUNTÁRIO ============ -->
+<sc-if value="{{ isVoluntario }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Seja Voluntário" style="max-width:1140px;margin:0 auto;padding:44px 24px 60px">
+  <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Rede de apoio</div>
+  <h1 style="margin:4px 0 8px;font-family:'Caveat',cursive;font-weight:700;font-size:54px;line-height:1">Seja um lar temporário (ou ajude do seu jeito)</h1>
+  <p style="margin:0 0 26px;font-size:20px;color:#5c554c;max-width:660px">Lar temporário é quem acolhe um animal em casa até a adoção. A AmeMais cobre ração e despesas veterinárias — você entra com o carinho.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:34px">
+    <sc-for list="{{ formasAjuda }}" as="f" hint-placeholder-count="4">
+      <div style="border:2px solid #2e2a26;border-radius:14px;background:#fff;padding:18px">
+        <div style="font-size:34px">{{ f.emoji }}</div>
+        <b style="font-size:21px">{{ f.titulo }}</b>
+        <div style="font-size:18px;color:#5c554c;line-height:1.4;margin-top:4px">{{ f.desc }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:#fff;border:2px solid #2e2a26;border-radius:16px;padding:26px;max-width:620px">
+    <h2 style="margin:0 0 4px;font-family:'Caveat',cursive;font-weight:700;font-size:38px">Quero ser voluntário</h2>
+    <p style="margin:0 0 16px;font-size:18px;color:#5c554c">Preencha e a gente te chama no WhatsApp em até 2 dias.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input placeholder="Seu nome" style="font-family:'Patrick Hand',cursive;font-size:19px;padding:11px 14px;border:2px solid #2e2a26;border-radius:10px;background:#faf6ef">
+      <input placeholder="Seu WhatsApp — (33) 9 ...." style="font-family:'Patrick Hand',cursive;font-size:19px;padding:11px 14px;border:2px solid #2e2a26;border-radius:10px;background:#faf6ef">
+      <input placeholder="Seu bairro" style="font-family:'Patrick Hand',cursive;font-size:19px;padding:11px 14px;border:2px solid #2e2a26;border-radius:10px;background:#faf6ef">
+      <select style="font-family:'Patrick Hand',cursive;font-size:19px;padding:11px 14px;border:2px solid #2e2a26;border-radius:10px;background:#faf6ef;color:#2e2a26">
+        <option>Como quer ajudar? — Lar temporário</option>
+        <option>Transporte de resgates</option>
+        <option>Eventos e feirinhas</option>
+        <option>Divulgação / redes sociais</option>
+      </select>
+      <a href="{{ waVoluntario }}" target="_blank" style="background:#b4543f;color:#fff;border-radius:999px;padding:12px 0;text-align:center;font-size:21px;text-decoration:none" style-hover="background:#8d3a28;color:#fff">Enviar pelo WhatsApp 💬</a>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ CONTATO ============ -->
+<sc-if value="{{ isContato }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Contato" style="max-width:1140px;margin:0 auto;padding:44px 24px 60px">
+  <div style="font-family:'Caveat',cursive;font-size:28px;color:#b4543f">Fale com a gente</div>
+  <h1 style="margin:4px 0 8px;font-family:'Caveat',cursive;font-weight:700;font-size:54px;line-height:1">Viu um animal precisando de ajuda?</h1>
+  <p style="margin:0 0 26px;font-size:20px;color:#5c554c;max-width:640px">Mande localização e foto pelo WhatsApp — é o jeito mais rápido de acionar a equipe de resgate.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="{{ waResgate }}" target="_blank" style="background:#2e2a26;color:#fff;border-radius:14px;padding:18px 22px;font-size:22px;text-decoration:none;display:flex;gap:12px;align-items:center" style-hover="background:#b4543f;color:#fff"><span style="font-size:30px">💬</span> WhatsApp — (33) 9 9999-0000</a>
+      <div style="background:#fff;border:2px solid #2e2a26;border-radius:14px;padding:16px 22px;font-size:19px;display:flex;flex-direction:column;gap:6px">
+        <span>📸 Instagram: <a href="#" onClick="{{ noop }}">@amemais.to</a></span>
+        <span>✉ E-mail: <a href="#" onClick="{{ noop }}">contato@amemais.org.br</a></span>
+        <span>🕑 Respondemos das 8h às 20h, todos os dias</span>
+      </div>
+      <div style="background:#f3ead9;border:2px solid #2e2a26;border-radius:14px;padding:16px 22px">
+        <b style="font-size:20px">Onde entregamos os animais adotados?</b>
+        <div style="font-size:18px;color:#5c554c;line-height:1.45;margin-top:4px">A visita e a entrega acontecem no lar temporário onde o animal está, sempre com um voluntário presente. Não temos sede física aberta ao público.</div>
+      </div>
+    </div>
+    <div>
+      <div style="border:2px solid #2e2a26;border-radius:14px;overflow:hidden;background:#fff">
+        <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=-41.55%2C-17.89%2C-41.46%2C-17.82&amp;layer=mapnik&amp;marker=-17.8595%2C-41.5087" style="width:100%;height:250px;border:0;display:block" title="Mapa de Teófilo Otoni"></iframe>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+        <sc-for list="{{ pontosColeta }}" as="p" hint-placeholder-count="3">
+          <div style="background:#fff;border:2px solid #2e2a26;border-radius:10px;padding:9px 14px;display:flex;gap:10px;align-items:baseline">
+            <span>📍</span><div><b style="font-size:19px">{{ p.nome }}</b><div style="font-size:17px;color:#8a8073">{{ p.end }} · {{ p.horario }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer style="background:#2e2a26;color:#f3ead9;border-top:2px solid #2e2a26">
+  <div style="max-width:1140px;margin:0 auto;padding:34px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:26px">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="assets/logo-amemais.jpg" alt="Logo AmeMais" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #f3ead9">
+        <span style="font-family:'Caveat',cursive;font-size:28px;font-weight:700;color:#fff">AmeMais</span>
+      </div>
+      <div style="font-size:18px;margin-top:8px;color:#c9bfae">ONG de proteção animal<br>Teófilo Otoni · MG · desde 2019</div>
+    </div>
+    <div style="font-size:18px;display:flex;flex-direction:column;gap:6px">
+      <b style="color:#fff;font-size:19px">Navegue</b>
+      <a onClick="{{ goAdote }}" style="cursor:pointer;color:#f0c9a8;text-decoration:none">Adote um amigo</a>
+      <a onClick="{{ goDoe }}" style="cursor:pointer;color:#f0c9a8;text-decoration:none">Central de ajuda</a>
+      <a onClick="{{ goAcoes }}" style="cursor:pointer;color:#f0c9a8;text-decoration:none">Mural de ações</a>
+      <a onClick="{{ goVoluntario }}" style="cursor:pointer;color:#f0c9a8;text-decoration:none">Seja voluntário</a>
+    </div>
+    <div style="font-size:18px;display:flex;flex-direction:column;gap:6px">
+      <b style="color:#fff;font-size:19px">Contato</b>
+      <span>💬 (33) 9 9999-0000</span>
+      <span>📸 @amemais.to</span>
+      <span>✉ contato@amemais.org.br</span>
+    </div>
+    <div>
+      <b style="color:#fff;font-size:19px">Doe via PIX</b>
+      <div style="display:flex;gap:8px;align-items:center;background:#faf6ef;border-radius:10px;padding:8px 12px;margin-top:8px;max-width:280px">
+        <span style="font-size:17px;color:#2e2a26;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">pix@amemais.org.br</span>
+        <a onClick="{{ copyPix }}" style="cursor:pointer;background:#b4543f;color:#fff;border-radius:999px;padding:4px 14px;font-size:16px;white-space:nowrap;text-decoration:none">{{ pixLabel }}</a>
+      </div>
+    </div>
+  </div>
+  <div style="border-top:1px solid #4a443c;text-align:center;padding:12px;font-size:16px;color:#8a8073">feito com ♥ pela comunidade de Teófilo Otoni</div>
+</footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280},&quot;telaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;inicio&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;adote&quot;,&quot;doe&quot;,&quot;acoes&quot;,&quot;sobre&quot;,&quot;voluntario&quot;,&quot;contato&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegação&quot;}}">
+class Component extends DCLogic {
+  state = { page: (this.props && this.props.telaInicial) || 'inicio', especie: 'todos', porte: 'todos', idade: 'todos', copied: false };
+
+  animais = [
+    { name: 'Thor',    especie: 'cão',  porte: 'M', idade: 'adulto',  tag: 'M · 2 anos',   desc: 'Resgatado no Ipiranga. Brincalhão, adora bola e convive bem com outros cães.', photo: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=700&q=70' },
+    { name: 'Mel',     especie: 'cão',  porte: 'P', idade: 'filhote', tag: 'P · filhote',  desc: 'Dócil e curiosa. Foi encontrada com a mãe no bairro Matinha, já vacinada.', photo: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=700&q=70' },
+    { name: 'Frajola', especie: 'gato', porte: 'P', idade: 'adulto',  tag: 'gato · 3 anos', desc: 'Calmo e carinhoso. Perfeito para apartamento, castrado e vacinado.', photo: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=700&q=70' },
+    { name: 'Luna',    especie: 'gato', porte: 'P', idade: 'filhote', tag: 'gata · filhote', desc: 'Uma bolinha de energia. Resgatada do telhado de uma obra no Centro.', photo: 'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=700&q=70' },
+    { name: 'Rex',     especie: 'cão',  porte: 'G', idade: 'adulto',  tag: 'G · 4 anos',   desc: 'Um gigante gentil. Precisa de quintal e de alguém com paciência para treinos.', photo: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=700&q=70' },
+    { name: 'Nina',    especie: 'cão',  porte: 'M', idade: 'idoso',   tag: 'M · 8 anos',   desc: 'Idosa tranquila que só quer um sofá e companhia. Saúde acompanhada de perto.', photo: 'https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=700&q=70' },
+    { name: 'Simba',   especie: 'gato', porte: 'P', idade: 'adulto',  tag: 'gato · 1 ano',  desc: 'Esperto e independente. Se dá bem com outros gatos, castrado.', photo: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=700&q=70' },
+    { name: 'Bidu',    especie: 'cão',  porte: 'P', idade: 'adulto',  tag: 'P · 3 anos',   desc: 'Pequeno no tamanho, enorme no carinho. Adora colo e passeios curtos.', photo: 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=700&q=70' },
+  ];
+
+  go(page) { this.setState({ page }); window.scrollTo(0, 0); }
+
+  chipStyle(active) {
+    return active
+      ? { cursor: 'pointer', background: '#2e2a26', color: '#fff', border: '2px solid #2e2a26', borderRadius: 999, padding: '3px 16px', fontSize: 18, textDecoration: 'none' }
+      : { cursor: 'pointer', background: '#fff', color: '#2e2a26', border: '2px solid #a89f94', borderRadius: 999, padding: '3px 16px', fontSize: 18, textDecoration: 'none' };
+  }
+
+  chips(key, opts) {
+    return opts.map(o => ({
+      label: o.label,
+      on: () => this.setState({ [key]: o.v }),
+      style: this.chipStyle(this.state[key] === o.v),
+    }));
+  }
+
+  wa(msg) { return 'https://wa.me/5533999990000?text=' + encodeURIComponent(msg); }
+
+  petView(a) {
+    return { ...a, wa: this.wa('Oi! Tenho interesse em adotar o(a) ' + a.name + ' 🐾') };
+  }
+
+  renderVals() {
+    const p = this.state.page;
+    const navDef = [
+      ['inicio', 'Início'], ['adote', 'Adote'], ['doe', 'Doe'],
+      ['acoes', 'Ações'], ['sobre', 'Sobre'], ['voluntario', 'Voluntário'], ['contato', 'Contato'],
+    ];
+    const navItems = navDef.map(([key, label]) => ({
+      label,
+      go: () => this.go(key),
+      style: {
+        cursor: 'pointer', textDecoration: 'none',
+        color: p === key ? '#b4543f' : '#2e2a26',
+        borderBottom: p === key ? '3px solid #b4543f' : '3px solid transparent',
+        paddingBottom: 2,
+      },
+    }));
+
+    const filtrados = this.animais.filter(a =>
+      (this.state.especie === 'todos' || a.especie === this.state.especie) &&
+      (this.state.porte === 'todos' || a.porte === this.state.porte) &&
+      (this.state.idade === 'todos' || a.idade === this.state.idade)
+    ).map(a => this.petView(a));
+
+    const bar = (pct, color) => ({ width: pct + '%', height: '100%', background: color, borderRadius: 6 });
+
+    return {
+      isInicio: p === 'inicio', isAdote: p === 'adote', isDoe: p === 'doe',
+      isAcoes: p === 'acoes', isSobre: p === 'sobre', isVoluntario: p === 'voluntario', isContato: p === 'contato',
+      navItems,
+      goInicio: () => this.go('inicio'), goAdote: () => this.go('adote'), goDoe: () => this.go('doe'),
+      goAcoes: () => this.go('acoes'), goSobre: () => this.go('sobre'), goVoluntario: () => this.go('voluntario'), goContato: () => this.go('contato'),
+      noop: (e) => { if (e && e.preventDefault) e.preventDefault(); },
+
+      destaques: this.animais.slice(0, 4).map(a => this.petView(a)),
+      filtrados,
+      resultadoTexto: filtrados.length === 1 ? '1 amigo encontrado' : filtrados.length + ' amigos encontrados',
+
+      chipsEspecie: this.chips('especie', [
+        { v: 'todos', label: 'todos' }, { v: 'cão', label: '🐶 cães' }, { v: 'gato', label: '🐱 gatos' },
+      ]),
+      chipsPorte: this.chips('porte', [
+        { v: 'todos', label: 'todos' }, { v: 'P', label: 'pequeno' }, { v: 'M', label: 'médio' }, { v: 'G', label: 'grande' },
+      ]),
+      chipsIdade: this.chips('idade', [
+        { v: 'todos', label: 'todos' }, { v: 'filhote', label: 'filhote' }, { v: 'adulto', label: 'adulto' }, { v: 'idoso', label: 'idoso' },
+      ]),
+
+      urgencias: [
+        { titulo: '20kg de ração medicada', tag: 'urgente', progresso: '9 de 20kg arrecadados', barStyle: bar(45, '#b4543f') },
+        { titulo: 'Cobertores para o inverno', tag: 'contínuo', progresso: '14 de 20 cobertores', barStyle: bar(70, '#2e2a26') },
+        { titulo: 'Custeio de 3 castrações', tag: 'urgente', progresso: 'R$ 180 de R$ 450', barStyle: bar(40, '#b4543f') },
+      ],
+
+      pontosColeta: [
+        { nome: 'Pet Shop Amigo Fiel', end: 'Av. Getúlio Vargas, 210 — Centro', horario: 'seg a sáb, 8h–18h' },
+        { nome: 'Clínica Vet Vida Animal', end: 'R. Epaminondas Otoni, 88 — Centro', horario: 'seg a sex, 8h–19h' },
+        { nome: 'Ração & Cia', end: 'Av. Minas Gerais, 1.450 — São Cristóvão', horario: 'seg a sáb, 8h–18h' },
+      ],
+
+      acoes: [
+        { titulo: 'Mutirão de castração', desc: '32 animais castrados em parceria com a Clínica Vida Animal, com fila organizada pelo WhatsApp.', local: 'São Cristóvão', data: 'jun 2026', photo: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=700&q=70' },
+        { titulo: 'Resgate da ninhada do córrego', desc: '6 filhotes e a mãe resgatados após chamado de moradores. Todos já estão em lares temporários.', local: 'Matinha', data: 'mai 2026', photo: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=700&q=70' },
+        { titulo: 'Feirinha de adoção na praça', desc: '8 adoções em um único sábado na Praça Tiradentes, com triagem e termo assinado na hora.', local: 'Centro', data: 'mai 2026', photo: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=700&q=70' },
+        { titulo: 'Campanha do agasalho pet', desc: 'Arrecadamos 60 cobertores e 40 caminhas distribuídos para animais comunitários.', local: 'toda a cidade', data: 'abr 2026', photo: 'https://images.unsplash.com/photo-1544568100-847a948585b9?w=700&q=70' },
+      ],
+
+      gastos: [
+        { nome: 'Ração e alimentação', pct: '38%', barStyle: bar(38, '#b4543f') },
+        { nome: 'Veterinário e remédios', pct: '34%', barStyle: bar(34, '#2e2a26') },
+        { nome: 'Castrações', pct: '18%', barStyle: bar(18, '#b4543f') },
+        { nome: 'Transporte e resgates', pct: '10%', barStyle: bar(10, '#2e2a26') },
+      ],
+
+      passos: [
+        { n: '1', titulo: 'Chamado', desc: 'Recebemos foto e localização pelo WhatsApp e avaliamos a urgência.' },
+        { n: '2', titulo: 'Resgate', desc: 'Um voluntário com transporte busca o animal com segurança.' },
+        { n: '3', titulo: 'Cuidado', desc: 'Check-up veterinário, vacinas, castração e recuperação em lar temporário.' },
+        { n: '4', titulo: 'Adoção', desc: 'Divulgamos no site e nas redes até encontrar a família certa.' },
+      ],
+
+      formasAjuda: [
+        { emoji: '🏠', titulo: 'Lar temporário', desc: 'Acolha um animal em casa até a adoção. Cobrimos ração e veterinário.' },
+        { emoji: '🚗', titulo: 'Transporte', desc: 'Ajude a levar animais para resgates, consultas e feirinhas.' },
+        { emoji: '🎪', titulo: 'Eventos', desc: 'Mãos na massa nas feirinhas de adoção e bazares beneficentes.' },
+        { emoji: '📣', titulo: 'Divulgação', desc: 'Fotografe, escreva e compartilhe os animais nas redes sociais.' },
+      ],
+
+      qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent('PIX AmeMais: pix@amemais.org.br'),
+      pixLabel: this.state.copied ? 'copiado! ✓' : '⧉ copiar',
+      copyPix: () => {
+        navigator.clipboard && navigator.clipboard.writeText('pix@amemais.org.br');
+        this.setState({ copied: true });
+        clearTimeout(this._t);
+        this._t = setTimeout(() => this.setState({ copied: false }), 2000);
+      },
+
+      waVoluntario: this.wa('Oi! Quero ser voluntário(a) da AmeMais 💚'),
+      waResgate: this.wa('Oi! Encontrei um animal precisando de resgate. Segue a localização:'),
+    };
+  }
+}
+</script>
+</body>
+</html>

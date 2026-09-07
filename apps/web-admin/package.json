@@ -7,10 +7,14 @@
     "build": "next build",
     "start": "next start --port 3003",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "@amemais/shared-types": "*",
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-select": "^2.1.4",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
     "@tanstack/react-query": "^5.62.0",
@@ -18,10 +22,13 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "gsap": "^3.12.5",
+    "lucide-react": "^0.469.0",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwind-merge": "^2.6.0"
+    "react-hook-form": "^7.62.0",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@amemais/eslint-config": "*",
@@ -32,6 +39,8 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.17.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "cypress": "15.21.1",
+    "@types/cypress": "^1.1.3"
   }
 }
