@@ -1,152 +1,92 @@
-# 📘 Guia Rápido: Padrão Rota ➔ Controller ➔ Service ➔ Repository
+# 📘 Guia rápido: padrão Route ➔ Controller ➔ UseCase ➔ Repository
 
-Este guia documenta o padrão de arquitetura backend adotado no projeto **AmeMais** (`apps/api`). Nossa arquitetura segue o padrão **Layered Feature-based** (camadas organizadas por funcionalidade). 
+Cada feature de `apps/api` segue o mesmo padrão, com tudo morando dentro da própria pasta da feature — nenhuma pasta compartilhada tipo `controllers/`, `usecases/` etc. no nível do projeto.
 
-Para mais detalhes sobre a justificativa de design, veja a [ADR 0002 — Arquitetura do backend](../../../../docs/decisions/0002-arquitetura-backend-layered-feature-based.md).
+Guia completo (com o "por quê" de cada peça, SOLID, DDD, padrões de projeto) em [`docs/guia-arquitetura-backend.md`](../../../../docs/guia-arquitetura-backend.md). Exemplo vivo: [`features/animals`](./animals).
 
 ---
 
-## 🧭 Fluxo da Requisição (Visão Geral)
-
-Toda requisição HTTP recebida pela API segue um caminho unidirecional e rígido através das camadas:
+## Fluxo da requisição
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Cliente as "Cliente (Frontend)"
-    participant Route as "route.ts (Next.js)"
-    participant Controller as "controller.ts"
-    participant Schema as "schema.ts (Zod)"
-    participant Service as "service.ts"
-    participant Repository as "repository.ts"
-    participant DB as "Supabase"
+    actor Cliente as Cliente (Frontend)
+    participant Next as app/api/animals/route.ts
+    participant Routes as features/animals/routes.ts
+    participant Controller as controller.ts
+    participant Schema as schema.ts (Zod)
+    participant UseCase as use-cases/*.use-case.ts
+    participant Entity as domain/animal.entity.ts
+    participant Repo as animal.repository.ts
+    participant DB as Supabase
 
-    Cliente->>Route: Requisição HTTP (ex: POST /api/example-demo)
-    Route->>Controller: Encaminha NextRequest
-    Note over Controller: Autenticação/RBAC (requireUser/requireRole)
-    Controller->>Schema: Valida payload (schema.parse)
-    Schema-->>Controller: Dados validados e tipados
-    Controller->>Service: Chama o Service
-    Note over Service: Executa Regras de Negócio e Validações
-    Service->>Repository: Chama o Repository
-    Repository->>DB: Query / Insert / Update (supabaseAdmin)
-    DB-->>Repository: Retorna dados brutos (snake_case)
-    Repository-->>Service: Retorna dados mapeados (camelCase)
-    Service-->>Controller: Retorna resultado do negócio
-    Controller-->>Route: Retorna ok(dados) / created(dados) / fail(error)
-    Route-->>Cliente: Resposta HTTP final (JSON)
+    Cliente->>Next: POST /api/animals
+    Note over Next: só reexporta o handler — sem lógica própria
+    Next->>Routes: GET/POST/PATCH/DELETE mapeados
+    Routes->>Controller: chama o método (ex.: controller.create)
+    Note over Controller: requireUser/requireRole (auth)
+    Controller->>Schema: schema.parse(body) — valida FORMATO
+    Schema-->>Controller: DTO de entrada tipado
+    Controller->>UseCase: new XUseCase(new AnimalRepository()).execute(dto)
+    UseCase->>Entity: Animal.create(dto) / animal.changeStatus(novoStatus)
+    Note over Entity: valida REGRA DE NEGÓCIO (ex.: matriz de transição)
+    Entity-->>UseCase: entidade validada
+    UseCase->>Repo: repository.create(...) / updateStatus(...)
+    Repo->>DB: insert/update/select (supabaseAdmin)
+    DB-->>Repo: linha crua (snake_case)
+    Repo-->>UseCase: entidade (mapper traduz snake_case -> camelCase)
+    UseCase-->>Controller: DTO de saída (toAnimalDTO)
+    Controller-->>Routes: ok(dto) / created(dto) / fail(error)
+    Routes-->>Next: Response
+    Next-->>Cliente: JSON + status code
 ```
 
 ---
 
-## 📂 As 5 Camadas Detalhadas
+## As peças, por arquivo
 
-Cada pasta de funcionalidade dentro de `src/features/<feature>/` encapsula suas camadas, exceto a rota HTTP que fica mapeada no App Router do Next.js.
+| Arquivo | Papel |
+| --- | --- |
+| `apps/api/app/api/<feature>/route.ts` | Só reexporta `routes.ts` da feature. Existe porque o App Router do Next.js só reconhece rota via arquivo físico em `app/`. Zero lógica. |
+| `routes.ts` | Tabela de endpoints: verbo HTTP → método do controller. |
+| `controller.ts` | Classe, 1 método por endpoint. Autentica (`requireUser`/`requireRole`), valida **formato** com Zod, instancia `new XUseCase(new XRepository())`, formata resposta (`ok`/`created`/`fail`). |
+| `schema.ts` | Schemas Zod — os tipos inferidos são os DTOs de entrada. |
+| `use-cases/*.use-case.ts` | 1 classe por ação (`CreateXUseCase`, `ListXUseCase`...), repository injetado no construtor. Aciona a entidade, nunca reimplementa regra de negócio. |
+| `domain/*.entity.ts` | Entidade: identidade + estado privado + métodos que protegem as invariantes (ex.: `Animal.changeStatus()`). |
+| `domain/*.vo.ts` | Value Object, quando um campo carrega regra própria (ex.: `AnimalStatus` — imutável, autovalidado, sabe se pode transicionar). |
+| `mapper.ts` | Único lugar que sabe o nome das colunas do banco — traduz linha (`snake_case`) ↔ entidade (`camelCase`). |
+| `<x>.dto.ts` | Contrato de saída exato da API, montado pelo use case a partir da entidade. |
+| `<x>.repository.ts` | Única camada que fala com o Supabase. Interface (`IXRepository`) + implementação — não sabe nada de HTTP/auth. |
 
-### 1. Rota (`route.ts`)
-* **Localização**: `apps/api/app/api/<nome-da-feature>/route.ts`
-* **Responsabilidade**: Ponto de entrada HTTP do Next.js. Funciona apenas como um "fio condutor" e deve ser o mais fino possível.
-* **O que faz**:
-  * Importa e exporta os verbos HTTP correspondentes (`GET`, `POST`, `PUT`, `DELETE` etc.) mapeados para funções do **Controller**.
-  * Exporta a resposta do preflight do CORS (`OPTIONS = corsPreflightResponse`).
-  * Não contém lógica de negócio, autenticação, nem regras de tratamento de erro.
-* **Referência Viva**: [app/api/example-demo/route.ts](../../app/api/example-demo/route.ts)
-
-### 2. Schema (`schema.ts`)
-* **Localização**: `apps/api/src/features/<feature>/schema.ts`
-* **Responsabilidade**: Validação e tipagem de entrada/saída de dados.
-* **O que faz**:
-  * Utiliza a biblioteca **Zod** para definir esquemas de validação de dados em runtime.
-  * Exporta tipos TypeScript inferidos (`z.infer<typeof schema>`) para serem usados pelo Controller, Service e Repository.
-* **Referência Viva**: [_example-demo/schema.ts](./_example-demo/schema.ts)
-
-### 3. Controller (`controller.ts`)
-* **Localização**: `apps/api/src/features/<feature>/controller.ts`
-* **Responsabilidade**: Adaptador de Protocolo (HTTP). Traduz a requisição HTTP em chamadas de serviço e formata a resposta.
-* **O que faz**:
-  * **Autenticação e RBAC**: Chama `requireUser(request)` ou `requireRole(request, roles)` logo na primeira linha para garantir segurança (ver [middleware/auth.ts](../middleware/auth.ts) e [middleware/rbac.ts](../middleware/rbac.ts)).
-  * **Extração**: Extrai dados da requisição (`request.json()`, `request.nextUrl.searchParams` etc.).
-  * **Validação**: Valida a estrutura dos dados usando o schema do Zod (`schema.parse()`).
-  * **Invocação**: Repassa os dados validados e tipados para o **Service**.
-  * **Resposta HTTP**: Formata as respostas de sucesso e captura erros em um bloco `try-catch`, enviando-os para os formatadores globais em [core/http.ts](../core/http.ts) (`ok()`, `created()`, `fail()`).
-* **Referência Viva**: [_example-demo/controller.ts](./_example-demo/controller.ts)
-
-### 4. Service (`service.ts`)
-* **Localização**: `apps/api/src/features/<feature>/service.ts`
-* **Responsabilidade**: Regras de Negócio e Orquestração. É o "coração" da funcionalidade.
-* **O que faz**:
-  * É **completamente isolado do HTTP** (nunca importa `NextRequest`, `NextResponse` ou manipula headers/status codes).
-  * Executa a lógica de negócio principal do sistema (validações de domínio, cálculos, fluxos condicionais).
-  * Orquestra a persistência de dados chamando um ou mais métodos do **Repository**.
-  * Dispara efeitos colaterais como envio de e-mails, notificações e integrações externas.
-  * Lança erros de aplicação específicos (`ValidationError`, `NotFoundError` etc., importados de [core/errors.ts](../core/errors.ts)) caso alguma regra seja violada.
-* **Referência Viva**: [_example-demo/service.ts](./_example-demo/service.ts)
-
-### 5. Repository (`repository.ts`)
-* **Localização**: `apps/api/src/features/<feature>/repository.ts`
-* **Responsabilidade**: Acesso a Dados (Supabase).
-* **O que faz**:
-  * **Única camada autorizada** a importar o `supabaseAdmin` e interagir diretamente com o banco de dados.
-  * Executa queries, inserts, updates e deletes nas tabelas.
-  * Captura erros internos do banco e os propaga.
-  * **Mapeamento de Dados (Camada Anti-Corrupção)**: Converte as colunas do banco de dados (que usam `snake_case`) para as propriedades camelCase esperadas pelo TypeScript e frontend.
-* **Referência Viva**: [_example-demo/repository.ts](./_example-demo/repository.ts)
+`dto`, `repository` e `use-cases` só viram pasta quando têm mais de um arquivo — com 1 só, ele mora solto na raiz da feature (é o caso de `animal.dto.ts` e `animal.repository.ts` hoje).
 
 ---
 
-## 🛡️ Gestão de Erros Padronizada
+## Erros
 
-Para evitar que a API retorne erros inconsistentes, a captura é centralizada via a função `fail(error)` de [core/http.ts](../core/http.ts). 
+Toda camada lança uma subclasse de `AppError` ([`core/errors.ts`](../core/errors.ts)) — nunca `Error` genérico, nunca a mensagem crua de um erro de infra:
 
-### Como lançar erros na prática (Camadas Service ou Repository):
-```typescript
-import { NotFoundError, ValidationError } from "@/core/errors";
-
-// Exemplo no Service:
-if (!animal) {
-  throw new NotFoundError("Animal"); // Retornará HTTP 404 automaticamente
-}
-
-if (idade < 0) {
-  throw new ValidationError("A idade do animal não pode ser negativa"); // Retornará HTTP 400 automaticamente
-}
+```ts
+throw new NotFoundError("Animal");           // 404
+throw new ValidationError("nome inválido");  // 400
+throw new DatabaseError(erroDoSupabase);     // 500 — mensagem pública fixa, erro real só em `cause` (log)
 ```
 
-O helper `fail(error)` trata isso da seguinte forma:
-1. **`AppError`** (ex: `NotFoundError`, `ForbiddenError`): Retorna a mensagem do erro com o código HTTP adequado (404, 403, 401, 400).
-2. **`ZodError`** (validação de entrada): Retorna HTTP 400 com a mensagem `"Dados inválidos"` e uma lista detalhada dos campos que falharam (`issues`).
-3. **Erros desconhecidos** (ex: erro de rede ou sintaxe do banco): Loga o erro no console (`console.error`) e retorna HTTP 500 com a mensagem genérica `"Erro interno"`.
+`fail(error)` em [`core/http.ts`](../core/http.ts) centraliza a tradução pra resposta HTTP e loga (com `cause`) todo erro 5xx.
 
 ---
 
-## 📝 Passo a Passo: Criando uma Feature Nova do Zero
+## Criando uma feature nova
 
-Ao receber a tarefa de criar uma funcionalidade nova (ex: `cadastro-vacinas`), siga esta receita de bolo:
+1. `domain/<x>.entity.ts` (+ `<x>-status.vo.ts` se algum campo tiver regra própria).
+2. `schema.ts` — schemas Zod de entrada.
+3. `mapper.ts` — linha do banco ↔ entidade.
+4. `<x>.dto.ts` — contrato de saída.
+5. `<x>.repository.ts` — interface `IXRepository` + implementação Supabase.
+6. `use-cases/*.use-case.ts` — 1 classe por ação.
+7. `controller.ts` — 1 método por endpoint.
+8. `routes.ts` — mapeia verbo HTTP → método do controller.
+9. `apps/api/app/api/<feature>/route.ts` (+ `[id]/route.ts` se precisar) — só reexporta `routes.ts`.
 
-1. **Defina os Contratos (`schema.ts`)**
-   * Crie a pasta `src/features/cadastro-vacinas/`.
-   * Crie o arquivo `schema.ts`.
-   * Escreva o schema Zod para validação da vacina e exporte o tipo correspondente.
-
-2. **Implemente o Repositório (`repository.ts`)**
-   * Crie o arquivo `repository.ts`.
-   * Escreva as queries Supabase necessárias.
-   * Lembre-se de mapear as colunas retornadas de `snake_case` para `camelCase`.
-
-3. **Escreva as Regras no Serviço (`service.ts`)**
-   * Crie o arquivo `service.ts`.
-   * Implemente as validações e regras de negócio.
-   * Chame o repositório para salvar ou recuperar as informações.
-   * *Opcional: Crie testes unitários para o serviço no arquivo `service.test.ts`*.
-
-4. **Prepare o Adaptador HTTP (`controller.ts`)**
-   * Crie o arquivo `controller.ts`.
-   * Adicione a validação de perfil/usuário necessária na primeira linha (`requireUser`/`requireRole`).
-   * Extraia o body ou query parameters, valide com o Zod schema, e chame o service.
-   * Envolva tudo em um `try-catch` retornando as funções HTTP padronizadas.
-
-5. **Exponha a Rota (`route.ts`)**
-   * Crie a pasta da rota em `app/api/cadastro-vacinas/`.
-   * Crie o arquivo `route.ts`.
-   * Importe as funções do controller e associe aos verbos HTTP (`GET`, `POST` etc.).
-   * Não se esqueça de expor o CORS OPTIONS.
+Copie a estrutura de [`features/animals`](./animals) e adapte.
