@@ -26,3 +26,25 @@ export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
     return Reflect.get(getSupabaseAdmin(), prop, receiver);
   },
 });
+
+/**
+ * Client autenticado como o próprio usuário (anon key + o access_token dele
+ * no header Authorization), em vez da service role.
+ *
+ * Isso faz o Postgres enxergar `auth.uid()` igual enxergaria se o browser
+ * tivesse chamado o Supabase direto — ou seja, a RLS das tabelas
+ * (check_user_access) vira a única fonte de verdade sobre o que esse
+ * usuário pode fazer, tanto pra leitura quanto pra escrita. Usar isso em
+ * vez de `supabaseAdmin` sempre que o dado pertence a uma tabela com RLS
+ * baseada em cargo/departamento (events, animais, medical_records,
+ * urgency_items).
+ */
+export function createSupabaseForUser(accessToken: string): SupabaseClient {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}

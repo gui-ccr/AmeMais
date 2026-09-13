@@ -25,15 +25,16 @@ sequenceDiagram
     Note over Next: só reexporta o handler — sem lógica própria
     Next->>Routes: GET/POST/PATCH/DELETE mapeados
     Routes->>Controller: chama o método (ex.: controller.create)
-    Note over Controller: requireUser/requireRole (auth)
+    Note over Controller: requireUser (autenticação) + createSupabaseForUser (client com o token do usuário)
     Controller->>Schema: schema.parse(body) — valida FORMATO
     Schema-->>Controller: DTO de entrada tipado
-    Controller->>UseCase: new XUseCase(new AnimalRepository()).execute(dto)
+    Controller->>UseCase: new XUseCase(new AnimalRepository(db)).execute(dto)
     UseCase->>Entity: Animal.create(dto) / animal.changeStatus(novoStatus)
     Note over Entity: valida REGRA DE NEGÓCIO (ex.: matriz de transição)
     Entity-->>UseCase: entidade validada
     UseCase->>Repo: repository.create(...) / updateStatus(...)
-    Repo->>DB: insert/update/select (supabaseAdmin)
+    Note over Repo,DB: quem pode ler/escrever é decidido pela RLS da tabela (check_user_access), não por uma checagem no código
+    Repo->>DB: insert/update/select (client do usuário)
     DB-->>Repo: linha crua (snake_case)
     Repo-->>UseCase: entidade (mapper traduz snake_case -> camelCase)
     UseCase-->>Controller: DTO de saída (toAnimalDTO)
@@ -50,7 +51,7 @@ sequenceDiagram
 | --- | --- |
 | `apps/api/app/api/<feature>/route.ts` | Só reexporta `routes.ts` da feature. Existe porque o App Router do Next.js só reconhece rota via arquivo físico em `app/`. Zero lógica. |
 | `routes.ts` | Tabela de endpoints: verbo HTTP → método do controller. |
-| `controller.ts` | Classe, 1 método por endpoint. Autentica (`requireUser`/`requireRole`), valida **formato** com Zod, instancia `new XUseCase(new XRepository())`, formata resposta (`ok`/`created`/`fail`). |
+| `controller.ts` | Classe, 1 método por endpoint. Autentica (`requireUser`), monta um client Supabase com o token do usuário (`createSupabaseForUser` — a RLS da tabela decide o que ele pode fazer), valida **formato** com Zod, instancia `new XUseCase(new XRepository(db))`, formata resposta (`ok`/`created`/`fail`). |
 | `schema.ts` | Schemas Zod — os tipos inferidos são os DTOs de entrada. |
 | `use-cases/*.use-case.ts` | 1 classe por ação (`CreateXUseCase`, `ListXUseCase`...), repository injetado no construtor. Aciona a entidade, nunca reimplementa regra de negócio. |
 | `domain/*.entity.ts` | Entidade: identidade + estado privado + métodos que protegem as invariantes (ex.: `Animal.changeStatus()`). |
