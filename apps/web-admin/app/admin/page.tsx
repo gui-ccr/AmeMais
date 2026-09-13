@@ -12,7 +12,8 @@ export default function AdminHomePage() {
     <main className="flex min-h-screen flex-col gap-4 p-8">
       <h1 className="text-xl font-semibold">Painel Administrativo</h1>
       <p className="text-sm text-neutral-600">
-        Logado como {profile?.nome || profile?.email} ({profile?.cargo}).
+        Logado como {profile?.nome || profile?.email}
+        {profile?.departamentos.length ? ` (${profile.departamentos.join(", ")})` : ""}.
       </p>
       <div className="flex gap-3">
         <Link href="/admin/eventos">

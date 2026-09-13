@@ -1,4 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
 import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
 import type { Animal } from "./domain/animal.entity";
@@ -27,10 +28,17 @@ export interface IAnimalRepository {
  * Única camada que fala com o Supabase. Não sabe nada de HTTP, request,
  * headers, cookies ou auth — recebe dados já validados e devolve a
  * entidade interna (via mapper).
+ *
+ * Recebe o client já autenticado como o usuário que fez a requisição (ver
+ * lib/supabase.ts, createSupabaseForUser) — não a service role. Quem pode
+ * ler/criar/editar/apagar é decidido pela RLS da tabela `animais`, não por
+ * uma checagem repetida aqui.
  */
 export class AnimalRepository implements IAnimalRepository {
+  constructor(private readonly db: SupabaseClient) {}
+
   async list(): Promise<Animal[]> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await this.db
       .from(TABLE)
       .select(COLUMNS)
       .order("created_at", { ascending: false });
@@ -40,37 +48,43 @@ export class AnimalRepository implements IAnimalRepository {
   }
 
   async findById(id: string): Promise<Animal> {
-    const { data, error } = await supabaseAdmin.from(TABLE).select(COLUMNS).eq("id", id).single();
+    const { data, error } = await this.db.from(TABLE).select(COLUMNS).eq("id", id).single();
 
     if (error || !data) throw new NotFoundError("Animal");
     return mapRowToEntity(data);
   }
 
   async create(input: CreateAnimalDTO): Promise<Animal> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await this.db
       .from(TABLE)
       .insert(mapCreateDTOToRow(input))
       .select(COLUMNS)
       .single();
 
-    if (error) throw new DatabaseError(error);
+    if (error) throwOnWriteError(error);
+    if (!data) throw new DatabaseError();
     return mapRowToEntity(data);
   }
 
   async updateStatus(id: string, status: AnimalStatus): Promise<Animal> {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await this.db
       .from(TABLE)
       .update({ status_adocao: status.valor })
       .eq("id", id)
       .select(COLUMNS)
       .single();
 
+    // Sem erro explícito e sem linha: ou o animal não existe, ou a RLS
+    // barrou por USING (nível insuficiente) — não distinguimos os dois por
+    // segurança, os dois viram 404.
     if (error || !data) throw new NotFoundError("Animal");
     return mapRowToEntity(data);
   }
 
   async remove(id: string): Promise<void> {
-    const { error } = await supabaseAdmin.from(TABLE).delete().eq("id", id);
-    if (error) throw new DatabaseError(error);
+    const { data, error } = await this.db.from(TABLE).delete().eq("id", id).select("id");
+
+    throwOnWriteError(error);
+    if (!data || data.length === 0) throw new NotFoundError("Animal");
   }
 }
