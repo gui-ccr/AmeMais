@@ -4,23 +4,17 @@ import type { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDeleteEvent, useEvents } from "../hooks/use-events";
-import type { Evento, TipoEvento } from "../types";
+import type { EventDTO } from "../types";
 
-const badgeVariantPorTipo: Record<TipoEvento, "primary" | "secondary" | "warning" | "muted"> = {
-  "Feira de Adoção": "primary",
-  Mutirão: "secondary",
-  Bazar: "warning",
-  Outro: "muted",
-};
-
-function formatarData(data: string): string {
-  const [ano, mes, dia] = data.split("-");
+function formatarData(data: string | null): string | null {
+  if (!data) return null;
+  const [ano, mes, dia] = data.split("T")[0]?.split("-") ?? [];
   if (!ano || !mes || !dia) return data;
   return `${dia}/${mes}/${ano}`;
 }
 
 interface EventoListProps {
-  onEditar: Dispatch<SetStateAction<Evento | null>>;
+  onEditar: Dispatch<SetStateAction<EventDTO | null>>;
 }
 
 export function EventoList({ onEditar }: EventoListProps) {
@@ -34,7 +28,7 @@ export function EventoList({ onEditar }: EventoListProps) {
     return <p className="text-sm text-muted-foreground">Nenhum evento cadastrado ainda.</p>;
   }
 
-  function handleExcluir(evento: Evento) {
+  function handleExcluir(evento: EventDTO) {
     if (window.confirm(`Excluir o evento "${evento.titulo}"?`)) {
       excluirEvento.mutate(evento.id);
     }
@@ -50,14 +44,13 @@ export function EventoList({ onEditar }: EventoListProps) {
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-foreground">{evento.titulo}</span>
-              <Badge variant={badgeVariantPorTipo[evento.tipo]} size="sm">
-                {evento.tipo}
+              <Badge variant={evento.isActive ? "primary" : "muted"} size="sm">
+                {evento.isActive ? "Ativo" : "Inativo"}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {formatarData(evento.dataEvento)}
-              {evento.local && ` · ${evento.local}`}
-            </p>
+            {evento.dataEvento && (
+              <p className="text-sm text-muted-foreground">{formatarData(evento.dataEvento)}</p>
+            )}
             {evento.descricao && <p className="text-sm text-foreground">{evento.descricao}</p>}
           </div>
           <div className="flex gap-2 shrink-0">

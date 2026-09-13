@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EventoForm } from "@/features/eventos/components/evento-form";
 import { EventoList } from "@/features/eventos/components/evento-list";
-import type { Evento as EventoType } from "@/features/eventos/types";
+import type { EventDTO as EventoType } from "@/features/eventos/types";
 import { UrgenciaForm } from "@/features/urgencias/components/urgencia-form";
 import { UrgenciaList } from "@/features/urgencias/components/urgencia-list";
 import type { Urgencia as UrgenciaType } from "@/features/urgencias/types";
