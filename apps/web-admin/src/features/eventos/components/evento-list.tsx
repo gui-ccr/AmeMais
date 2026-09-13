@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarPlus } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useDeleteEvent, useEvents } from "../hooks/use-events";
 import type { EventDTO } from "../types";
 
@@ -23,18 +24,17 @@ function focarFormularioDeCriacao() {
 
 function EventoCardSkeleton() {
   return (
-    <li
-      className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border-2 border-border-subtle bg-white p-4 animate-pulse"
-      aria-hidden="true"
-    >
-      <div className="flex w-full max-w-xs flex-col gap-2">
-        <div className="h-4 w-2/3 rounded bg-card-muted" />
-        <div className="h-3 w-1/3 rounded bg-card-muted" />
-      </div>
-      <div className="flex shrink-0 gap-2">
-        <div className="h-8 w-16 rounded-full bg-card-muted" />
-        <div className="h-8 w-16 rounded-full bg-card-muted" />
-      </div>
+    <li aria-hidden="true">
+      <Card className="flex flex-col md:flex-row md:items-center justify-between gap-3 animate-pulse">
+        <div className="flex w-full max-w-xs flex-col gap-2">
+          <div className="h-4 w-2/3 rounded bg-card-muted" />
+          <div className="h-3 w-1/3 rounded bg-card-muted" />
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <div className="h-8 w-16 rounded-full bg-card-muted" />
+          <div className="h-8 w-16 rounded-full bg-card-muted" />
+        </div>
+      </Card>
     </li>
   );
 }
@@ -92,30 +92,29 @@ export function EventoList({ onEditar }: EventoListProps) {
   return (
     <ul className="flex flex-col gap-3">
       {eventos.map((evento) => (
-        <li
-          key={evento.id}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-xl border-2 border-border-subtle bg-white p-4"
-        >
-          <div className="flex flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-foreground">{evento.titulo}</span>
-              <Badge variant={evento.isActive ? "primary" : "muted"} size="sm">
-                {evento.isActive ? "Ativo" : "Inativo"}
-              </Badge>
+        <li key={evento.id}>
+          <Card className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-foreground">{evento.titulo}</span>
+                <Badge variant={evento.isActive ? "primary" : "muted"} size="sm">
+                  {evento.isActive ? "Ativo" : "Inativo"}
+                </Badge>
+              </div>
+              {evento.dataEvento && (
+                <p className="text-sm text-muted-foreground">{formatarData(evento.dataEvento)}</p>
+              )}
+              {evento.descricao && <p className="text-sm text-foreground">{evento.descricao}</p>}
             </div>
-            {evento.dataEvento && (
-              <p className="text-sm text-muted-foreground">{formatarData(evento.dataEvento)}</p>
-            )}
-            {evento.descricao && <p className="text-sm text-foreground">{evento.descricao}</p>}
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => onEditar(evento)}>
-              Editar
-            </Button>
-            <Button variant="destructive" size="sm" onClick={() => handleExcluir(evento)}>
-              Excluir
-            </Button>
-          </div>
+            <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => onEditar(evento)}>
+                Editar
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => handleExcluir(evento)}>
+                Excluir
+              </Button>
+            </div>
+          </Card>
         </li>
       ))}
     </ul>
