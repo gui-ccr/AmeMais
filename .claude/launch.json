@@ -6,6 +6,12 @@
       "runtimeExecutable": "yarn",
       "runtimeArgs": ["workspace", "@amemais/web-admin", "dev"],
       "port": 3003
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["workspace", "@amemais/api", "dev"],
+      "port": 3001
     }
   ]
 }
