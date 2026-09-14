@@ -5,6 +5,7 @@ import { UnauthorizedError } from "@/core/errors";
 export interface AuthenticatedUser {
   id: string;
   email: string | null;
+  accessToken: string;
 }
 
 export { UnauthorizedError };
@@ -27,5 +28,5 @@ export async function requireUser(request: NextRequest): Promise<AuthenticatedUs
     throw new UnauthorizedError("Token de autenticação inválido");
   }
 
-  return { id: data.user.id, email: data.user.email ?? null };
+  return { id: data.user.id, email: data.user.email ?? null, accessToken: token };
 }

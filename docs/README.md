@@ -17,6 +17,14 @@ Objetivo: qualquer pessoa do time (principalmente quem está entrando agora) con
 | [0007](./decisions/0007-separacao-frontend-publico-admin.md) | Separar o frontend em `apps/web-public` e `apps/web-admin` |
 | [0008](./decisions/0008-apps-web-vira-web-example.md) | Migrar auth/admin para `apps/web-admin` e renomear `apps/web` → `apps/web-example` |
 
+## Guias
+
+Diferente dos ADRs (que registram uma decisão pontual), guias explicam *como aplicar* decisões já tomadas no dia a dia.
+
+| Guia | Conteúdo |
+| --- | --- |
+| [Arquitetura e boas práticas do backend](./guia-arquitetura-backend.md) | Guia ultra-didático (❌ sem o padrão / ✅ com o padrão) de camadas, SOLID, padrões de projeto, DDD (entidade + Value Object), feature-based vs pasta-por-tipo e clean code, tudo com exemplo real em `features/animals` |
+
 ## Como adicionar um novo ADR
 
 1. Crie um arquivo `NNNN-titulo-curto.md` em `docs/decisions/`, com `NNNN` sequencial.

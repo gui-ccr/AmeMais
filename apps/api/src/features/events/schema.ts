@@ -1,46 +1,27 @@
 import { z } from "zod";
 
 /**
- * Schema base para validação de criação de eventos.
- * Valida obrigatoriamente nome, data (ISO/data válida), local e descrição,
- * bloqueando strings vazias ou apenas com espaços em branco.
+ * Schemas Zod: validam o que chega pela requisição. Os tipos inferidos
+ * daqui são os DTOs de entrada usados pelo controller e repassados,
+ * já validados, para o use case. Campos batem com as colunas reais da
+ * tabela "events" (ver supabase/migrations/20260906220500_create_events_and_urgencies.sql).
  */
-export const eventSchema = z.object({
-  nome: z
-    .string({ required_error: "Nome é obrigatório" })
-    .trim()
-    .min(1, "Nome é obrigatório"),
-  data: z
-    .string({ required_error: "Data é obrigatória" })
-    .trim()
-    .min(1, "Data é obrigatória")
+export const createEventSchema = z.object({
+  titulo: z.string().min(2, "titulo deve ter pelo menos 2 caracteres"),
+  descricao: z.string().min(1).optional(),
+  dataEvento: z
+    .string()
     .refine((val) => !isNaN(Date.parse(val)), {
-      message: "Data deve ser uma data válida no formato ISO (ex: YYYY-MM-DD ou ISO 8601)",
-    }),
-  local: z
-    .string({ required_error: "Local é obrigatório" })
-    .trim()
-    .min(1, "Local é obrigatório"),
-  descricao: z
-    .string({ required_error: "Descrição é obrigatória" })
-    .trim()
-    .min(1, "Descrição é obrigatória"),
+      message: "dataEvento deve ser uma data válida (ISO 8601)",
+    })
+    .optional(),
+  isActive: z.boolean().default(false),
 });
+export type CreateEventDTO = z.infer<typeof createEventSchema>;
 
-/** Alias semântico para criação de eventos */
-export const createEventSchema = eventSchema;
+export const updateEventSchema = createEventSchema.partial();
+export type UpdateEventDTO = z.infer<typeof updateEventSchema>;
 
-/** Schema para atualização parcial de eventos */
-export const updateEventSchema = eventSchema.partial();
-
-/** Schema para representação de evento retornado pelo backend / banco */
-export const eventResponseSchema = eventSchema.extend({
-  id: z.string().uuid(),
-  created_at: z.string().optional(),
+export const eventIdParamSchema = z.object({
+  id: z.string().uuid("id inválido"),
 });
-
-/** Tipos inferidos a partir dos schemas */
-export type EventInput = z.infer<typeof eventSchema>;
-export type CreateEventInput = z.infer<typeof createEventSchema>;
-export type UpdateEventInput = z.infer<typeof updateEventSchema>;
-export type EventResponse = z.infer<typeof eventResponseSchema>;

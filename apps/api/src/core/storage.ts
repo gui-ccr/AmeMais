@@ -68,7 +68,7 @@ export async function uploadFile(
     });
 
     if (error) {
-      throw new StorageError(`Erro ao fazer upload do arquivo: ${error.message}`);
+      throw new StorageError(error);
     }
 
     const publicUrl = getPublicUrl(data.path, bucket);
@@ -81,8 +81,7 @@ export async function uploadFile(
     if (error instanceof ValidationError || error instanceof StorageError) {
       throw error;
     }
-    const message = error instanceof Error ? error.message : "Erro desconhecido ao fazer upload";
-    throw new StorageError(`Erro ao fazer upload do arquivo: ${message}`);
+    throw new StorageError(error);
   }
 }
 
@@ -103,13 +102,12 @@ export async function deleteFile(
   try {
     const { error } = await supabaseAdmin.storage.from(bucket).remove([path]);
     if (error) {
-      throw new StorageError(`Erro ao remover arquivo: ${error.message}`);
+      throw new StorageError(error);
     }
   } catch (error) {
     if (error instanceof ValidationError || error instanceof StorageError) {
       throw error;
     }
-    const message = error instanceof Error ? error.message : "Erro desconhecido ao remover arquivo";
-    throw new StorageError(`Erro ao remover arquivo: ${message}`);
+    throw new StorageError(error);
   }
 }

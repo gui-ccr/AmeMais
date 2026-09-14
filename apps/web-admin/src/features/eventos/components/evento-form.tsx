@@ -10,26 +10,24 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateEvent, useUpdateEvent } from "../hooks/use-events";
-import { TIPOS_EVENTO, type Evento, type EventoFormValues } from "../types";
+import type { CreateEventDTO, EventDTO } from "../types";
 
 const eventoSchema = z.object({
-  titulo: z.string().min(1, "Título é obrigatório"),
-  tipo: z.enum(TIPOS_EVENTO),
-  descricao: z.string(),
-  dataEvento: z.string().min(1, "Data é obrigatória"),
-  local: z.string(),
+  titulo: z.string().min(2, "Título deve ter pelo menos 2 caracteres"),
+  descricao: z.string().optional(),
+  dataEvento: z.string().optional(),
+  isActive: z.boolean(),
 });
 
-const valoresPadrao: EventoFormValues = {
+const valoresPadrao: CreateEventDTO = {
   titulo: "",
-  tipo: "Feira de Adoção",
   descricao: "",
   dataEvento: "",
-  local: "",
+  isActive: false,
 };
 
 interface EventoFormProps {
-  eventoParaEditar?: Evento | null;
+  eventoParaEditar?: EventDTO | null;
   onCancelarEdicao?: VoidFunction;
 }
 
@@ -44,16 +42,25 @@ export function EventoForm({ eventoParaEditar, onCancelarEdicao }: EventoFormPro
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<EventoFormValues>({
+  } = useForm<CreateEventDTO>({
     resolver: zodResolver(eventoSchema),
     defaultValues: valoresPadrao,
   });
 
   useEffect(() => {
-    reset(eventoParaEditar ?? valoresPadrao);
+    reset(
+      eventoParaEditar
+        ? {
+            titulo: eventoParaEditar.titulo,
+            descricao: eventoParaEditar.descricao ?? "",
+            dataEvento: eventoParaEditar.dataEvento ?? "",
+            isActive: eventoParaEditar.isActive,
+          }
+        : valoresPadrao,
+    );
   }, [eventoParaEditar, reset]);
 
-  async function onSubmit(values: EventoFormValues) {
+  async function onSubmit(values: CreateEventDTO) {
     if (eventoParaEditar) {
       await atualizarEvento.mutateAsync({ id: eventoParaEditar.id, input: values });
       onCancelarEdicao?.();
@@ -81,47 +88,30 @@ export function EventoForm({ eventoParaEditar, onCancelarEdicao }: EventoFormPro
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="evento-tipo" required>
-          Tipo
-        </Label>
+        <Label htmlFor="evento-data">Data</Label>
+        <Input id="evento-data" type="date" {...register("dataEvento")} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="evento-status">Status</Label>
         <Controller
           control={control}
-          name="tipo"
+          name="isActive"
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="evento-tipo">
+            <Select
+              value={field.value ? "true" : "false"}
+              onValueChange={(value) => field.onChange(value === "true")}
+            >
+              <SelectTrigger id="evento-status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TIPOS_EVENTO.map((tipo) => (
-                  <SelectItem key={tipo} value={tipo}>
-                    {tipo}
-                  </SelectItem>
-                ))}
+                <SelectItem value="true">Ativo</SelectItem>
+                <SelectItem value="false">Inativo</SelectItem>
               </SelectContent>
             </Select>
           )}
         />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="evento-data" required>
-          Data
-        </Label>
-        <Input
-          id="evento-data"
-          type="date"
-          hasError={!!errors.dataEvento}
-          {...register("dataEvento")}
-        />
-        {errors.dataEvento && (
-          <p className="text-sm text-destructive font-medium">{errors.dataEvento.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5 md:col-span-2">
-        <Label htmlFor="evento-local">Local</Label>
-        <Input id="evento-local" placeholder="Ex: Praça Central, Teófilo Otoni" {...register("local")} />
       </div>
 
       <div className="flex flex-col gap-1.5 md:col-span-2">
