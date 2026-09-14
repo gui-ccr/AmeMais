@@ -20,7 +20,7 @@ const navigation = [
   { name: "Lares", href: "/admin/lares", icon: Home },
   { name: "Eventos", href: "/admin/eventos", icon: Calendar },
   { name: "Urgências", href: "/admin/urgencias", icon: AlertTriangle },
-  { name: "Interesses", href: "/admin/interesses", icon: Heart },
+  { name: "Doações", href: "/admin/doacao", icon: Heart },
   { name: "Rede de Voluntários", href: "/admin/voluntarios", icon: HeartHandshake },
   { name: "Equipe e Acessos", href: "/admin/equipe", icon: ShieldCheck },
 ];
