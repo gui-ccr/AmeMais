@@ -15,7 +15,7 @@ import { useSession } from "../hooks/use-session";
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { session, loading: sessionLoading } = useSession();
-  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: profile, isLoading: profileLoading } = useProfile(session);
 
   const loading = sessionLoading || (!!session && profileLoading);
 

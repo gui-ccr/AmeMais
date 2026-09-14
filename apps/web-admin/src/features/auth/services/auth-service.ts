@@ -34,16 +34,18 @@ export const authService = {
 
     if (error || !data) return null;
 
-    const { usuario_departamentos, ...profile } = data as {
+    const { usuario_departamentos, ...profile } = data as unknown as {
       id: string;
       nome: string;
       email: string;
-      usuario_departamentos: { departamentos: { nome: string }[] }[];
+      usuario_departamentos: { departamentos: { nome: string } | null }[];
     };
 
     return {
       ...profile,
-      departamentos: usuario_departamentos.flatMap((ud) => ud.departamentos.map((d) => d.nome)),
+      departamentos: usuario_departamentos
+        .map((ud) => ud.departamentos?.nome)
+        .filter((nome): nome is string => !!nome),
     };
   },
 };

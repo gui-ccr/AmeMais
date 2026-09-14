@@ -9,6 +9,20 @@
 -- chamadas antigas com 1 argumento funcionando) e só libera 'total' quando
 -- o melhor nível encontrado (departamento OU cargo, o maior dos dois) for
 -- de fato 'total'.
+--
+-- IMPORTANTE: a assinatura antiga (1 argumento) precisa ser removida
+-- explicitamente. CREATE OR REPLACE não troca a assinatura de uma função
+-- existente — como o parâmetro nivel_minimo é novo, o Postgres passa a
+-- tratar isso como duas funções sobrecarregadas (overload) distintas, e
+-- toda chamada com 1 argumento (ex: check_user_access('operacional')) fica
+-- ambígua entre elas, causando o erro
+-- "function check_user_access(unknown) is not unique".
+-- Usamos CASCADE porque as políticas antigas ("Acesso total autenticado
+-- para animais/saude_animal/eventos/urgencias") ainda chamam essa
+-- assinatura de 1 argumento — elas são recriadas mais abaixo de qualquer
+-- forma, então perder essa dependência aqui é seguro.
+DROP FUNCTION IF EXISTS public.check_user_access(text) CASCADE;
+
 CREATE OR REPLACE FUNCTION public.check_user_access(modulo_slug text, nivel_minimo text DEFAULT 'leitura')
 RETURNS boolean
 LANGUAGE plpgsql

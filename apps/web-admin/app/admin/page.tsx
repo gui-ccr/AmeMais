@@ -4,9 +4,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/features/auth/services/auth-service";
 import { useProfile } from "@/features/auth/hooks/use-profile";
+import { useSession } from "@/features/auth/hooks/use-session";
 
 export default function AdminHomePage() {
-  const { data: profile } = useProfile();
+  const { session } = useSession();
+  const { data: profile } = useProfile(session);
 
   return (
     <main className="flex min-h-screen flex-col gap-4 p-8">
