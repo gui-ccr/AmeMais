@@ -18,6 +18,9 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
     "@tanstack/react-query": "^5.62.0",
+    "@zxcvbn-ts/core": "^4.2.0",
+    "@zxcvbn-ts/language-common": "^4.1.3",
+    "@zxcvbn-ts/language-pt-br": "^4.1.1",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -34,13 +37,13 @@
     "@amemais/eslint-config": "*",
     "@amemais/typescript-config": "*",
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/cypress": "^1.1.3",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "cypress": "15.21.1",
     "eslint": "^9.17.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.7.0",
-    "cypress": "15.21.1",
-    "@types/cypress": "^1.1.3"
+    "typescript": "^5.7.0"
   }
 }
