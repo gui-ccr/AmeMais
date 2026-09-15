@@ -28,11 +28,24 @@ export const authService = {
 
     const { data, error } = await supabase
       .from("usuarios")
-      .select("id, nome, email, cargo")
+      .select("id, nome, email, usuario_departamentos(departamentos(nome))")
       .eq("id", userData.user.id)
       .single();
 
     if (error || !data) return null;
-    return data as Profile;
+
+    const { usuario_departamentos, ...profile } = data as unknown as {
+      id: string;
+      nome: string;
+      email: string;
+      usuario_departamentos: { departamentos: { nome: string } | null }[];
+    };
+
+    return {
+      ...profile,
+      departamentos: usuario_departamentos
+        .map((ud) => ud.departamentos?.nome)
+        .filter((nome): nome is string => !!nome),
+    };
   },
 };
