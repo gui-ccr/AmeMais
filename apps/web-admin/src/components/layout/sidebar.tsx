@@ -38,7 +38,7 @@ export function Sidebar() {
   const papel = profile?.departamentos?.join(", ");
 
   return (
-    <aside className="w-64 flex flex-col bg-sidebar-bg text-sidebar-fg border-r border-sidebar-border h-full min-h-screen">
+    <aside className="w-64 shrink-0 flex flex-col sticky top-0 h-screen bg-sidebar-bg text-sidebar-fg border-r border-sidebar-border">
       <div className="flex h-20 shrink-0 items-center gap-3 px-6 border-b border-sidebar-border">
         <Image
           src="/logo-amemais.jpg"
