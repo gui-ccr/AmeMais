@@ -119,7 +119,7 @@ describe("Use Cases: Urgência", () => {
       repository.items.push(urgency);
 
       const useCase = new RegisterDonationUseCase(repository);
-      const result = await useCase.execute({ id: "urg-2", valor: 200 });
+      const result = await useCase.execute("urg-2", 200);
 
       expect(result.valorArrecadado).toBe(1000);
       expect(result.metaArrecadacao).toBe(1000);
@@ -160,14 +160,10 @@ describe("Use Cases: Urgência", () => {
 
       const useCase = new RegisterDonationUseCase(repository);
 
-      try {
-        await useCase.execute("urg-4", 250);
-      } catch {
-        // Esperado falhar pela regra de negócio
-      }
+      await expect(useCase.execute("urg-4", 250)).rejects.toThrowError(ValidationError);
 
       expect(repository.updateValorArrecadadoCalled).toBe(false);
-      expect(repository.items[0].valorArrecadado).toBe(800);
+      expect(repository.items[0]?.valorArrecadado).toBe(800);
     });
 
     it("deve rejeitar doação com valor menor ou igual a zero", async () => {
@@ -311,8 +307,8 @@ describe("Use Cases: Urgência", () => {
       const results = await useCase.execute();
 
       expect(results.length).toBe(2);
-      expect(results[0].titulo).toBe("Urgência 1");
-      expect(results[1].titulo).toBe("Urgência 2");
+      expect(results[0]?.titulo).toBe("Urgência 1");
+      expect(results[1]?.titulo).toBe("Urgência 2");
     });
   });
 

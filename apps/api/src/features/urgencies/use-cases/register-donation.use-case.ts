@@ -1,11 +1,6 @@
 import type { IUrgencyRepository } from "../urgency.repository";
 import { toUrgencyDTO, type UrgencyDTO } from "../urgency.dto";
 
-export interface RegisterDonationInput {
-  id: string;
-  valor: number;
-}
-
 /**
  * Caso de uso: Registrar doação para uma urgência.
  *
@@ -21,15 +16,7 @@ export interface RegisterDonationInput {
 export class RegisterDonationUseCase {
   constructor(private readonly repository: IUrgencyRepository) {}
 
-  async execute(id: string, valor: number): Promise<UrgencyDTO>;
-  async execute(input: RegisterDonationInput): Promise<UrgencyDTO>;
-  async execute(
-    idOrInput: string | RegisterDonationInput,
-    maybeValor?: number,
-  ): Promise<UrgencyDTO> {
-    const id = typeof idOrInput === "string" ? idOrInput : idOrInput.id;
-    const valor = typeof idOrInput === "string" ? (maybeValor as number) : idOrInput.valor;
-
+  async execute(id: string, valor: number): Promise<UrgencyDTO> {
     const urgency = await this.repository.findById(id);
 
     // A regra de negócio mora na entidade Urgency, protegendo o domínio:
