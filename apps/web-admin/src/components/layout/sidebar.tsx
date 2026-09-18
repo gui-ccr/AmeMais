@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -30,10 +31,20 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 shrink-0 flex flex-col sticky top-0 h-screen bg-sidebar-bg text-sidebar-fg border-r border-sidebar-border">
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border">
-        <span className="text-xl font-bold font-display text-primary-light">
-          AmeMais Admin
-        </span>
+      <div className="flex h-20 shrink-0 items-center gap-3 px-6 border-b border-sidebar-border">
+        <Image
+          src="/logo-amemais.jpg"
+          alt="AmeMais"
+          width={44}
+          height={44}
+          className="h-11 w-11 shrink-0 rounded-full object-cover"
+        />
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-2xl font-bold font-display leading-tight text-primary-light">
+            AmeMais
+          </span>
+          <span className="truncate text-xs text-sidebar-muted">Painel interno</span>
+        </div>
       </div>
       <nav className="flex flex-1 flex-col p-4 gap-2">
         <ul className="flex flex-1 flex-col gap-2">
