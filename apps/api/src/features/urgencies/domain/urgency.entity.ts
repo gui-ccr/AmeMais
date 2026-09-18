@@ -38,6 +38,14 @@ export interface UpdateUrgencyProps {
 }
 
 /**
+ * Dados já validados e normalizados por `Urgency.create()`, prontos para
+ * persistir. Nomeado explicitamente (em vez de ficar como um `Omit<...>`
+ * anônimo repetido em cada camada) para que repository e mapper dependam
+ * do mesmo contrato que a fábrica de domínio produz.
+ */
+export type UrgencyCreationData = Omit<UrgencyProps, "id" | "createdAt">;
+
+/**
  * Entidade de domínio (DDD): tem identidade (`id`) e é dona das regras que
  * garantem que uma Urgency nunca fique num estado inválido (ex.: título vazio,
  * valor arrecadado maior que a meta de arrecadação na criação).
@@ -69,7 +77,7 @@ export class Urgency {
    * 2. valorArrecadado não pode ser maior que metaArrecadacao na criação.
    * 3. Valores monetários não podem ser negativos.
    */
-  static create(input: NewUrgencyProps): Omit<UrgencyProps, "id" | "createdAt"> {
+  static create(input: NewUrgencyProps): UrgencyCreationData {
     const titulo = input.titulo?.trim();
     if (!titulo) {
       throw new ValidationError("titulo é obrigatório");
