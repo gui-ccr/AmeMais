@@ -12,6 +12,8 @@ import {
   HeartHandshake,
   ShieldCheck,
 } from "lucide-react";
+import { useProfile } from "@/features/auth/hooks/use-profile";
+import { useSession } from "@/features/auth/hooks/use-session";
 import { cn } from "@/lib/cn";
 
 const navigation = [
@@ -27,6 +29,12 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { session } = useSession();
+  const { data: profile } = useProfile(session);
+
+  const nomeExibido = profile?.nome || profile?.email || "Usuário";
+  const inicial = nomeExibido.charAt(0).toUpperCase();
+  const papel = profile?.departamentos?.join(", ");
 
   return (
     <aside className="w-64 flex flex-col bg-sidebar-bg text-sidebar-fg border-r border-sidebar-border h-full min-h-screen">
@@ -65,6 +73,15 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
+      <div className="flex items-center gap-3 border-t border-sidebar-border p-4">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-active-bg text-sm font-semibold text-sidebar-active-fg">
+          {inicial}
+        </span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm font-semibold text-sidebar-fg">{nomeExibido}</span>
+          {papel && <span className="truncate text-xs text-sidebar-muted">{papel}</span>}
+        </div>
+      </div>
     </aside>
   );
 }
