@@ -1,5 +1,5 @@
-import { Urgency } from "./domain/urgency.entity";
-import type { CreateUrgencyDTO, UpdateUrgencyDTO } from "./schema";
+import { Urgency, type UrgencyCreationData } from "./domain/urgency.entity";
+import type { UpdateUrgencyDTO } from "./schema";
 
 /**
  * Formato exato da tabela "urgency_items" no Postgres (snake_case). Fica
@@ -32,12 +32,17 @@ export function mapRowToEntity(row: UrgencyRow): Urgency {
   });
 }
 
-export function mapCreateDTOToRow(input: CreateUrgencyDTO) {
+/**
+ * Recebe o resultado já validado de `Urgency.create()` — não o DTO crú da
+ * requisição — para que o título trimado e os defaults aplicados pela
+ * entidade sejam o que realmente vai para o banco.
+ */
+export function mapCreateDTOToRow(input: UrgencyCreationData) {
   return {
     titulo: input.titulo,
-    descricao: input.descricao ?? null,
-    meta_arrecadacao: input.metaArrecadacao ?? null,
-    valor_arrecadado: input.valorArrecadado ?? 0,
+    descricao: input.descricao,
+    meta_arrecadacao: input.metaArrecadacao,
+    valor_arrecadado: input.valorArrecadado,
     is_active: input.isActive,
   };
 }

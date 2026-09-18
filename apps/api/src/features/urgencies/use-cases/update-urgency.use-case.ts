@@ -14,7 +14,14 @@ export class UpdateUrgencyUseCase {
     const urgency = await this.repository.findById(id);
     urgency.update(input);
 
-    const updated = await this.repository.update(id, input);
+    // Persiste os valores já normalizados pela entidade (ex.: titulo/descricao
+    // trimados), não o input crú — a entidade é a única fonte de verdade do
+    // que é válido, então é ela quem decide o que efetivamente é gravado.
+    const patch: UpdateUrgencyDTO = { ...input };
+    if (input.titulo !== undefined) patch.titulo = urgency.titulo;
+    if (input.descricao !== undefined) patch.descricao = urgency.descricao;
+
+    const updated = await this.repository.update(id, patch);
     return toUrgencyDTO(updated);
   }
 }

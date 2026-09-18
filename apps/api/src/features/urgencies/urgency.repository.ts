@@ -2,8 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
 import { mapRowToEntity, mapCreateDTOToRow, mapUpdateDTOToRow } from "./mapper";
-import type { Urgency } from "./domain/urgency.entity";
-import type { CreateUrgencyDTO, UpdateUrgencyDTO } from "./schema";
+import type { Urgency, UrgencyCreationData } from "./domain/urgency.entity";
+import type { UpdateUrgencyDTO } from "./schema";
 
 const TABLE = "urgency_items";
 const COLUMNS = "id, titulo, descricao, meta_arrecadacao, valor_arrecadado, is_active, created_at";
@@ -16,7 +16,7 @@ const COLUMNS = "id, titulo, descricao, meta_arrecadacao, valor_arrecadado, is_a
 export interface IUrgencyRepository {
   list(): Promise<Urgency[]>;
   findById(id: string): Promise<Urgency>;
-  create(input: CreateUrgencyDTO): Promise<Urgency>;
+  create(input: UrgencyCreationData): Promise<Urgency>;
   update(id: string, input: UpdateUrgencyDTO): Promise<Urgency>;
   updateValorArrecadado(id: string, valorArrecadado: number): Promise<Urgency>;
   remove(id: string): Promise<void>;
@@ -51,7 +51,7 @@ export class UrgencyRepository implements IUrgencyRepository {
     return mapRowToEntity(data);
   }
 
-  async create(input: CreateUrgencyDTO): Promise<Urgency> {
+  async create(input: UrgencyCreationData): Promise<Urgency> {
     const { data, error } = await this.db
       .from(TABLE)
       .insert(mapCreateDTOToRow(input))

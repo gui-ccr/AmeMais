@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { Urgency } from "../src/features/urgencies/domain/urgency.entity";
+import { Urgency, type UrgencyCreationData } from "../src/features/urgencies/domain/urgency.entity";
 import type { IUrgencyRepository } from "../src/features/urgencies/urgency.repository";
 import type { CreateUrgencyDTO, UpdateUrgencyDTO } from "../src/features/urgencies/schema";
 import { RegisterDonationUseCase } from "../src/features/urgencies/use-cases/register-donation.use-case";
@@ -32,25 +32,39 @@ class FakeUrgencyRepository implements IUrgencyRepository {
     return item;
   }
 
-  async create(input: CreateUrgencyDTO): Promise<Urgency> {
+  async create(input: UrgencyCreationData): Promise<Urgency> {
     const urgency = Urgency.restore({
       id: "fake-uuid-1",
-      titulo: input.titulo,
-      descricao: input.descricao ?? null,
-      metaArrecadacao: input.metaArrecadacao ?? null,
-      valorArrecadado: input.valorArrecadado ?? 0,
-      isActive: input.isActive ?? false,
+      ...input,
       createdAt: "2026-09-16T12:00:00.000Z",
     });
     this.items.push(urgency);
     return urgency;
   }
 
+  // Simula a escrita no banco: grava exatamente os campos do patch, igual
+  // ao repository real (mapUpdateDTOToRow), sem rechamar a validação de
+  // domínio — essa responsabilidade já é do use case/entidade, não do
+  // repository. Chamar `urgency.update(input)` de novo aqui mascararia bug
+  // de "persistiu o valor errado", porque sempre re-normalizaria em cima do
+  // mesmo objeto em memória.
   async update(id: string, input: UpdateUrgencyDTO): Promise<Urgency> {
     this.updateCalled = true;
-    const urgency = await this.findById(id);
-    urgency.update(input);
-    return urgency;
+    const current = await this.findById(id);
+    const updated = Urgency.restore({
+      id: current.id,
+      titulo: input.titulo !== undefined ? input.titulo : current.titulo,
+      descricao: input.descricao !== undefined ? input.descricao : current.descricao,
+      metaArrecadacao:
+        input.metaArrecadacao !== undefined ? input.metaArrecadacao : current.metaArrecadacao,
+      valorArrecadado:
+        input.valorArrecadado !== undefined ? input.valorArrecadado : current.valorArrecadado,
+      isActive: input.isActive !== undefined ? input.isActive : current.isActive,
+      createdAt: current.createdAt,
+    });
+    const index = this.items.findIndex((u) => u.id === id);
+    this.items[index] = updated;
+    return updated;
   }
 
   async updateValorArrecadado(id: string, valorArrecadado: number): Promise<Urgency> {
@@ -245,6 +259,20 @@ describe("Use Cases: Urgência", () => {
       await expect(useCase.execute(invalidInput)).rejects.toThrowError(ValidationError);
       expect(repository.items.length).toBe(0);
     });
+
+    it("deve persistir o titulo já trimado pela entidade, não o input crú", async () => {
+      const useCase = new CreateUrgencyUseCase(repository);
+      const input: CreateUrgencyDTO = {
+        titulo: "  Ração para cães resgatados  ",
+        valorArrecadado: 0,
+        isActive: false,
+      };
+
+      const result = await useCase.execute(input);
+
+      expect(result.titulo).toBe("Ração para cães resgatados");
+      expect(repository.items[0]?.titulo).toBe("Ração para cães resgatados");
+    });
   });
 
   describe("GetUrgencyUseCase", () => {
@@ -355,6 +383,28 @@ describe("Use Cases: Urgência", () => {
       ).rejects.toThrowError(ValidationError);
       expect(repository.updateCalled).toBe(false);
     });
+
+    it("deve persistir titulo/descricao já trimados pela entidade, não o input crú", async () => {
+      const urgency = Urgency.restore({
+        id: "urg-edit-3",
+        titulo: "Título Inicial",
+        descricao: null,
+        metaArrecadacao: null,
+        valorArrecadado: 0,
+        isActive: false,
+        createdAt: "2026-09-16T10:00:00Z",
+      });
+      repository.items.push(urgency);
+
+      const useCase = new UpdateUrgencyUseCase(repository);
+      const result = await useCase.execute("urg-edit-3", {
+        titulo: "  Campanha de Vacinação  ",
+        descricao: "  Dose única  ",
+      });
+
+      expect(result.titulo).toBe("Campanha de Vacinação");
+      expect(result.descricao).toBe("Dose única");
+    });
   });
 
   describe("DeleteUrgencyUseCase", () => {
@@ -407,8 +457,8 @@ describe("Use Cases: Urgência", () => {
       expect(entity.createdAt).toBe("2026-09-16T12:00:00Z");
     });
 
-    it("mapCreateDTOToRow deve converter DTO camelCase para snake_case do Postgres", () => {
-      const dto: CreateUrgencyDTO = {
+    it("mapCreateDTOToRow deve converter dados normalizados de Urgency.create() para snake_case do Postgres", () => {
+      const data: UrgencyCreationData = {
         titulo: "Nova Urgência",
         descricao: "Detalhes",
         metaArrecadacao: 1500,
@@ -416,7 +466,7 @@ describe("Use Cases: Urgência", () => {
         isActive: true,
       };
 
-      const row = mapCreateDTOToRow(dto);
+      const row = mapCreateDTOToRow(data);
 
       expect(row).toEqual({
         titulo: "Nova Urgência",

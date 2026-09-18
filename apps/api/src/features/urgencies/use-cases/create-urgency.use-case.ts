@@ -7,11 +7,12 @@ export class CreateUrgencyUseCase {
   constructor(private readonly repository: IUrgencyRepository) {}
 
   async execute(input: CreateUrgencyDTO): Promise<UrgencyDTO> {
-    // Valida as invariantes de domínio (ex.: valorArrecadado <= metaArrecadacao)
-    // centralizadas na fábrica Urgency.create().
-    Urgency.create(input);
+    // Urgency.create() valida as invariantes de domínio (ex.: valorArrecadado
+    // <= metaArrecadacao) e devolve os dados já normalizados (titulo trimado,
+    // defaults aplicados) — é esse resultado, não o input crú, que é persistido.
+    const data = Urgency.create(input);
 
-    const urgency = await this.repository.create(input);
+    const urgency = await this.repository.create(data);
     return toUrgencyDTO(urgency);
   }
 }
