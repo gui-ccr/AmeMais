@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -26,10 +25,10 @@ const valoresPadrao: UrgenciaFormValues = {
 
 interface UrgenciaFormProps {
   urgenciaParaEditar?: Urgencia | null;
-  onCancelarEdicao?: VoidFunction;
+  onFechar: VoidFunction;
 }
 
-export function UrgenciaForm({ urgenciaParaEditar, onCancelarEdicao }: UrgenciaFormProps) {
+export function UrgenciaForm({ urgenciaParaEditar, onFechar }: UrgenciaFormProps) {
   const criarUrgencia = useCreateUrgencia();
   const atualizarUrgencia = useUpdateUrgencia();
   const emEdicao = !!urgenciaParaEditar;
@@ -38,25 +37,19 @@ export function UrgenciaForm({ urgenciaParaEditar, onCancelarEdicao }: UrgenciaF
     register,
     control,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<UrgenciaFormValues>({
     resolver: zodResolver(urgenciaSchema),
-    defaultValues: valoresPadrao,
+    defaultValues: urgenciaParaEditar ?? valoresPadrao,
   });
-
-  useEffect(() => {
-    reset(urgenciaParaEditar ?? valoresPadrao);
-  }, [urgenciaParaEditar, reset]);
 
   async function onSubmit(values: UrgenciaFormValues) {
     if (urgenciaParaEditar) {
       await atualizarUrgencia.mutateAsync({ id: urgenciaParaEditar.id, input: values });
-      onCancelarEdicao?.();
     } else {
       await criarUrgencia.mutateAsync(values);
-      reset(valoresPadrao);
     }
+    onFechar();
   }
 
   const salvando = criarUrgencia.isPending || atualizarUrgencia.isPending;
@@ -76,29 +69,27 @@ export function UrgenciaForm({ urgenciaParaEditar, onCancelarEdicao }: UrgenciaF
         {errors.titulo && <p className="text-sm text-destructive font-medium">{errors.titulo.message}</p>}
       </div>
 
-      {emEdicao && (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="urgencia-status">Status</Label>
-          <Controller
-            control={control}
-            name="ativo"
-            render={({ field }) => (
-              <Select
-                value={field.value ? "true" : "false"}
-                onValueChange={(value) => field.onChange(value === "true")}
-              >
-                <SelectTrigger id="urgencia-status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">Ativa</SelectItem>
-                  <SelectItem value="false">Atendida</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-      )}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="urgencia-status">Status</Label>
+        <Controller
+          control={control}
+          name="ativo"
+          render={({ field }) => (
+            <Select
+              value={field.value ? "true" : "false"}
+              onValueChange={(value) => field.onChange(value === "true")}
+            >
+              <SelectTrigger id="urgencia-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Ativa</SelectItem>
+                <SelectItem value="false">Atendida</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
 
       <div className="flex flex-col gap-1.5 md:col-span-2">
         <Label htmlFor="urgencia-descricao">Detalhes (opcional)</Label>
@@ -110,11 +101,9 @@ export function UrgenciaForm({ urgenciaParaEditar, onCancelarEdicao }: UrgenciaF
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-3 pt-2">
-        {emEdicao && (
-          <Button type="button" variant="outline" onClick={() => onCancelarEdicao?.()}>
-            Cancelar
-          </Button>
-        )}
+        <Button type="button" variant="outline" onClick={onFechar}>
+          Cancelar
+        </Button>
         <Button type="submit" disabled={salvando}>
           {salvando ? "Salvando..." : emEdicao ? "Salvar alterações" : "Adicionar urgência"}
         </Button>
