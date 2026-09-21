@@ -1,5 +1,6 @@
 import type { Shelter } from "./domain/shelter.entity";
-import type { ShelterStatusValue } from "./domain/shelter-status.vo.ts";
+import type { ShelterStatusValue } from "./domain/shelter-status.vo";
+export type { CreateShelterDTO } from "./schema";
 
 /**
  * DTO de saída: o formato exato que a API devolve pro cliente. É o use
