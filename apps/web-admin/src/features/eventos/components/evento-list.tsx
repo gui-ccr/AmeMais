@@ -1,32 +1,39 @@
 "use client";
 
 import { AlertTriangle, CalendarPlus } from "lucide-react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useDeleteEvent, useEvents } from "../hooks/use-events";
 import type { EventDTO } from "../types";
 
-function formatarData(data: string | null): string | null {
-  if (!data) return null;
-  const [ano, mes, dia] = data.split("T")[0]?.split("-") ?? [];
-  if (!ano || !mes || !dia) return data;
-  return `${dia}/${mes}/${ano}`;
-}
+const MESES_ABREVIADOS = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
-/** Foca o campo de título do EventoForm, que fica sempre acima desta lista na mesma página. */
-function focarFormularioDeCriacao() {
-  const campo = document.getElementById("evento-titulo");
-  campo?.scrollIntoView({ behavior: "smooth", block: "center" });
-  campo?.focus();
+function DataBadge({ data }: { data: string | null }) {
+  const partes = data?.split("T")[0]?.split("-");
+  if (!partes || partes.length !== 3) return null;
+
+  const [, mes, dia] = partes;
+  const mesAbreviado = MESES_ABREVIADOS[Number(mes) - 1];
+  if (!mesAbreviado) return null;
+
+  return (
+    <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-lg border-2 border-border-subtle bg-card-muted py-2">
+      <span className="text-lg font-bold leading-none text-primary">{dia}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {mesAbreviado}
+      </span>
+    </div>
+  );
 }
 
 function EventoCardSkeleton() {
   return (
     <li aria-hidden="true">
-      <Card className="flex flex-col md:flex-row md:items-center justify-between gap-3 animate-pulse">
-        <div className="flex w-full max-w-xs flex-col gap-2">
+      <Card className="flex items-center gap-4 animate-pulse">
+        <div className="h-14 w-14 shrink-0 rounded-lg bg-card-muted" />
+        <div className="flex flex-1 flex-col gap-2">
           <div className="h-4 w-2/3 rounded bg-card-muted" />
           <div className="h-3 w-1/3 rounded bg-card-muted" />
         </div>
@@ -40,10 +47,11 @@ function EventoCardSkeleton() {
 }
 
 interface EventoListProps {
-  onEditar: Dispatch<SetStateAction<EventDTO | null>>;
+  onEditar: Dispatch<EventDTO>;
+  onNovo: VoidFunction;
 }
 
-export function EventoList({ onEditar }: EventoListProps) {
+export function EventoList({ onEditar, onNovo }: EventoListProps) {
   const { data: eventos, isLoading, isError, refetch, isRefetching } = useEvents();
   const excluirEvento = useDeleteEvent();
 
@@ -82,7 +90,7 @@ export function EventoList({ onEditar }: EventoListProps) {
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
         <CalendarPlus className="h-8 w-8 text-muted-dark" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Nenhum evento cadastrado ainda.</p>
-        <Button size="sm" onClick={focarFormularioDeCriacao}>
+        <Button size="sm" onClick={onNovo}>
           Criar evento
         </Button>
       </div>
@@ -93,18 +101,18 @@ export function EventoList({ onEditar }: EventoListProps) {
     <ul className="flex flex-col gap-3">
       {eventos.map((evento) => (
         <li key={evento.id}>
-          <Card className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex flex-col gap-1">
+          <Card className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <DataBadge data={evento.dataEvento} />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-foreground">{evento.titulo}</span>
                 <Badge variant={evento.isActive ? "primary" : "muted"} size="sm">
                   {evento.isActive ? "Ativo" : "Inativo"}
                 </Badge>
               </div>
-              {evento.dataEvento && (
-                <p className="text-sm text-muted-foreground">{formatarData(evento.dataEvento)}</p>
+              {evento.descricao && (
+                <p className="truncate text-sm text-muted-foreground">{evento.descricao}</p>
               )}
-              {evento.descricao && <p className="text-sm text-foreground">{evento.descricao}</p>}
             </div>
             <div className="flex gap-2 shrink-0">
               <Button variant="outline" size="sm" onClick={() => onEditar(evento)}>
