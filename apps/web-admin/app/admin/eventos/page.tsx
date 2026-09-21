@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,17 +33,10 @@ export default function EventosPage() {
             Feiras de adoção, mutirões e bazares beneficentes organizados pela ONG.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button className="gap-2" onClick={abrirCriacao}>
-            <Plus className="h-4 w-4" />
-            Novo evento
-          </Button>
-          <Link href="/admin">
-            <Button variant="outline" size="sm">
-              ← Voltar ao Admin
-            </Button>
-          </Link>
-        </div>
+        <Button className="gap-2" onClick={abrirCriacao}>
+          <Plus className="h-4 w-4" />
+          Novo evento
+        </Button>
       </div>
 
       <EventoList onEditar={abrirEdicao} onNovo={abrirCriacao} />

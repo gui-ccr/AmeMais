@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,17 +33,10 @@ export default function UrgenciasPage() {
             O que a ONG mais precisa arrecadar nesta semana.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button className="gap-2" onClick={abrirCriacao}>
-            <Plus className="h-4 w-4" />
-            Nova urgência
-          </Button>
-          <Link href="/admin">
-            <Button variant="outline" size="sm">
-              ← Voltar ao Admin
-            </Button>
-          </Link>
-        </div>
+        <Button className="gap-2" onClick={abrirCriacao}>
+          <Plus className="h-4 w-4" />
+          Nova urgência
+        </Button>
       </div>
 
       <UrgenciaList onEditar={abrirEdicao} onNovo={abrirCriacao} />
