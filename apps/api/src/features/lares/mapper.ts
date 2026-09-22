@@ -1,5 +1,5 @@
 import { Shelter } from "./domain/shelter.entity";
-import { ShelterStatus, type ShelterStatusValue } from "./domain/shelter-status.vo";
+import { ShelterStatus } from "./domain/shelter-status.vo";
 import type { CreateShelterDTO } from "./schema";
 
 /**
@@ -48,7 +48,6 @@ export function mapCreateDTOToRow(input: CreateShelterDTO) {
     capacidade: input.capacidade,
     status: input.status,
     endereco_regiao: input.enderecoRegiao,
-    is_active: input.isActive,
   };
 }
 
