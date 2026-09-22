@@ -1,72 +1,54 @@
 "use client";
 
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventoForm } from "@/features/eventos/components/evento-form";
 import { EventoList } from "@/features/eventos/components/evento-list";
-import type { EventDTO as EventoType } from "@/features/eventos/types";
-import { UrgenciaForm } from "@/features/urgencias/components/urgencia-form";
-import { UrgenciaList } from "@/features/urgencias/components/urgencia-list";
-import type { Urgencia as UrgenciaType } from "@/features/urgencias/types";
+import type { EventDTO } from "@/features/eventos/types";
 
 export default function EventosPage() {
-  const [eventoEmEdicao, setEventoEmEdicao] = useState<EventoType | null>(null);
-  const [urgenciaEmEdicao, setUrgenciaEmEdicao] = useState<UrgenciaType | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [eventoEmEdicao, setEventoEmEdicao] = useState<EventDTO | null>(null);
+
+  function abrirCriacao() {
+    setEventoEmEdicao(null);
+    setModalAberto(true);
+  }
+
+  function abrirEdicao(evento: EventDTO) {
+    setEventoEmEdicao(evento);
+    setModalAberto(true);
+  }
 
   return (
-    <main className="min-h-screen bg-background text-foreground p-6 md:p-12 max-w-5xl mx-auto flex flex-col gap-10">
+    <main className="min-h-screen bg-background text-foreground p-6 md:p-12 max-w-5xl mx-auto flex flex-col gap-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 border-secondary pb-6">
         <div>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground">
-            Eventos e Urgências
+            Agenda de Eventos
           </h1>
           <p className="text-muted-foreground text-lg mt-1">
-            Agenda de ações da ONG e mural de necessidades urgentes da semana.
-          </p>
-        </div>
-        <Link href="/admin">
-          <Button variant="outline" size="sm">
-            ← Voltar ao Admin
-          </Button>
-        </Link>
-      </div>
-
-      <section className="bg-card rounded-2xl border-2 border-secondary p-6 md:p-8 flex flex-col gap-6 shadow-sm">
-        <div>
-          <h2 className="font-display text-3xl font-bold text-foreground">Agenda de Eventos</h2>
-          <p className="text-muted-foreground text-sm mt-0.5">
             Feiras de adoção, mutirões e bazares beneficentes organizados pela ONG.
           </p>
         </div>
+        <Button className="gap-2" onClick={abrirCriacao}>
+          <Plus className="h-4 w-4" />
+          Novo evento
+        </Button>
+      </div>
 
-        <EventoForm
-          eventoParaEditar={eventoEmEdicao}
-          onCancelarEdicao={() => setEventoEmEdicao(null)}
-        />
+      <EventoList onEditar={abrirEdicao} onNovo={abrirCriacao} />
 
-        <div className="border-t border-border-subtle pt-6">
-          <EventoList onEditar={setEventoEmEdicao} />
-        </div>
-      </section>
-
-      <section className="bg-card rounded-2xl border-2 border-secondary p-6 md:p-8 flex flex-col gap-6 shadow-sm">
-        <div>
-          <h2 className="font-display text-3xl font-bold text-foreground">Mural de Urgências</h2>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            O que a ONG mais precisa arrecadar nesta semana.
-          </p>
-        </div>
-
-        <UrgenciaForm
-          urgenciaParaEditar={urgenciaEmEdicao}
-          onCancelarEdicao={() => setUrgenciaEmEdicao(null)}
-        />
-
-        <div className="border-t border-border-subtle pt-6">
-          <UrgenciaList onEditar={setUrgenciaEmEdicao} />
-        </div>
-      </section>
+      <Dialog open={modalAberto} onOpenChange={setModalAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{eventoEmEdicao ? "Editar evento" : "Novo evento"}</DialogTitle>
+          </DialogHeader>
+          <EventoForm eventoParaEditar={eventoEmEdicao} onFechar={() => setModalAberto(false)} />
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

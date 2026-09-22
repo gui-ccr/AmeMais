@@ -21,6 +21,20 @@ export const authService = {
     return data.session;
   },
 
+  async resetPasswordForEmail(email: string) {
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/trocar-senha`,
+    });
+    if (error) throw error;
+  },
+
+  async updatePassword(password: string) {
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  },
+
   async getOwnProfile(): Promise<Profile | null> {
     const supabase = createSupabaseBrowserClient();
     const { data: userData } = await supabase.auth.getUser();

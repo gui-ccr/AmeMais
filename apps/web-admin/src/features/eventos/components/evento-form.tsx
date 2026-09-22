@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -28,10 +27,10 @@ const valoresPadrao: CreateEventDTO = {
 
 interface EventoFormProps {
   eventoParaEditar?: EventDTO | null;
-  onCancelarEdicao?: VoidFunction;
+  onFechar: VoidFunction;
 }
 
-export function EventoForm({ eventoParaEditar, onCancelarEdicao }: EventoFormProps) {
+export function EventoForm({ eventoParaEditar, onFechar }: EventoFormProps) {
   const criarEvento = useCreateEvent();
   const atualizarEvento = useUpdateEvent();
   const emEdicao = !!eventoParaEditar;
@@ -40,34 +39,26 @@ export function EventoForm({ eventoParaEditar, onCancelarEdicao }: EventoFormPro
     register,
     control,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<CreateEventDTO>({
     resolver: zodResolver(eventoSchema),
-    defaultValues: valoresPadrao,
+    defaultValues: eventoParaEditar
+      ? {
+          titulo: eventoParaEditar.titulo,
+          descricao: eventoParaEditar.descricao ?? "",
+          dataEvento: eventoParaEditar.dataEvento ?? "",
+          isActive: eventoParaEditar.isActive,
+        }
+      : valoresPadrao,
   });
-
-  useEffect(() => {
-    reset(
-      eventoParaEditar
-        ? {
-            titulo: eventoParaEditar.titulo,
-            descricao: eventoParaEditar.descricao ?? "",
-            dataEvento: eventoParaEditar.dataEvento ?? "",
-            isActive: eventoParaEditar.isActive,
-          }
-        : valoresPadrao,
-    );
-  }, [eventoParaEditar, reset]);
 
   async function onSubmit(values: CreateEventDTO) {
     if (eventoParaEditar) {
       await atualizarEvento.mutateAsync({ id: eventoParaEditar.id, input: values });
-      onCancelarEdicao?.();
     } else {
       await criarEvento.mutateAsync(values);
-      reset(valoresPadrao);
     }
+    onFechar();
   }
 
   const salvando = criarEvento.isPending || atualizarEvento.isPending;
@@ -120,11 +111,9 @@ export function EventoForm({ eventoParaEditar, onCancelarEdicao }: EventoFormPro
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-3 pt-2">
-        {emEdicao && (
-          <Button type="button" variant="outline" onClick={() => onCancelarEdicao?.()}>
-            Cancelar
-          </Button>
-        )}
+        <Button type="button" variant="outline" onClick={onFechar}>
+          Cancelar
+        </Button>
         <Button type="submit" disabled={salvando}>
           {salvando ? "Salvando..." : emEdicao ? "Salvar alterações" : "Cadastrar evento"}
         </Button>
