@@ -32,3 +32,9 @@ export type UpdateUrgencyDTO = z.infer<typeof updateUrgencySchema>;
 export const urgencyIdParamSchema = z.object({
   id: z.string().uuid("id inválido"),
 });
+
+export const registerDonationSchema = z.object({
+  valor: z.number().positive("valor da doação deve ser maior que zero"),
+});
+export type RegisterDonationDTO = z.infer<typeof registerDonationSchema>;
+
