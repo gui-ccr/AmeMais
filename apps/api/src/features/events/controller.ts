@@ -37,11 +37,11 @@ export class EventController {
     }
   };
 
-  getById = async (request: NextRequest, { params }: { params: { id: string } }) => {
+  getById = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const { id } = eventIdParamSchema.parse(params);
+      const { id } = eventIdParamSchema.parse(await params);
 
       const useCase = new GetEventUseCase(new EventRepository(db));
       const event = await useCase.execute(id);
@@ -68,11 +68,11 @@ export class EventController {
     }
   };
 
-  update = async (request: NextRequest, { params }: { params: { id: string } }) => {
+  update = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const { id } = eventIdParamSchema.parse(params);
+      const { id } = eventIdParamSchema.parse(await params);
       const body = await request.json();
       const input = updateEventSchema.parse(body);
 
@@ -85,11 +85,11 @@ export class EventController {
     }
   };
 
-  delete = async (request: NextRequest, { params }: { params: { id: string } }) => {
+  delete = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const { id } = eventIdParamSchema.parse(params);
+      const { id } = eventIdParamSchema.parse(await params);
 
       const useCase = new DeleteEventUseCase(new EventRepository(db));
       await useCase.execute(id);

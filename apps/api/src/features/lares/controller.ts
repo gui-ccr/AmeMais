@@ -42,13 +42,12 @@ export class ShelterController {
 
   getById = async (
     request: NextRequest,
-    context: { params: Promise<{ id: string }> | { id: string } },
+    { params }: { params: Promise<{ id: string }> },
   ) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const params = await Promise.resolve(context.params);
-      const { id } = shelterIdParamSchema.parse(params);
+      const { id } = shelterIdParamSchema.parse(await params);
 
       const useCase = new GetShelterUseCase(new ShelterRepository(db));
       const shelter = await useCase.execute(id);
@@ -77,13 +76,12 @@ export class ShelterController {
 
   updateStatus = async (
     request: NextRequest,
-    context: { params: Promise<{ id: string }> | { id: string } },
+    { params }: { params: Promise<{ id: string }> },
   ) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const params = await Promise.resolve(context.params);
-      const { id } = shelterIdParamSchema.parse(params);
+      const { id } = shelterIdParamSchema.parse(await params);
       const body = await request.json();
       const { status } = updateShelterStatusSchema.parse(body);
 
@@ -98,13 +96,12 @@ export class ShelterController {
 
   delete = async (
     request: NextRequest,
-    context: { params: Promise<{ id: string }> | { id: string } },
+    { params }: { params: Promise<{ id: string }> },
   ) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const params = await Promise.resolve(context.params);
-      const { id } = shelterIdParamSchema.parse(params);
+      const { id } = shelterIdParamSchema.parse(await params);
 
       const useCase = new DeleteShelterUseCase(new ShelterRepository(db));
       await useCase.execute(id);

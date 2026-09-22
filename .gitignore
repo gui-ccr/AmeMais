@@ -39,3 +39,5 @@ Thumbs.db
 
 /docs/controle_projeto
 /docs/sprint-planning
+.vercel
+.env*

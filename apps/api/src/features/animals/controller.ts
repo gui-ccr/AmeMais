@@ -41,11 +41,11 @@ export class AnimalController {
     }
   };
 
-  getById = async (request: NextRequest, { params }: { params: { id: string } }) => {
+  getById = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const { id } = animalIdParamSchema.parse(params);
+      const { id } = animalIdParamSchema.parse(await params);
 
       const useCase = new GetAnimalUseCase(new AnimalRepository(db));
       const animal = await useCase.execute(id);
@@ -72,11 +72,11 @@ export class AnimalController {
     }
   };
 
-  updateStatus = async (request: NextRequest, { params }: { params: { id: string } }) => {
+  updateStatus = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const { id } = animalIdParamSchema.parse(params);
+      const { id } = animalIdParamSchema.parse(await params);
       const body = await request.json();
       const { status } = updateAnimalStatusSchema.parse(body);
 
@@ -89,11 +89,11 @@ export class AnimalController {
     }
   };
 
-  delete = async (request: NextRequest, { params }: { params: { id: string } }) => {
+  delete = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const { id } = animalIdParamSchema.parse(params);
+      const { id } = animalIdParamSchema.parse(await params);
 
       const useCase = new DeleteAnimalUseCase(new AnimalRepository(db));
       await useCase.execute(id);

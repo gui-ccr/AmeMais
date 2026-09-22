@@ -1,5 +1,5 @@
 import { ValidationError } from "@/core/errors";
-import { ShelterStatus, type ShelterStatusValue } from "./shelter-status.vo.js";
+import { ShelterStatus, type ShelterStatusValue } from "./shelter-status.vo";
 
 /**
  * Estado completo de um lar temporário já persistido no banco.
