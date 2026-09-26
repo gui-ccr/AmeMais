@@ -48,10 +48,14 @@ export function formatarDia(dia: string): string {
   return `${diaDoMes}/${mes}/${ano}`;
 }
 
-/** Progresso de 0 a 100, ou null quando não há meta. */
+/**
+ * Progresso de 0 a 100, ou null quando não há meta. Arredonda para BAIXO: 996 de
+ * 1000 é 99%, não 100% — "100%" só aparece quando a meta foi de fato atingida
+ * (e aí a urgência também vira "Atendida").
+ */
 export function calcularPercentual(meta: number | null, arrecadado: number): number | null {
   if (meta === null || meta <= 0) return null;
-  return Math.min(100, Math.round((arrecadado / meta) * 100));
+  return Math.min(100, Math.floor((arrecadado / meta) * 100));
 }
 
 export function getSituacaoUrgencia(urgencia: UrgenciaParaSituacao, agora: Date = new Date()): SituacaoUrgencia {

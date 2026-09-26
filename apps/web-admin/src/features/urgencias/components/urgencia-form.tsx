@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { useCreateUrgencia, useUpdateUrgencia } from "../hooks/use-urgencias";
 import { PRIORIDADE_INFO, TIPO_INFO, UNIDADE_INFO } from "../opcoes";
 import { extrairDia, getSituacaoUrgencia } from "../situacao";
@@ -141,7 +142,7 @@ export function UrgenciaForm({ urgenciaParaEditar, onFechar }: UrgenciaFormProps
       }
       onFechar();
     } catch (error) {
-      setErroServidor(error instanceof Error ? error.message : "Não foi possível salvar a urgência. Tente novamente.");
+      setErroServidor(mensagemDeErroDaApi(error, "Não foi possível salvar a urgência. Tente novamente."));
     }
   }
 

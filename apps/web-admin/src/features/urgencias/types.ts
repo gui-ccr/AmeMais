@@ -16,11 +16,28 @@ export const UNIDADES_META = ["kg", "un", "L", "R$"] as const;
 export type UnidadeMeta = (typeof UNIDADES_META)[number];
 
 /**
- * Modelo de urgência do front. Hoje é alimentado por um mock (ver
- * `urgencia-service.ts`). O DTO real da API só tem titulo, descricao,
- * metaArrecadacao, valorArrecadado e isActive — `prioridade`, `tipo`,
- * `dataLimite` e `unidade` ainda não existem lá (precisam de colunas novas no
- * back). `meta` e `arrecadado` correspondem a metaArrecadacao/valorArrecadado.
+ * Formato que a API devolve em `/api/urgencias` — espelha
+ * apps/api/src/features/urgencies/urgency.dto.ts. Só o `urgencia-service.ts`
+ * conhece esse formato: as telas usam o modelo `Urgencia` abaixo.
+ */
+export interface UrgencyDTO {
+  id: string;
+  titulo: string;
+  descricao: string | null;
+  metaArrecadacao: number | null;
+  valorArrecadado: number;
+  unidade: UnidadeMeta;
+  prioridade: PrioridadeUrgencia;
+  tipo: TipoDoacao;
+  dataLimite: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+/**
+ * Modelo de urgência usado pelas telas. `meta` e `arrecadado` correspondem a
+ * `metaArrecadacao`/`valorArrecadado` da API e `ativo` a `isActive` (a tradução
+ * é feita em `urgencia-service.ts`).
  */
 export interface Urgencia {
   id: string;
