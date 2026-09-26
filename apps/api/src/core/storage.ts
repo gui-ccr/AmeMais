@@ -1,7 +1,18 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase";
-import { StorageError, ValidationError } from "./errors";
+import { ForbiddenError, StorageError, ValidationError } from "./errors";
 
 export const DEFAULT_STORAGE_BUCKET = "animal-photos";
+
+/**
+ * Quando o envio é feito como o usuário (`options.client`), a RLS de
+ * `storage.objects` pode negá-lo — o mesmo caso do 42501 nas tabelas
+ * (`throwOnWriteError`): vira 403, não um 500 genérico.
+ */
+function erroDeStorage(error: { message?: string; statusCode?: string | number }): ForbiddenError | StorageError {
+  const negadoPelaRls = String(error.statusCode) === "403" || /row-level security/i.test(error.message ?? "");
+  return negadoPelaRls ? new ForbiddenError() : new StorageError(error);
+}
 
 export type StorageFileBody =
   | Buffer
@@ -15,6 +26,12 @@ export interface UploadOptions {
   bucket?: string;
   contentType?: string;
   upsert?: boolean;
+  /**
+   * Client a usar no envio. Padrão: `supabaseAdmin` (service role, ignora a
+   * RLS do Storage). Passe o client do usuário (`createSupabaseForUser`) para
+   * que as policies de `storage.objects` decidam quem pode enviar.
+   */
+  client?: SupabaseClient;
 }
 
 export interface UploadResult {
@@ -28,12 +45,16 @@ export interface UploadResult {
  * @param path Caminho do arquivo dentro do bucket
  * @param bucket Nome do bucket (padrão: "animal-photos")
  */
-export function getPublicUrl(path: string, bucket: string = DEFAULT_STORAGE_BUCKET): string {
+export function getPublicUrl(
+  path: string,
+  bucket: string = DEFAULT_STORAGE_BUCKET,
+  client: SupabaseClient = supabaseAdmin,
+): string {
   if (!path || !path.trim()) {
     throw new ValidationError("Caminho do arquivo é obrigatório");
   }
 
-  const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
+  const { data } = client.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
 }
 
@@ -60,25 +81,26 @@ export async function uploadFile(
   }
 
   const bucket = options?.bucket || DEFAULT_STORAGE_BUCKET;
+  const client = options?.client ?? supabaseAdmin;
 
   try {
-    const { data, error } = await supabaseAdmin.storage.from(bucket).upload(path, file, {
+    const { data, error } = await client.storage.from(bucket).upload(path, file, {
       contentType: options?.contentType,
       upsert: options?.upsert ?? false,
     });
 
     if (error) {
-      throw new StorageError(error);
+      throw erroDeStorage(error);
     }
 
-    const publicUrl = getPublicUrl(data.path, bucket);
+    const publicUrl = getPublicUrl(data.path, bucket, client);
 
     return {
       path: data.path,
       publicUrl,
     };
   } catch (error) {
-    if (error instanceof ValidationError || error instanceof StorageError) {
+    if (error instanceof ValidationError || error instanceof StorageError || error instanceof ForbiddenError) {
       throw error;
     }
     throw new StorageError(error);

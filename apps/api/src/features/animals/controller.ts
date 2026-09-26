@@ -1,14 +1,63 @@
 import { NextRequest } from "next/server";
 import { ok, created, fail } from "@/core/http";
+import { ValidationError } from "@/core/errors";
+import { deleteFile, uploadFile } from "@/core/storage";
+import { TAMANHO_MAXIMO_IMAGEM_BYTES } from "@/features/uploads/image-rules";
+import { UploadImageUseCase } from "@/features/uploads/upload-image.use-case";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
-import { createAnimalSchema, updateAnimalStatusSchema, animalIdParamSchema } from "./schema";
+import {
+  createAnimalSchema,
+  updateAnimalStatusSchema,
+  animalIdParamSchema,
+  type CreateAnimalDTO,
+} from "./schema";
 import { AnimalRepository } from "./animal.repository";
 import { ListAnimalsUseCase } from "./use-cases/list-animals.use-case";
 import { GetAnimalUseCase } from "./use-cases/get-animal.use-case";
-import { CreateAnimalUseCase } from "./use-cases/create-animal.use-case";
+import { CreateAnimalUseCase, type FotosDoAnimal } from "./use-cases/create-animal.use-case";
 import { UpdateAnimalStatusUseCase } from "./use-cases/update-animal-status.use-case";
 import { DeleteAnimalUseCase } from "./use-cases/delete-animal.use-case";
+
+/**
+ * O cadastro aceita dois formatos:
+ *  - JSON (`Content-Type: application/json`): o corpo é o animal; a foto, se
+ *    houver, vem como `urlFoto` (uma URL já existente);
+ *  - multipart (`multipart/form-data`): o campo `dados` traz o JSON do animal e
+ *    o campo `foto` traz o arquivo — a API envia a foto e grava o animal num
+ *    pedido só, e a foto não fica no Storage se o cadastro falhar.
+ */
+async function lerCorpoDoCadastro(request: NextRequest): Promise<{ input: CreateAnimalDTO; foto?: Uint8Array }> {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.includes("multipart/form-data")) {
+    return { input: createAnimalSchema.parse(await request.json()) };
+  }
+
+  const form = await request.formData();
+
+  const dados = form.get("dados");
+  if (typeof dados !== "string") {
+    throw new ValidationError("dados é obrigatório (JSON do animal)");
+  }
+  let json: unknown;
+  try {
+    json = JSON.parse(dados);
+  } catch {
+    throw new ValidationError("dados deve ser um JSON válido");
+  }
+  const input = createAnimalSchema.parse(json);
+
+  const arquivo = form.get("foto");
+  if (arquivo === null) return { input };
+  if (!(arquivo instanceof File)) {
+    throw new ValidationError("foto deve ser um arquivo");
+  }
+  // Recusa antes de ler o arquivo inteiro para a memória.
+  if (arquivo.size > TAMANHO_MAXIMO_IMAGEM_BYTES) {
+    throw new ValidationError(`a foto deve ter no máximo ${TAMANHO_MAXIMO_IMAGEM_BYTES / 1024 / 1024} MB`);
+  }
+  return { input, foto: new Uint8Array(await arquivo.arrayBuffer()) };
+}
 
 /**
  * Controller da feature Animals: 1 método por endpoint. Cada método:
@@ -60,11 +109,22 @@ export class AnimalController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const body = await request.json();
-      const input = createAnimalSchema.parse(body);
+      const { input, foto } = await lerCorpoDoCadastro(request);
 
-      const useCase = new CreateAnimalUseCase(new AnimalRepository(db));
-      const animal = await useCase.execute(input);
+      // Envio como o usuário (a RLS do Storage decide quem pode subir foto);
+      // a remoção usa o padrão (service role) de propósito: é só a limpeza de
+      // um arquivo que esta mesma requisição acabou de criar, num caminho que
+      // o servidor gerou.
+      const uploadImage = new UploadImageUseCase((path, bytes, contentType) =>
+        uploadFile(path, bytes, { client: db, contentType }),
+      );
+      const fotos: FotosDoAnimal = {
+        enviar: (bytes) => uploadImage.execute({ tipo: "animal", bytes }),
+        remover: (path) => deleteFile(path),
+      };
+
+      const useCase = new CreateAnimalUseCase(new AnimalRepository(db), fotos);
+      const animal = await useCase.execute(input, foto);
 
       return created(animal);
     } catch (error) {
@@ -78,10 +138,10 @@ export class AnimalController {
       const db = createSupabaseForUser(user.accessToken);
       const { id } = animalIdParamSchema.parse(await params);
       const body = await request.json();
-      const { status } = updateAnimalStatusSchema.parse(body);
+      const { status, adotante, dataAdocao } = updateAnimalStatusSchema.parse(body);
 
       const useCase = new UpdateAnimalStatusUseCase(new AnimalRepository(db));
-      const animal = await useCase.execute(id, status);
+      const animal = await useCase.execute(id, status, adotante || dataAdocao ? { adotante, dataAdocao } : undefined);
 
       return ok(animal);
     } catch (error) {

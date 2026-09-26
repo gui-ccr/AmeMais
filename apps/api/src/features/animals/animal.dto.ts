@@ -8,6 +8,14 @@ import type { AnimalStatusValue } from "./domain/animal-status.vo";
  * aqui é a string crua, não o Value Object — um DTO nunca vaza instâncias
  * de domínio, só valores serializáveis.
  */
+export interface AdotanteDTO {
+  nome: string;
+  idade: number;
+  /** Só os 8 dígitos. */
+  cep: string;
+  localidade: string;
+}
+
 export interface AnimalDTO {
   id: string;
   nome: string;
@@ -17,6 +25,8 @@ export interface AnimalDTO {
   urlFoto: string | null;
   larTemporarioId: string | null;
   adotanteId: string | null;
+  /** Dados de quem adotou (pessoais): só existem para animais `adotado`. */
+  adotante: AdotanteDTO | null;
   dataAdocao: string | null;
   createdAt: string;
 }
@@ -31,6 +41,14 @@ export function toAnimalDTO(animal: Animal): AnimalDTO {
     urlFoto: animal.urlFoto,
     larTemporarioId: animal.larTemporarioId,
     adotanteId: animal.adotanteId,
+    adotante: animal.adotante
+      ? {
+          nome: animal.adotante.nome,
+          idade: animal.adotante.idade,
+          cep: animal.adotante.cep,
+          localidade: animal.adotante.localidade,
+        }
+      : null,
     dataAdocao: animal.dataAdocao,
     createdAt: animal.createdAt,
   };

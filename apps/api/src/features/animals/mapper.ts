@@ -1,6 +1,6 @@
-import { Animal } from "./domain/animal.entity";
+import { Adotante } from "./domain/adotante.vo";
+import { Animal, type AnimalCreationData } from "./domain/animal.entity";
 import { AnimalStatus } from "./domain/animal-status.vo";
-import type { CreateAnimalDTO } from "./schema";
 
 /**
  * Formato exato da tabela "animais" no Postgres (snake_case). Fica só
@@ -17,6 +17,10 @@ export interface AnimalRow {
   adotante_id: string | null;
   url_foto: string | null;
   data_adocao: string | null;
+  adotante_nome: string | null;
+  adotante_idade: number | null;
+  adotante_cep: string | null;
+  adotante_localidade: string | null;
   created_at: string;
 }
 
@@ -40,17 +44,62 @@ export function mapRowToEntity(row: AnimalRow): Animal {
     urlFoto: row.url_foto,
     larTemporarioId: row.lar_temporario_id,
     adotanteId: row.adotante_id,
+    adotante: mapRowToAdotante(row),
     dataAdocao: row.data_adocao,
     createdAt: row.created_at,
   });
 }
 
-export function mapCreateDTOToRow(input: CreateAnimalDTO) {
+/** As 4 colunas do adotante andam juntas (CHECK no banco): ou vêm todas, ou nenhuma. */
+function mapRowToAdotante(row: AnimalRow): Adotante | null {
+  if (
+    row.adotante_nome === null ||
+    row.adotante_idade === null ||
+    row.adotante_cep === null ||
+    row.adotante_localidade === null
+  ) {
+    return null;
+  }
+  return Adotante.from({
+    nome: row.adotante_nome,
+    idade: row.adotante_idade,
+    cep: row.adotante_cep,
+    localidade: row.adotante_localidade,
+  });
+}
+
+/**
+ * Colunas que guardam a adoção, tiradas do estado da entidade. Quando o animal
+ * deixa de estar `adotado`, a entidade já zerou tudo — então gravar estas
+ * colunas apaga os dados pessoais do adotante junto com a mudança de status.
+ */
+export function mapAdocaoToRow(animal: Animal) {
+  return {
+    adotante_id: animal.adotanteId,
+    adotante_nome: animal.adotante?.nome ?? null,
+    adotante_idade: animal.adotante?.idade ?? null,
+    adotante_cep: animal.adotante?.cep ?? null,
+    adotante_localidade: animal.adotante?.localidade ?? null,
+    data_adocao: animal.dataAdocao,
+  };
+}
+
+/**
+ * Recebe o resultado já validado de `Animal.create()` — não o DTO cru da
+ * requisição — para que o nome trimado, o CEP só com dígitos e as demais
+ * normalizações da entidade sejam o que realmente vai para o banco.
+ */
+export function mapCreateDTOToRow(input: AnimalCreationData) {
   return {
     nome: input.nome,
-    especie: input.especie ?? null,
-    raca: input.raca ?? null,
-    status_adocao: input.status,
-    url_foto: input.urlFoto ?? null,
+    especie: input.especie,
+    raca: input.raca,
+    status_adocao: input.status.valor,
+    url_foto: input.urlFoto,
+    adotante_nome: input.adotante?.nome ?? null,
+    adotante_idade: input.adotante?.idade ?? null,
+    adotante_cep: input.adotante?.cep ?? null,
+    adotante_localidade: input.adotante?.localidade ?? null,
+    data_adocao: input.dataAdocao,
   };
 }
