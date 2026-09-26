@@ -3,12 +3,11 @@ import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
 import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
 import type { Animal } from "./domain/animal.entity";
-import type { AnimalStatus } from "./domain/animal-status.vo";
 import type { CreateAnimalDTO } from "./schema";
 
 const TABLE = "animais";
 const COLUMNS =
-  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, created_at";
+  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, url_foto, data_adocao, created_at";
 
 /**
  * Contrato que os use cases dependem de (Dependency Inversion): eles não
@@ -20,7 +19,7 @@ export interface IAnimalRepository {
   list(): Promise<Animal[]>;
   findById(id: string): Promise<Animal>;
   create(input: CreateAnimalDTO): Promise<Animal>;
-  updateStatus(id: string, status: AnimalStatus): Promise<Animal>;
+  updateStatus(animal: Animal): Promise<Animal>;
   remove(id: string): Promise<void>;
 }
 
@@ -66,11 +65,26 @@ export class AnimalRepository implements IAnimalRepository {
     return mapRowToEntity(data);
   }
 
-  async updateStatus(id: string, status: AnimalStatus): Promise<Animal> {
+  /**
+   * Recebe a entidade (já com `changeStatus()` aplicado) em vez de só
+   * `status`, porque a devolução de um animal adotado limpa `adotante` e
+   * `dataAdocao` em memória (ver `Animal.changeStatus()`) — sem o objeto
+   * inteiro aqui, o repository não tem como saber que precisa gravar esses
+   * campos como `null` no banco, e a devolução ficaria "meio feita" (limpa
+   * na entidade, mas com o adotante antigo ainda salvo no Postgres).
+   */
+  async updateStatus(animal: Animal): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
-      .update({ status_adocao: status.valor })
-      .eq("id", id)
+      .update({
+        status_adocao: animal.status.valor,
+        adotante_nome: animal.adotante?.nome ?? null,
+        adotante_idade: animal.adotante?.idade ?? null,
+        adotante_cep: animal.adotante?.cep ?? null,
+        adotante_localidade: animal.adotante?.localidade ?? null,
+        data_adocao: animal.dataAdocao,
+      })
+      .eq("id", animal.id)
       .select(COLUMNS)
       .single();
 

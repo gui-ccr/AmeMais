@@ -1,4 +1,4 @@
-import type { Animal } from "./domain/animal.entity";
+import type { Animal, AdotanteInfo } from "./domain/animal.entity";
 import type { AnimalStatusValue } from "./domain/animal-status.vo";
 
 /**
@@ -7,6 +7,10 @@ import type { AnimalStatusValue } from "./domain/animal-status.vo";
  * e as camadas HTTP só enxergam este formato, nunca a entidade. `status`
  * aqui é a string crua, não o Value Object — um DTO nunca vaza instâncias
  * de domínio, só valores serializáveis.
+ *
+ * `adotanteId` (FK para uma conta em `adotantes`) e `adotante` (retrato
+ * solto de nome/idade/cep/localidade) são dados diferentes — o segundo foi
+ * adicionado sem remover o primeiro para não quebrar quem já consome `adotanteId`.
  */
 export interface AnimalDTO {
   id: string;
@@ -17,6 +21,7 @@ export interface AnimalDTO {
   urlFoto: string | null;
   larTemporarioId: string | null;
   adotanteId: string | null;
+  adotante: AdotanteInfo | null;
   dataAdocao: string | null;
   createdAt: string;
 }
@@ -31,6 +36,7 @@ export function toAnimalDTO(animal: Animal): AnimalDTO {
     urlFoto: animal.urlFoto,
     larTemporarioId: animal.larTemporarioId,
     adotanteId: animal.adotanteId,
+    adotante: animal.adotante,
     dataAdocao: animal.dataAdocao,
     createdAt: animal.createdAt,
   };
