@@ -2,17 +2,8 @@ import { z } from "zod";
 import { ESPECIES } from "./domain/animal-options";
 import { ANIMAL_STATUSES } from "./domain/animal-status.vo";
 
-/**
- * Schemas Zod: validam o que chega pela requisição. Os tipos inferidos
- * daqui são os DTOs de entrada usados pelo controller e repassados,
- * já validados, para o use case.
- */
-/**
- * As mesmas faixas do Value Object `Adotante` (a fonte de verdade), conferidas
- * já na borda HTTP para devolver 400 com `issues` campo a campo, em vez de só
- * a mensagem genérica do domínio. O CEP entra só com os 8 dígitos (a máscara é
- * coisa da tela).
- */
+/** Schemas Zod: validam o que chega pela requisição. */
+/** Adotante: mesmas faixas do domínio, com erro campo a campo. CEP só com 8 números. */
 const adotanteSchema = z.object({
   nome: z.string().min(2, "nome do adotante deve ter pelo menos 2 caracteres"),
   idade: z
@@ -37,11 +28,7 @@ export const createAnimalSchema = z.object({
 });
 export type CreateAnimalDTO = z.infer<typeof createAnimalSchema>;
 
-/**
- * Para `status: "adotado"`, `adotante` e `dataAdocao` são obrigatórios — a regra
- * mora em `Animal.changeStatus`; aqui só o formato. Para os demais status não
- * devem ser enviados.
- */
+/** Para `adotado`, `adotante` e `dataAdocao` são obrigatórios (regra em `Animal.changeStatus`). */
 export const updateAnimalStatusSchema = z.object({
   status: z.enum(ANIMAL_STATUSES),
   adotante: adotanteSchema.optional(),
