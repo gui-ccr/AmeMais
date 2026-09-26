@@ -22,6 +22,10 @@ describe("Urgency Entity (Domain Layer)", () => {
         descricao: "Custos do procedimento emergencial",
         valorArrecadado: 500,
         metaArrecadacao: 1000,
+        unidade: "R$",
+        prioridade: "importante",
+        tipo: "outros",
+        dataLimite: null,
         isActive: true,
       });
     });
@@ -150,6 +154,7 @@ describe("Urgency Entity (Domain Layer)", () => {
   describe("Urgency.restore()", () => {
     it("deve restaurar uma entidade persistida sem revalidar regras de criação", () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "123e4567-e89b-12d3-a456-426614174000",
         titulo: "Cirurgia ortopédica",
         descricao: "Fixador externo",
@@ -172,6 +177,7 @@ describe("Urgency Entity (Domain Layer)", () => {
   describe("Operações de negócio da entidade (update e registrarArrecadacao)", () => {
     it("deve atualizar campos mantendo as invariantes protegidas", () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-1",
         titulo: "Ração especial",
         descricao: null,
@@ -194,6 +200,7 @@ describe("Urgency Entity (Domain Layer)", () => {
 
     it("deve rejeitar update que tente colocar valorArrecadado maior que a meta", () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-1",
         titulo: "Ração especial",
         descricao: null,
@@ -208,6 +215,7 @@ describe("Urgency Entity (Domain Layer)", () => {
 
     it("deve registrar nova arrecadação somando ao total", () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-1",
         titulo: "Campanha Castração",
         descricao: null,
@@ -223,6 +231,7 @@ describe("Urgency Entity (Domain Layer)", () => {
 
     it("deve rejeitar registrarArrecadacao quando o valor ultrapassar a meta", () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-1",
         titulo: "Campanha Castração",
         descricao: null,
@@ -240,6 +249,7 @@ describe("Urgency Entity (Domain Layer)", () => {
   describe("Integração com DTO e Schema", () => {
     it("toUrgencyDTO deve mapear a entidade para o contrato serializável de saída da API", () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-123",
         titulo: "Cirurgia",
         descricao: "Ajuda médica",
@@ -257,6 +267,10 @@ describe("Urgency Entity (Domain Layer)", () => {
         descricao: "Ajuda médica",
         metaArrecadacao: 1500,
         valorArrecadado: 750,
+        unidade: "R$",
+        prioridade: "importante",
+        tipo: "outros",
+        dataLimite: null,
         isActive: true,
         createdAt: "2026-09-14T10:00:00Z",
       });

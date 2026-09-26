@@ -1,4 +1,34 @@
 import { ValidationError } from "@/core/errors";
+import {
+  PRIORIDADES_URGENCIA,
+  PRIORIDADE_PADRAO,
+  TIPOS_DOACAO,
+  TIPO_PADRAO,
+  UNIDADES_META,
+  UNIDADE_PADRAO,
+  type PrioridadeUrgencia,
+  type TipoDoacao,
+  type UnidadeMeta,
+} from "./urgency-options";
+
+/** Confere se `valor` está na lista fixa `permitidos`; lança ValidationError com a lista se não estiver. */
+function validarOpcao<T extends string>(campo: string, valor: string, permitidos: readonly T[]): T {
+  if (!permitidos.includes(valor as T)) {
+    throw new ValidationError(`${campo} deve ser um de: ${permitidos.join(", ")}`);
+  }
+  return valor as T;
+}
+
+/** `dataLimite` é um dia ("AAAA-MM-DD") que realmente existe no calendário (rejeita 2026-02-30). */
+function validarDataLimite(valor: string | null | undefined): string | null {
+  if (valor === null || valor === undefined) return null;
+  const valida =
+    /^\d{4}-\d{2}-\d{2}$/.test(valor) && new Date(`${valor}T00:00:00Z`).toISOString().slice(0, 10) === valor;
+  if (!valida) {
+    throw new ValidationError("dataLimite deve ser uma data válida no formato AAAA-MM-DD");
+  }
+  return valor;
+}
 
 /**
  * Estado completo de uma urgência já persistida (tem id e createdAt, que só
@@ -10,6 +40,12 @@ export interface UrgencyProps {
   descricao: string | null;
   metaArrecadacao: number | null;
   valorArrecadado: number;
+  /** Em que `metaArrecadacao` e `valorArrecadado` são medidos (kg, un, L ou R$). */
+  unidade: UnidadeMeta;
+  prioridade: PrioridadeUrgencia;
+  tipo: TipoDoacao;
+  /** Prazo opcional, dia no formato AAAA-MM-DD. */
+  dataLimite: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -22,6 +58,10 @@ export interface NewUrgencyProps {
   descricao?: string | null;
   metaArrecadacao?: number | null;
   valorArrecadado?: number;
+  unidade?: UnidadeMeta;
+  prioridade?: PrioridadeUrgencia;
+  tipo?: TipoDoacao;
+  dataLimite?: string | null;
   isActive?: boolean;
 }
 
@@ -34,6 +74,10 @@ export interface UpdateUrgencyProps {
   descricao?: string | null;
   metaArrecadacao?: number | null;
   valorArrecadado?: number;
+  unidade?: UnidadeMeta;
+  prioridade?: PrioridadeUrgencia;
+  tipo?: TipoDoacao;
+  dataLimite?: string | null;
   isActive?: boolean;
 }
 
@@ -75,7 +119,10 @@ export class Urgency {
    * Regras de negócio centralizadas aqui:
    * 1. Título obrigatório (rejeita ausente, vazio ou somente espaços, mín. 2 caracteres).
    * 2. valorArrecadado não pode ser maior que metaArrecadacao na criação.
-   * 3. Valores monetários não podem ser negativos.
+   * 3. Valores de meta e arrecadado não podem ser negativos.
+   * 4. prioridade, tipo e unidade precisam ser de listas fixas (com padrão neutro).
+   * 5. dataLimite, se informada, precisa ser um dia válido (AAAA-MM-DD). Data
+   *    no passado é aceita de propósito: a urgência aparece como "prazo vencido".
    */
   static create(input: NewUrgencyProps): UrgencyCreationData {
     const titulo = input.titulo?.trim();
@@ -107,6 +154,10 @@ export class Urgency {
       descricao: input.descricao?.trim() || null,
       metaArrecadacao,
       valorArrecadado,
+      unidade: validarOpcao("unidade", input.unidade ?? UNIDADE_PADRAO, UNIDADES_META),
+      prioridade: validarOpcao("prioridade", input.prioridade ?? PRIORIDADE_PADRAO, PRIORIDADES_URGENCIA),
+      tipo: validarOpcao("tipo", input.tipo ?? TIPO_PADRAO, TIPOS_DOACAO),
+      dataLimite: validarDataLimite(input.dataLimite),
       isActive,
     };
   }
@@ -125,6 +176,18 @@ export class Urgency {
   }
   get valorArrecadado(): number {
     return this.props.valorArrecadado;
+  }
+  get unidade(): UnidadeMeta {
+    return this.props.unidade;
+  }
+  get prioridade(): PrioridadeUrgencia {
+    return this.props.prioridade;
+  }
+  get tipo(): TipoDoacao {
+    return this.props.tipo;
+  }
+  get dataLimite(): string | null {
+    return this.props.dataLimite;
   }
   get isActive(): boolean {
     return this.props.isActive;
@@ -171,6 +234,18 @@ export class Urgency {
     }
     if (input.metaArrecadacao !== undefined) {
       this.props.metaArrecadacao = novaMeta ?? null;
+    }
+    if (input.unidade !== undefined) {
+      this.props.unidade = validarOpcao("unidade", input.unidade, UNIDADES_META);
+    }
+    if (input.prioridade !== undefined) {
+      this.props.prioridade = validarOpcao("prioridade", input.prioridade, PRIORIDADES_URGENCIA);
+    }
+    if (input.tipo !== undefined) {
+      this.props.tipo = validarOpcao("tipo", input.tipo, TIPOS_DOACAO);
+    }
+    if (input.dataLimite !== undefined) {
+      this.props.dataLimite = validarDataLimite(input.dataLimite);
     }
     if (input.isActive !== undefined) {
       this.props.isActive = input.isActive;
