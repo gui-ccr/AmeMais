@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mapRowToEntity, mapCreateDTOToRow, type AnimalRow } from "../src/features/animals/mapper";
 import { ValidationError } from "../src/core/errors";
+import { Animal } from "../src/features/animals/domain/animal.entity";
 import type { CreateAnimalDTO } from "../src/features/animals/schema";
 
 function baseRow(overrides: Partial<AnimalRow> = {}): AnimalRow {
@@ -71,7 +72,8 @@ describe("animals mapper", () => {
         dataAdocao: "2026-09-20",
       };
 
-      const row = mapCreateDTOToRow(input);
+      // O mapper recebe os dados JÁ validados e normalizados por Animal.create().
+      const row = mapCreateDTOToRow(Animal.create(input));
 
       expect(row).toEqual({
         nome: "Rex",
@@ -90,7 +92,8 @@ describe("animals mapper", () => {
     it("deve gravar null nas colunas adotante_* e data_adocao quando não há adotante", () => {
       const input: CreateAnimalDTO = { nome: "Rex", status: "disponivel" };
 
-      const row = mapCreateDTOToRow(input);
+      // O mapper recebe os dados JÁ validados e normalizados por Animal.create().
+      const row = mapCreateDTOToRow(Animal.create(input));
 
       expect(row.adotante_nome).toBeNull();
       expect(row.adotante_idade).toBeNull();

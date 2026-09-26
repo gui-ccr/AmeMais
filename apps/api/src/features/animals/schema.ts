@@ -1,11 +1,17 @@
 import { z } from "zod";
+import { ESPECIES } from "./domain/animal-options";
 import { ANIMAL_STATUSES } from "./domain/animal-status.vo";
 
 /**
- * Dados do adotante informados no cadastro de um animal já adotado. As
- * mesmas faixas exigidas pela entidade (ver `Animal.create()`) já são
- * checadas aqui para virar um 400 com `issues` na borda HTTP, em vez de
- * só o `ValidationError` genérico do domínio.
+ * Schemas Zod: validam o que chega pela requisição. Os tipos inferidos
+ * daqui são os DTOs de entrada usados pelo controller e repassados,
+ * já validados, para o use case.
+ */
+/**
+ * As mesmas faixas do Value Object `Adotante` (a fonte de verdade), conferidas
+ * já na borda HTTP para devolver 400 com `issues` campo a campo, em vez de só
+ * a mensagem genérica do domínio. O CEP entra só com os 8 dígitos (a máscara é
+ * coisa da tela).
  */
 const adotanteSchema = z.object({
   nome: z.string().min(2, "nome do adotante deve ter pelo menos 2 caracteres"),
@@ -18,28 +24,28 @@ const adotanteSchema = z.object({
   localidade: z.string().min(1, "localidade do adotante é obrigatória"),
 });
 
-/**
- * Schemas Zod: validam o que chega pela requisição. Os tipos inferidos
- * daqui são os DTOs de entrada usados pelo controller e repassados,
- * já validados, para o use case.
- */
+const dataAdocaoSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "dataAdocao deve estar no formato AAAA-MM-DD");
+
 export const createAnimalSchema = z.object({
   nome: z.string().min(2, "nome deve ter pelo menos 2 caracteres"),
-  especie: z.string().min(1).optional(),
+  especie: z.enum(ESPECIES).optional(),
   raca: z.string().optional(),
   status: z.enum(ANIMAL_STATUSES).default("disponivel"),
   urlFoto: z.string().url().optional(),
   adotante: adotanteSchema.optional(),
-  dataAdocao: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "dataAdocao deve estar no formato YYYY-MM-DD")
-    .refine((val) => !isNaN(Date.parse(val)), { message: "dataAdocao deve ser uma data válida" })
-    .optional(),
+  dataAdocao: dataAdocaoSchema.optional(),
 });
 export type CreateAnimalDTO = z.infer<typeof createAnimalSchema>;
 
+/**
+ * Para `status: "adotado"`, `adotante` e `dataAdocao` são obrigatórios — a regra
+ * mora em `Animal.changeStatus`; aqui só o formato. Para os demais status não
+ * devem ser enviados.
+ */
 export const updateAnimalStatusSchema = z.object({
   status: z.enum(ANIMAL_STATUSES),
+  adotante: adotanteSchema.optional(),
+  dataAdocao: dataAdocaoSchema.optional(),
 });
 export type UpdateAnimalStatusDTO = z.infer<typeof updateAnimalStatusSchema>;
 

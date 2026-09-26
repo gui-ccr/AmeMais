@@ -6,7 +6,8 @@ import type { Urgency, UrgencyCreationData } from "./domain/urgency.entity";
 import type { UpdateUrgencyDTO } from "./schema";
 
 const TABLE = "urgency_items";
-const COLUMNS = "id, titulo, descricao, meta_arrecadacao, valor_arrecadado, is_active, created_at";
+const COLUMNS =
+  "id, titulo, descricao, meta_arrecadacao, valor_arrecadado, unidade, prioridade, tipo, data_limite, is_active, created_at";
 
 /**
  * Contrato de persistência que os use cases dependem (Dependency Inversion):

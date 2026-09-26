@@ -1,13 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
-import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
-import type { Animal } from "./domain/animal.entity";
-import type { CreateAnimalDTO } from "./schema";
+import { mapAdocaoToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
+import type { Animal, AnimalCreationData } from "./domain/animal.entity";
 
 const TABLE = "animais";
 const COLUMNS =
-  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, url_foto, data_adocao, created_at";
+  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
 
 /**
  * Contrato que os use cases dependem de (Dependency Inversion): eles não
@@ -18,7 +17,7 @@ const COLUMNS =
 export interface IAnimalRepository {
   list(): Promise<Animal[]>;
   findById(id: string): Promise<Animal>;
-  create(input: CreateAnimalDTO): Promise<Animal>;
+  create(input: AnimalCreationData): Promise<Animal>;
   updateStatus(animal: Animal): Promise<Animal>;
   remove(id: string): Promise<void>;
 }
@@ -53,7 +52,7 @@ export class AnimalRepository implements IAnimalRepository {
     return mapRowToEntity(data);
   }
 
-  async create(input: CreateAnimalDTO): Promise<Animal> {
+  async create(input: AnimalCreationData): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
       .insert(mapCreateDTOToRow(input))
@@ -66,24 +65,14 @@ export class AnimalRepository implements IAnimalRepository {
   }
 
   /**
-   * Recebe a entidade (já com `changeStatus()` aplicado) em vez de só
-   * `status`, porque a devolução de um animal adotado limpa `adotante` e
-   * `dataAdocao` em memória (ver `Animal.changeStatus()`) — sem o objeto
-   * inteiro aqui, o repository não tem como saber que precisa gravar esses
-   * campos como `null` no banco, e a devolução ficaria "meio feita" (limpa
-   * na entidade, mas com o adotante antigo ainda salvo no Postgres).
+   * Grava o status E os dados da adoção a partir do estado da entidade, na mesma
+   * escrita: ao virar `adotado` guarda adotante/data; ao deixar de ser `adotado`
+   * a entidade já zerou tudo (privacidade do adotante; o CHECK da tabela exige).
    */
   async updateStatus(animal: Animal): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
-      .update({
-        status_adocao: animal.status.valor,
-        adotante_nome: animal.adotante?.nome ?? null,
-        adotante_idade: animal.adotante?.idade ?? null,
-        adotante_cep: animal.adotante?.cep ?? null,
-        adotante_localidade: animal.adotante?.localidade ?? null,
-        data_adocao: animal.dataAdocao,
-      })
+      .update({ status_adocao: animal.status.valor, ...mapAdocaoToRow(animal) })
       .eq("id", animal.id)
       .select(COLUMNS)
       .single();

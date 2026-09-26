@@ -52,6 +52,7 @@ class FakeUrgencyRepository implements IUrgencyRepository {
     this.updateCalled = true;
     const current = await this.findById(id);
     const updated = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
       id: current.id,
       titulo: input.titulo !== undefined ? input.titulo : current.titulo,
       descricao: input.descricao !== undefined ? input.descricao : current.descricao,
@@ -71,6 +72,7 @@ class FakeUrgencyRepository implements IUrgencyRepository {
     this.updateValorArrecadadoCalled = true;
     const urgency = await this.findById(id);
     const updated = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
       id: urgency.id,
       titulo: urgency.titulo,
       descricao: urgency.descricao,
@@ -102,6 +104,7 @@ describe("Use Cases: Urgência", () => {
   describe("RegisterDonationUseCase", () => {
     it("Caso 1 — doação válida: incrementa o valor arrecadado (Meta = 1000, Arrecadado = 500, Doação = 200 -> Total 700)", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-1",
         titulo: "Cirurgia urgente",
         descricao: null,
@@ -122,6 +125,7 @@ describe("Use Cases: Urgência", () => {
 
     it("Caso 2 — doação completa exatamente a meta: permitido (Meta = 1000, Arrecadado = 800, Doação = 200 -> Total 1000)", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-2",
         titulo: "Medicamentos",
         descricao: null,
@@ -142,6 +146,7 @@ describe("Use Cases: Urgência", () => {
 
     it("Caso 3 — doação ultrapassa a meta: rejeita com erro de domínio (Meta = 1000, Arrecadado = 800, Doação = 201 -> rejeitado)", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-3",
         titulo: "Ração medicada",
         descricao: null,
@@ -162,6 +167,7 @@ describe("Use Cases: Urgência", () => {
 
     it("Caso 4 — garantia de não persistência: quando a doação ultrapassar a meta, o repository NÃO persiste nada", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-4",
         titulo: "Fisioterapia",
         descricao: null,
@@ -182,6 +188,7 @@ describe("Use Cases: Urgência", () => {
 
     it("deve rejeitar doação com valor menor ou igual a zero", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-5",
         titulo: "Exames",
         descricao: null,
@@ -201,6 +208,7 @@ describe("Use Cases: Urgência", () => {
 
     it("deve permitir doação em urgência sem meta definida", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-no-goal",
         titulo: "Fundo de emergência",
         descricao: null,
@@ -278,6 +286,7 @@ describe("Use Cases: Urgência", () => {
   describe("GetUrgencyUseCase", () => {
     it("deve buscar e retornar uma urgência existente como DTO", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-10",
         titulo: "Raio-X de emergência",
         descricao: "Pata fraturada",
@@ -297,6 +306,10 @@ describe("Use Cases: Urgência", () => {
         descricao: "Pata fraturada",
         metaArrecadacao: 350,
         valorArrecadado: 100,
+        unidade: "R$",
+        prioridade: "importante",
+        tipo: "outros",
+        dataLimite: null,
         isActive: true,
         createdAt: "2026-09-16T11:00:00Z",
       });
@@ -312,6 +325,7 @@ describe("Use Cases: Urgência", () => {
     it("deve listar todas as urgências convertidas em DTOs", async () => {
       repository.items.push(
         Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
           id: "1",
           titulo: "Urgência 1",
           descricao: null,
@@ -321,6 +335,7 @@ describe("Use Cases: Urgência", () => {
           createdAt: "2026-09-16T10:00:00Z",
         }),
         Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
           id: "2",
           titulo: "Urgência 2",
           descricao: null,
@@ -343,6 +358,7 @@ describe("Use Cases: Urgência", () => {
   describe("UpdateUrgencyUseCase", () => {
     it("deve atualizar os dados da urgência respeitando regras de domínio", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-edit",
         titulo: "Título Inicial",
         descricao: null,
@@ -366,6 +382,7 @@ describe("Use Cases: Urgência", () => {
 
     it("deve rejeitar atualização se valorArrecadado ficar maior que a meta", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-edit-2",
         titulo: "Campanha",
         descricao: null,
@@ -386,6 +403,7 @@ describe("Use Cases: Urgência", () => {
 
     it("deve persistir titulo/descricao já trimados pela entidade, não o input crú", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-edit-3",
         titulo: "Título Inicial",
         descricao: null,
@@ -410,6 +428,7 @@ describe("Use Cases: Urgência", () => {
   describe("DeleteUrgencyUseCase", () => {
     it("deve remover uma urgência existente", async () => {
       const urgency = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
         id: "urg-del",
         titulo: "Para deletar",
         descricao: null,
@@ -441,6 +460,10 @@ describe("Use Cases: Urgência", () => {
         descricao: "Para idosos",
         meta_arrecadacao: 800,
         valor_arrecadado: 350,
+        unidade: "kg",
+        prioridade: "urgente",
+        tipo: "racao",
+        data_limite: "2026-10-30",
         is_active: true,
         created_at: "2026-09-16T12:00:00Z",
       };
@@ -453,6 +476,10 @@ describe("Use Cases: Urgência", () => {
       expect(entity.descricao).toBe("Para idosos");
       expect(entity.metaArrecadacao).toBe(800);
       expect(entity.valorArrecadado).toBe(350);
+      expect(entity.unidade).toBe("kg");
+      expect(entity.prioridade).toBe("urgente");
+      expect(entity.tipo).toBe("racao");
+      expect(entity.dataLimite).toBe("2026-10-30");
       expect(entity.isActive).toBe(true);
       expect(entity.createdAt).toBe("2026-09-16T12:00:00Z");
     });
@@ -463,6 +490,10 @@ describe("Use Cases: Urgência", () => {
         descricao: "Detalhes",
         metaArrecadacao: 1500,
         valorArrecadado: 200,
+        unidade: "R$",
+        prioridade: "continua",
+        tipo: "cirurgia",
+        dataLimite: "2026-12-01",
         isActive: true,
       };
 
@@ -473,6 +504,10 @@ describe("Use Cases: Urgência", () => {
         descricao: "Detalhes",
         meta_arrecadacao: 1500,
         valor_arrecadado: 200,
+        unidade: "R$",
+        prioridade: "continua",
+        tipo: "cirurgia",
+        data_limite: "2026-12-01",
         is_active: true,
       });
     });

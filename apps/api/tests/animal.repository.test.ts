@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AnimalRepository } from "../src/features/animals/animal.repository";
+import { Adotante } from "../src/features/animals/domain/adotante.vo";
 import { Animal } from "../src/features/animals/domain/animal.entity";
 import { AnimalStatus } from "../src/features/animals/domain/animal-status.vo";
 import type { AnimalRow } from "../src/features/animals/mapper";
@@ -76,14 +77,16 @@ describe("AnimalRepository", () => {
       const { client, calls } = stubSupabase({ data: row, error: null });
       const repository = new AnimalRepository(client);
 
-      const animal = await repository.create({
-        nome: "Rex",
-        especie: "Cachorro",
-        raca: "Labrador",
-        status: "adotado",
-        adotante: { nome: "João Silva", idade: 30, cep: "39800000", localidade: "Teófilo Otoni" },
-        dataAdocao: "2026-09-20",
-      });
+      const animal = await repository.create(
+        Animal.create({
+          nome: "Rex",
+          especie: "Cachorro",
+          raca: "Labrador",
+          status: "adotado",
+          adotante: { nome: "João Silva", idade: 30, cep: "39800000", localidade: "Teófilo Otoni" },
+          dataAdocao: "2026-09-20",
+        }),
+      );
 
       const insertCall = calls.find((c) => c.method === "insert");
       expect(insertCall?.args[0]).toEqual({
@@ -118,7 +121,7 @@ describe("AnimalRepository", () => {
         urlFoto: "https://exemplo.com/rex.png",
         larTemporarioId: null,
         adotanteId: null,
-        adotante: { nome: "João Silva", idade: 30, cep: "39800000", localidade: "Teófilo Otoni" },
+        adotante: Adotante.from({ nome: "João Silva", idade: 30, cep: "39800000", localidade: "Teófilo Otoni" }),
         dataAdocao: "2026-09-20",
         createdAt: "2026-09-20T00:00:00.000Z",
       });
@@ -137,6 +140,7 @@ describe("AnimalRepository", () => {
       const updateCall = calls.find((c) => c.method === "update");
       expect(updateCall?.args[0]).toEqual({
         status_adocao: "disponivel",
+        adotante_id: null,
         adotante_nome: null,
         adotante_idade: null,
         adotante_cep: null,
@@ -171,7 +175,7 @@ describe("AnimalRepository", () => {
         urlFoto: animal.urlFoto,
         larTemporarioId: animal.larTemporarioId,
         adotanteId: animal.adotanteId,
-        adotante: { nome: "Maria Souza", idade: 40, cep: "39800000", localidade: "Teófilo Otoni" },
+        adotante: Adotante.from({ nome: "Maria Souza", idade: 40, cep: "39800000", localidade: "Teófilo Otoni" }),
         dataAdocao: "2026-09-20",
         createdAt: animal.createdAt,
       });
@@ -185,6 +189,7 @@ describe("AnimalRepository", () => {
       const updateCall = calls.find((c) => c.method === "update");
       expect(updateCall?.args[0]).toEqual({
         status_adocao: "adotado",
+        adotante_id: null,
         adotante_nome: "Maria Souza",
         adotante_idade: 40,
         adotante_cep: "39800000",

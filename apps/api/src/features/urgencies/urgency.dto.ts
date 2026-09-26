@@ -1,4 +1,5 @@
 import type { Urgency } from "./domain/urgency.entity";
+import type { PrioridadeUrgencia, TipoDoacao, UnidadeMeta } from "./domain/urgency-options";
 
 /**
  * DTO de saída: o formato exato que a API devolve para o cliente. É o use
@@ -11,6 +12,10 @@ export interface UrgencyDTO {
   descricao: string | null;
   metaArrecadacao: number | null;
   valorArrecadado: number;
+  unidade: UnidadeMeta;
+  prioridade: PrioridadeUrgencia;
+  tipo: TipoDoacao;
+  dataLimite: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -22,6 +27,10 @@ export function toUrgencyDTO(urgency: Urgency): UrgencyDTO {
     descricao: urgency.descricao,
     metaArrecadacao: urgency.metaArrecadacao,
     valorArrecadado: urgency.valorArrecadado,
+    unidade: urgency.unidade,
+    prioridade: urgency.prioridade,
+    tipo: urgency.tipo,
+    dataLimite: urgency.dataLimite,
     isActive: urgency.isActive,
     createdAt: urgency.createdAt,
   };
