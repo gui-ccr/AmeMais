@@ -18,4 +18,8 @@ export interface CreateEventDTO {
   isActive: boolean;
 }
 
-export type UpdateEventDTO = Partial<CreateEventDTO>;
+/** No PATCH, campo ausente = não alterar; `null` = limpar `descricao`/`dataEvento`. */
+export type UpdateEventDTO = Partial<Pick<CreateEventDTO, "titulo" | "isActive">> & {
+  descricao?: string | null;
+  dataEvento?: string | null;
+};

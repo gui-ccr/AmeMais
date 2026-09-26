@@ -1,12 +1,12 @@
 "use client";
 
-import { AlertTriangle, CalendarPlus } from "lucide-react";
+import { AlertTriangle, CalendarPlus, Eye, EyeOff } from "lucide-react";
 import type { Dispatch } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useDeleteEvent, useEvents } from "../hooks/use-events";
 import type { EventDTO } from "../types";
+import { EventoStatusBadge } from "./evento-status-badge";
 
 const MESES_ABREVIADOS = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
@@ -106,9 +106,15 @@ export function EventoList({ onEditar, onNovo }: EventoListProps) {
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-foreground">{evento.titulo}</span>
-                <Badge variant={evento.isActive ? "primary" : "muted"} size="sm">
-                  {evento.isActive ? "Ativo" : "Inativo"}
-                </Badge>
+                <EventoStatusBadge evento={evento} />
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  {evento.isActive ? (
+                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {evento.isActive ? "Visível no site" : "Oculto no site"}
+                </span>
               </div>
               {evento.descricao && (
                 <p className="truncate text-sm text-muted-foreground">{evento.descricao}</p>
