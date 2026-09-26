@@ -22,16 +22,6 @@ export function paraAnimal(dto: AnimalDTO): Animal {
   };
 }
 
-/** Envia a foto e devolve a URL pública que o cadastro do animal guarda em `urlFoto`. */
-async function enviarFoto(foto: File): Promise<string> {
-  const corpo = new FormData();
-  corpo.append("file", foto);
-  corpo.append("tipo", "animal");
-
-  const { data } = await api.post<{ data: { url: string } }>("/api/uploads/imagem", corpo);
-  return data.data.url;
-}
-
 export const animalService = {
   async list(): Promise<Animal[]> {
     const { data } = await api.get<{ data: AnimalDTO[] }>("/api/animals");
@@ -39,28 +29,34 @@ export const animalService = {
   },
 
   /**
-   * Cadastra um animal JÁ ADOTADO (o formulário registra a adoção junto): envia
-   * a foto e depois cria o animal com os dados do adotante. Se o cadastro falhar
-   * depois do envio, a foto fica no bucket sem animal — inofensivo, e o nome
-   * aleatório evita colisão numa nova tentativa.
+   * Cadastra um animal JÁ ADOTADO (o formulário registra a adoção junto).
+   *
+   * É UM pedido só (multipart): `dados` com o JSON do animal e `foto` com o
+   * arquivo. A API valida tudo, sobe a foto e grava o animal — e se a gravação
+   * falhar, apaga a foto. Assim uma foto nunca fica no bucket sem animal, que
+   * era o risco de enviar a foto num pedido e cadastrar o animal em outro.
    */
   async create(input: NovoAnimalInput): Promise<Animal> {
-    const urlFoto = await enviarFoto(input.foto);
+    const corpo = new FormData();
+    corpo.append(
+      "dados",
+      JSON.stringify({
+        nome: input.nome,
+        especie: input.especie,
+        raca: input.raca,
+        status: "adotado",
+        adotante: {
+          nome: input.adotante.nome,
+          idade: input.adotante.idade,
+          cep: input.adotante.cep.replace(/\D/g, ""),
+          localidade: input.adotante.localidade,
+        },
+        dataAdocao: input.dataAdocao,
+      }),
+    );
+    corpo.append("foto", input.foto);
 
-    const { data } = await api.post<{ data: AnimalDTO }>("/api/animals", {
-      nome: input.nome,
-      especie: input.especie,
-      raca: input.raca,
-      urlFoto,
-      status: "adotado",
-      adotante: {
-        nome: input.adotante.nome,
-        idade: input.adotante.idade,
-        cep: input.adotante.cep.replace(/\D/g, ""),
-        localidade: input.adotante.localidade,
-      },
-      dataAdocao: input.dataAdocao,
-    });
+    const { data } = await api.post<{ data: AnimalDTO }>("/api/animals", corpo);
     return paraAnimal(data.data);
   },
 };

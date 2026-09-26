@@ -68,15 +68,21 @@ function mapRowToAdotante(row: AnimalRow): Adotante | null {
   });
 }
 
-/** Colunas que guardam a adoção, zeradas quando o animal deixa de estar `adotado`. */
-export const ADOCAO_LIMPA = {
-  adotante_id: null,
-  adotante_nome: null,
-  adotante_idade: null,
-  adotante_cep: null,
-  adotante_localidade: null,
-  data_adocao: null,
-} as const;
+/**
+ * Colunas que guardam a adoção, tiradas do estado da entidade. Quando o animal
+ * deixa de estar `adotado`, a entidade já zerou tudo — então gravar estas
+ * colunas apaga os dados pessoais do adotante junto com a mudança de status.
+ */
+export function mapAdocaoToRow(animal: Animal) {
+  return {
+    adotante_id: animal.adotanteId,
+    adotante_nome: animal.adotante?.nome ?? null,
+    adotante_idade: animal.adotante?.idade ?? null,
+    adotante_cep: animal.adotante?.cep ?? null,
+    adotante_localidade: animal.adotante?.localidade ?? null,
+    data_adocao: animal.dataAdocao,
+  };
+}
 
 /**
  * Recebe o resultado já validado de `Animal.create()` — não o DTO cru da

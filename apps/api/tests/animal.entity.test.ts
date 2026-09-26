@@ -7,7 +7,6 @@ import { ValidationError } from "../src/core/errors";
 import { toAnimalDTO } from "../src/features/animals/animal.dto";
 import { createAnimalSchema } from "../src/features/animals/schema";
 import {
-  ADOCAO_LIMPA,
   mapCreateDTOToRow,
   mapRowToEntity,
   type AnimalRow,
@@ -164,6 +163,66 @@ describe("Animal.changeStatus() — privacidade do adotante", () => {
   });
 });
 
+describe("Animal.changeStatus() — mudar para 'adotado' exige os dados da adoção", () => {
+  function animalDisponivel() {
+    return Animal.restore({
+      id: "a2",
+      nome: "Mel",
+      especie: "Cachorro",
+      raca: null,
+      status: AnimalStatus.from("disponivel"),
+      urlFoto: null,
+      larTemporarioId: null,
+      adotanteId: null,
+      adotante: null,
+      dataAdocao: null,
+      createdAt: "2026-09-10T12:00:00.000Z",
+    });
+  }
+
+  it("registra adotante e data ao adotar", () => {
+    const animal = animalDisponivel();
+
+    animal.changeStatus(AnimalStatus.from("adotado"), { adotante: ADOTANTE, dataAdocao: "2026-09-20" });
+
+    expect(animal.status.valor).toBe("adotado");
+    expect(animal.adotante?.nome).toBe("Maria Souza");
+    expect(animal.adotante?.cep).toBe("39800000");
+    expect(animal.dataAdocao).toBe("2026-09-20");
+  });
+
+  it("recusa adotar sem adotante, sem data ou sem nenhum dos dois — e o animal não muda", () => {
+    const animal = animalDisponivel();
+
+    expect(() => animal.changeStatus(AnimalStatus.from("adotado"))).toThrow(/adotante/);
+    expect(() => animal.changeStatus(AnimalStatus.from("adotado"), { adotante: ADOTANTE })).toThrow(/dataAdocao/);
+    expect(() => animal.changeStatus(AnimalStatus.from("adotado"), { dataAdocao: "2026-09-20" })).toThrow(/adotante/);
+    expect(animal.status.valor).toBe("disponivel");
+    expect(animal.adotante).toBeNull();
+  });
+
+  it("recusa dados inválidos de adoção sem alterar o estado", () => {
+    const animal = animalDisponivel();
+
+    expect(() =>
+      animal.changeStatus(AnimalStatus.from("adotado"), { adotante: { ...ADOTANTE, idade: 0 }, dataAdocao: "2026-09-20" }),
+    ).toThrow(ValidationError);
+    expect(() =>
+      animal.changeStatus(AnimalStatus.from("adotado"), { adotante: ADOTANTE, dataAdocao: "2026-12-31" }),
+    ).toThrow(/futura/);
+    expect(animal.status.valor).toBe("disponivel");
+  });
+
+  it("recusa dados de adoção ao mudar para um status que não é 'adotado'", () => {
+    const animal = animalDisponivel();
+
+    expect(() =>
+      animal.changeStatus(AnimalStatus.from("em_tratamento"), { adotante: ADOTANTE, dataAdocao: "2026-09-20" }),
+    ).toThrow(ValidationError);
+    expect(animal.status.valor).toBe("disponivel");
+  });
+});
+
 describe("mapper e DTO", () => {
   const linha: AnimalRow = {
     id: "a1",
@@ -226,7 +285,16 @@ describe("mapper e DTO", () => {
       cep: "39800000",
       localidade: "Teófilo Otoni - MG",
     });
-    expect(toAnimalDTO(mapRowToEntity({ ...linha, ...ADOCAO_LIMPA, status_adocao: "disponivel" })).adotante).toBeNull();
+    const devolvido = mapRowToEntity({
+      ...linha,
+      status_adocao: "disponivel",
+      adotante_nome: null,
+      adotante_idade: null,
+      adotante_cep: null,
+      adotante_localidade: null,
+      data_adocao: null,
+    });
+    expect(toAnimalDTO(devolvido).adotante).toBeNull();
   });
 });
 
@@ -272,7 +340,7 @@ describe("CreateAnimalUseCase", () => {
   });
 });
 
-describe("AnimalRepository.updateStatus — privacidade no banco", () => {
+describe("AnimalRepository.updateStatus — grava a adoção junto com o status", () => {
   function repositorioEspiao() {
     let payload: Record<string, unknown> = {};
     const linha = {
@@ -305,17 +373,48 @@ describe("AnimalRepository.updateStatus — privacidade no banco", () => {
 
   it("ao sair de 'adotado', zera adotante_* e data_adocao na mesma escrita", async () => {
     const { repository, payload } = repositorioEspiao();
+    const animal = animalAdotado();
+    animal.changeStatus(AnimalStatus.from("disponivel"));
 
-    await repository.updateStatus("a1", AnimalStatus.from("disponivel"));
+    await repository.updateStatus(animal);
 
-    expect(payload()).toMatchObject({ status_adocao: "disponivel", ...ADOCAO_LIMPA });
+    expect(payload()).toEqual({
+      status_adocao: "disponivel",
+      adotante_id: null,
+      adotante_nome: null,
+      adotante_idade: null,
+      adotante_cep: null,
+      adotante_localidade: null,
+      data_adocao: null,
+    });
   });
 
-  it("ao ir para 'adotado', só troca o status (não apaga nada)", async () => {
+  it("ao virar 'adotado', grava adotante e data junto com o status", async () => {
     const { repository, payload } = repositorioEspiao();
+    const animal = Animal.restore({
+      id: "a1",
+      nome: "Thor",
+      especie: "Cachorro",
+      raca: null,
+      status: AnimalStatus.from("disponivel"),
+      urlFoto: null,
+      larTemporarioId: null,
+      adotanteId: null,
+      adotante: null,
+      dataAdocao: null,
+      createdAt: "2026-09-10T12:00:00Z",
+    });
+    animal.changeStatus(AnimalStatus.from("adotado"), { adotante: ADOTANTE, dataAdocao: "2026-09-20" });
 
-    await repository.updateStatus("a1", AnimalStatus.from("adotado"));
+    await repository.updateStatus(animal);
 
-    expect(payload()).toEqual({ status_adocao: "adotado" });
+    expect(payload()).toMatchObject({
+      status_adocao: "adotado",
+      adotante_nome: "Maria Souza",
+      adotante_idade: 34,
+      adotante_cep: "39800000",
+      adotante_localidade: "Teófilo Otoni - MG",
+      data_adocao: "2026-09-20",
+    });
   });
 });

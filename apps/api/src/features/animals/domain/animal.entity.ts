@@ -60,6 +60,12 @@ export interface NewAnimalProps {
   dataAdocao?: string | null;
 }
 
+/** Dados da adoção, exigidos para mudar o status de um animal para `adotado`. */
+export interface AdocaoInput {
+  adotante?: AdotanteInput;
+  dataAdocao?: string;
+}
+
 /** Dados já validados e normalizados por `Animal.create()`, prontos para persistir. */
 export type AnimalCreationData = Omit<AnimalProps, "id" | "createdAt">;
 
@@ -195,22 +201,46 @@ export class Animal {
    * por baixo usa a matriz de transição encapsulada em `animal-status.vo.ts`
    * — a entidade só aciona a regra, não a reimplementa.
    *
+   * Adoção: mudar para `adotado` EXIGE os dados do adotante e a data da adoção
+   * (mesmas regras do cadastro); qualquer outro status NÃO aceita esses dados.
+   * Tudo é validado antes de alterar o estado — se algo falhar, o animal fica
+   * exatamente como estava.
+   *
    * Se o animal deixa de estar `adotado` (devolução), os dados da adoção são
    * apagados junto: dado pessoal do adotante não pode sobrar num animal que
    * volta a ser exibido no site.
    */
-  changeStatus(novoStatus: AnimalStatus): void {
+  changeStatus(novoStatus: AnimalStatus, adocao?: AdocaoInput): void {
     if (!this.props.status.podeTransicionarPara(novoStatus)) {
       throw new ValidationError(
         `Não é possível mudar o status de "${this.props.status}" para "${novoStatus}"`,
       );
     }
-    this.props.status = novoStatus;
 
-    if (novoStatus.valor !== "adotado") {
-      this.props.adotante = null;
+    if (novoStatus.valor === "adotado") {
+      if (!adocao?.adotante) {
+        throw new ValidationError("adotante é obrigatório para marcar o animal como adotado");
+      }
+      if (!adocao.dataAdocao) {
+        throw new ValidationError("dataAdocao é obrigatória para marcar o animal como adotado");
+      }
+      const adotante = Adotante.from(adocao.adotante);
+      const dataAdocao = validarDataAdocao(adocao.dataAdocao);
+
+      this.props.status = novoStatus;
+      this.props.adotante = adotante;
       this.props.adotanteId = null;
-      this.props.dataAdocao = null;
+      this.props.dataAdocao = dataAdocao;
+      return;
     }
+
+    if (adocao) {
+      throw new ValidationError('adotante e dataAdocao só podem ser informados ao mudar para o status "adotado"');
+    }
+
+    this.props.status = novoStatus;
+    this.props.adotante = null;
+    this.props.adotanteId = null;
+    this.props.dataAdocao = null;
   }
 }
