@@ -1,14 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
-import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
-import type { Animal } from "./domain/animal.entity";
+import { ADOCAO_LIMPA, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
+import type { Animal, AnimalCreationData } from "./domain/animal.entity";
 import type { AnimalStatus } from "./domain/animal-status.vo";
-import type { CreateAnimalDTO } from "./schema";
 
 const TABLE = "animais";
 const COLUMNS =
-  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, created_at";
+  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
 
 /**
  * Contrato que os use cases dependem de (Dependency Inversion): eles não
@@ -19,7 +18,7 @@ const COLUMNS =
 export interface IAnimalRepository {
   list(): Promise<Animal[]>;
   findById(id: string): Promise<Animal>;
-  create(input: CreateAnimalDTO): Promise<Animal>;
+  create(input: AnimalCreationData): Promise<Animal>;
   updateStatus(id: string, status: AnimalStatus): Promise<Animal>;
   remove(id: string): Promise<void>;
 }
@@ -54,7 +53,7 @@ export class AnimalRepository implements IAnimalRepository {
     return mapRowToEntity(data);
   }
 
-  async create(input: CreateAnimalDTO): Promise<Animal> {
+  async create(input: AnimalCreationData): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
       .insert(mapCreateDTOToRow(input))
@@ -69,7 +68,9 @@ export class AnimalRepository implements IAnimalRepository {
   async updateStatus(id: string, status: AnimalStatus): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
-      .update({ status_adocao: status.valor })
+      // Deixar de estar `adotado` apaga os dados da adoção (privacidade do
+      // adotante; o CHECK da tabela exige isso). Ver Animal.changeStatus.
+      .update(status.valor === "adotado" ? { status_adocao: status.valor } : { status_adocao: status.valor, ...ADOCAO_LIMPA })
       .eq("id", id)
       .select(COLUMNS)
       .single();

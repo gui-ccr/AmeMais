@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { formatISODateToBR } from "@/utils";
 import { useAnimais } from "../hooks/use-animais";
-import { ESPECIE_INFO } from "../opcoes";
+import { ESPECIE_INFO, STATUS_INFO } from "../opcoes";
 import type { Animal } from "../types";
 
 export type VisaoAnimais = "grade" | "lista";
@@ -28,9 +28,20 @@ function FotoAnimal({ animal, className }: { animal: Animal; className?: string 
   );
 }
 
-function textoAdocao(animal: Animal): string {
+/** "Adotado por Fulano · 10/09/2026" — só existe para animal adotado; os demais mostram só o selo de status. */
+function textoAdocao(animal: Animal): string | null {
+  if (!animal.adotante) return null;
+
   const data = formatISODateToBR(animal.dataAdocao);
   return data ? `Adotado por ${animal.adotante.nome} · ${data}` : `Adotado por ${animal.adotante.nome}`;
+}
+
+function SeloStatus({ status }: { status: Animal["status"] }) {
+  return (
+    <Badge variant={STATUS_INFO[status].variante} size="sm" dot>
+      {STATUS_INFO[status].rotulo}
+    </Badge>
+  );
 }
 
 function AnimalCard({ animal }: { animal: Animal }) {
@@ -43,9 +54,10 @@ function AnimalCard({ animal }: { animal: Animal }) {
           <Badge variant="neutral" size="sm">
             {ESPECIE_INFO[animal.especie].rotulo}
           </Badge>
+          <SeloStatus status={animal.status} />
           <span className="text-sm text-muted-dark">{animal.raca}</span>
         </div>
-        <p className="text-xs text-muted-foreground">{textoAdocao(animal)}</p>
+        {textoAdocao(animal) && <p className="text-xs text-muted-foreground">{textoAdocao(animal)}</p>}
       </div>
     </Card>
   );
@@ -61,14 +73,17 @@ function AnimalLinha({ animal }: { animal: Animal }) {
           <Badge variant="neutral" size="sm">
             {ESPECIE_INFO[animal.especie].rotulo}
           </Badge>
+          <SeloStatus status={animal.status} />
         </div>
         <span className="truncate text-sm text-muted-dark">{animal.raca}</span>
       </div>
-      <p className="hidden shrink-0 text-right text-xs text-muted-foreground sm:block">
-        {textoAdocao(animal)}
-        <br />
-        {animal.adotante.localidade}
-      </p>
+      {animal.adotante && (
+        <p className="hidden shrink-0 text-right text-xs text-muted-foreground sm:block">
+          {textoAdocao(animal)}
+          <br />
+          {animal.adotante.localidade}
+        </p>
+      )}
     </Card>
   );
 }

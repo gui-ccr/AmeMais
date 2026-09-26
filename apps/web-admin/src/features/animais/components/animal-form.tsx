@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { cn } from "@/lib/cn";
 import { CepNaoEncontradoError, buscarCep } from "@/lib/viacep";
 import { cepSchema } from "@/lib/validations";
-import { formatCEP } from "@/utils";
+import { diaDeHoje, formatCEP } from "@/utils";
 import { useCreateAnimal } from "../hooks/use-animais";
 import { ESPECIE_INFO, TAMANHO_MAXIMO_FOTO_BYTES, TAMANHO_MAXIMO_FOTO_MB, TIPOS_FOTO_ACEITOS } from "../opcoes";
 import { ESPECIES } from "../types";
@@ -48,7 +49,9 @@ const animalSchema = z.object({
   dataAdocao: z
     .string()
     .min(1, "Informe a data da adoção")
-    .refine((valor) => !Number.isNaN(Date.parse(valor)), "A data informada é inválida"),
+    .refine((valor) => !Number.isNaN(Date.parse(valor)), "A data informada é inválida")
+    // O back também recusa (Animal.create): ninguém adota amanhã.
+    .refine((valor) => valor <= diaDeHoje(), "A data da adoção não pode ser no futuro"),
 });
 
 type FormEntrada = z.input<typeof animalSchema>;
@@ -227,7 +230,7 @@ export function AnimalForm({ onFechar }: AnimalFormProps) {
       });
       onFechar();
     } catch (erro) {
-      setErroServidor(erro instanceof Error ? erro.message : "Não foi possível cadastrar o animal. Tente novamente.");
+      setErroServidor(mensagemDeErroDaApi(erro, "Não foi possível cadastrar o animal. Tente novamente."));
     }
   }
 
@@ -360,7 +363,13 @@ export function AnimalForm({ onFechar }: AnimalFormProps) {
               <Label htmlFor="animal-data-adocao" required>
                 Data da adoção
               </Label>
-              <Input id="animal-data-adocao" type="date" hasError={!!errors.dataAdocao} {...register("dataAdocao")} />
+              <Input
+                id="animal-data-adocao"
+                type="date"
+                max={diaDeHoje()}
+                hasError={!!errors.dataAdocao}
+                {...register("dataAdocao")}
+              />
               <MensagemErro id="animal-data-adocao-erro" mensagem={errors.dataAdocao?.message} />
             </div>
 

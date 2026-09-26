@@ -7,11 +7,12 @@ export class CreateAnimalUseCase {
   constructor(private readonly repository: IAnimalRepository) {}
 
   async execute(input: CreateAnimalDTO): Promise<AnimalDTO> {
-    // Valida as invariantes de domínio (ex.: status inicial permitido)
-    // independente do que o schema Zod já validou na borda HTTP.
-    Animal.create(input);
+    // Valida as invariantes de domínio (ex.: status inicial permitido, dados
+    // da adoção) e devolve os dados já normalizados — é esse resultado, não o
+    // input cru, que é persistido.
+    const data = Animal.create(input);
 
-    const animal = await this.repository.create(input);
+    const animal = await this.repository.create(data);
     return toAnimalDTO(animal);
   }
 }
