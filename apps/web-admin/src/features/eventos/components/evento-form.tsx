@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -12,30 +12,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateEvent, useUpdateEvent } from "../hooks/use-events";
 import { dataPermitePublicar, extrairDia, getStatusEvento } from "../status";
-import type { CreateEventDTO, EventDTO } from "../types";
+import type { CreateEventDTO, EventDTO, UpdateEventDTO } from "../types";
 import { EventoStatusBadge } from "./evento-status-badge";
 
-const eventoSchema = z
-  .object({
-    titulo: z.string().trim().min(2, "Título deve ter pelo menos 2 caracteres"),
-    descricao: z.string().optional(),
-    dataEvento: z.string().optional(),
-    isActive: z.boolean(),
-  })
-  .superRefine((valores, ctx) => {
-    if (!valores.isActive) return;
+/**
+ * O back só valida a publicação quando o evento passa a ficar publicado ou muda
+ * de dia (Event.update). Por isso, editar um evento que JÁ está publicado sem
+ * mexer na data (ex.: corrigir o título depois que o dia chegou) não é
+ * bloqueado aqui — só quem publica ou troca a data precisa de uma data válida.
+ */
+function criarEventoSchema(eventoOriginal?: EventDTO | null) {
+  const diaOriginal = eventoOriginal?.isActive ? extrairDia(eventoOriginal.dataEvento) : null;
 
-    const dia = extrairDia(valores.dataEvento);
-    if (!dia) {
-      ctx.addIssue({ code: "custom", path: ["dataEvento"], message: "Informe a data para publicar o evento." });
-    } else if (!dataPermitePublicar(dia)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["dataEvento"],
-        message: "Para publicar, escolha uma data futura — ou salve como rascunho.",
-      });
-    }
-  });
+  return z
+    .object({
+      titulo: z.string().trim().min(2, "Título deve ter pelo menos 2 caracteres"),
+      descricao: z.string().optional(),
+      dataEvento: z.string().optional(),
+      isActive: z.boolean(),
+    })
+    .superRefine((valores, ctx) => {
+      if (!valores.isActive) return;
+
+      const dia = extrairDia(valores.dataEvento);
+      if (!dia) {
+        ctx.addIssue({ code: "custom", path: ["dataEvento"], message: "Informe a data para publicar o evento." });
+      } else if (dia !== diaOriginal && !dataPermitePublicar(dia)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["dataEvento"],
+          message: "Para publicar, escolha uma data a partir de hoje — ou salve como rascunho.",
+        });
+      }
+    });
+}
 
 const valoresPadrao: CreateEventDTO = {
   titulo: "",
@@ -44,12 +54,22 @@ const valoresPadrao: CreateEventDTO = {
   isActive: false,
 };
 
-/** A API rejeita string vazia em `descricao`/`dataEvento` (400): campo em branco tem que ser omitido. */
-function montarPayload(values: CreateEventDTO): CreateEventDTO {
+/** Ao criar, a API rejeita string vazia em `descricao`/`dataEvento` (400): campo em branco é omitido. */
+function montarPayloadCriacao(values: CreateEventDTO): CreateEventDTO {
   return {
     titulo: values.titulo.trim(),
     descricao: values.descricao?.trim() || undefined,
     dataEvento: extrairDia(values.dataEvento) ?? undefined,
+    isActive: values.isActive,
+  };
+}
+
+/** Ao editar, campo em branco vira `null` — é assim que o PATCH pede para limpar o valor. */
+function montarPayloadEdicao(values: CreateEventDTO): UpdateEventDTO {
+  return {
+    titulo: values.titulo.trim(),
+    descricao: values.descricao?.trim() || null,
+    dataEvento: extrairDia(values.dataEvento),
     isActive: values.isActive,
   };
 }
@@ -74,12 +94,12 @@ export function EventoForm({ eventoParaEditar, onFechar }: EventoFormProps) {
   const atualizarEvento = useUpdateEvent();
   const emEdicao = !!eventoParaEditar;
   const [erroServidor, setErroServidor] = useState<string | null>(null);
+  const eventoSchema = useMemo(() => criarEventoSchema(eventoParaEditar), [eventoParaEditar]);
 
   const {
     register,
     control,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm<CreateEventDTO>({
     resolver: zodResolver(eventoSchema),
@@ -99,24 +119,12 @@ export function EventoForm({ eventoParaEditar, onFechar }: EventoFormProps) {
 
   async function onSubmit(values: CreateEventDTO) {
     setErroServidor(null);
-    const payload = montarPayload(values);
-
-    // A API ainda não aceita limpar (null) data/descrição num PATCH: campo
-    // ausente significa "não alterar". Avisamos em vez de ignorar em silêncio.
-    if (eventoParaEditar?.dataEvento && !payload.dataEvento) {
-      setError("dataEvento", { message: "Não é possível remover a data de um evento já cadastrado. Escolha outra data." });
-      return;
-    }
-    if (eventoParaEditar?.descricao && !payload.descricao) {
-      setError("descricao", { message: "Não é possível apagar a descrição de um evento já cadastrado. Edite o texto." });
-      return;
-    }
 
     try {
       if (eventoParaEditar) {
-        await atualizarEvento.mutateAsync({ id: eventoParaEditar.id, input: payload });
+        await atualizarEvento.mutateAsync({ id: eventoParaEditar.id, input: montarPayloadEdicao(values) });
       } else {
-        await criarEvento.mutateAsync(payload);
+        await criarEvento.mutateAsync(montarPayloadCriacao(values));
       }
       onFechar();
     } catch (error) {

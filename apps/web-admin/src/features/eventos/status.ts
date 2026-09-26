@@ -51,11 +51,13 @@ function diasEntre(de: string, ate: string): number {
 
 /**
  * Regra do back (Event.validarPublicacao): só dá para publicar um evento com
- * data definida e no futuro. Espelhada aqui para o form avisar antes de o
- * usuário receber um 400.
+ * data definida e que ainda não passou — o evento de hoje pode ser publicado.
+ * Espelhada aqui para o form avisar antes de o usuário receber um 400. O back
+ * compara o dia no fuso de Brasília; aqui usamos o dia local do navegador, que
+ * é o mesmo para quem opera a ONG.
  */
 export function dataPermitePublicar(dia: string, agora: Date = new Date()): boolean {
-  return diasEntre(hojeLocal(agora), dia) > 0;
+  return diasEntre(hojeLocal(agora), dia) >= 0;
 }
 
 export function getStatusEvento(evento: EventoParaStatus, agora: Date = new Date()): StatusEventoInfo {
