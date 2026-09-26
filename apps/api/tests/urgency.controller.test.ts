@@ -3,30 +3,6 @@ import type { NextRequest } from "next/server";
 import { Urgency } from "../src/features/urgencies/domain/urgency.entity";
 import { UnauthorizedError, ForbiddenError, NotFoundError } from "../src/core/errors";
 
-/**
- * O Controller de Urgências não faz checagem de cargo em código — quem
- * decide o que Admin/Voluntário podem fazer é a política de RLS
- * (check_user_access) da tabela `urgency_items` no Postgres, exatamente
- * como em Events/Animals (ver controller.ts). Por isso, estes testes
- * unitários simulam a fronteira de autorização no nível do repository:
- * quando o "usuário" do teste representa alguém sem permissão de escrita,
- * o método correspondente do repository fake rejeita com `ForbiddenError`
- * — o mesmo erro que `throwOnWriteError` (core/supabase-errors.ts) geraria
- * a partir do código 42501 que o Postgres devolveria na vida real.
- *
- * O que este arquivo garante:
- * 1. o Controller exige autenticação (`requireUser`) antes de tudo — sem
- *    token válido, sempre 401, e o use case nunca é executado;
- * 2. o Controller instancia e executa o use case certo pra cada endpoint,
- *    repassando id/body validados;
- * 3. o Controller propaga corretamente pra HTTP qualquer erro que vier do
- *    repository (403 da RLS, 404 de não encontrado etc.) via `fail()`.
- *
- * A validação real de "Admin pode, Voluntário de escrita pode, DELETE só
- * Admin" contra o Postgres de verdade é o teste manual do item 16 do
- * ticket — não algo que dá pra provar com mock.
- */
-
 const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() => {
   return {
     mockRequireUser: vi.fn(),
@@ -51,7 +27,9 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 vi.mock("../src/features/urgencies/urgency.repository", () => ({
-  UrgencyRepository: vi.fn().mockImplementation(() => repoMocks),
+  UrgencyRepository: vi.fn().mockImplementation(function () {
+    return repoMocks;
+  }),
 }));
 
 const { urgencyController } = await import("../src/features/urgencies/controller");
@@ -66,6 +44,7 @@ const AUTH_ADMIN = { id: "admin-1", email: "admin@amemais.org", accessToken: "to
 const AUTH_VOLUNTARIO = { id: "vol-1", email: "voluntario@amemais.org", accessToken: "token-vol" };
 
 const SAMPLE_URGENCY = Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
   id: "11111111-1111-1111-1111-111111111111",
   titulo: "Cirurgia urgente",
   descricao: "Fratura exposta",
@@ -111,7 +90,7 @@ describe("UrgencyController", () => {
       repoMocks.findById.mockResolvedValueOnce(SAMPLE_URGENCY);
 
       const response = await urgencyController.getById(fakeRequest(), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
       const body = await response.json();
 
@@ -124,7 +103,7 @@ describe("UrgencyController", () => {
       repoMocks.findById.mockRejectedValueOnce(new NotFoundError("Urgência"));
 
       const response = await urgencyController.getById(fakeRequest(), {
-        params: { id: "22222222-2222-2222-2222-222222222222" },
+        params: Promise.resolve({ id: "22222222-2222-2222-2222-222222222222" }),
       });
 
       expect(response.status).toBe(404);
@@ -137,7 +116,7 @@ describe("UrgencyController", () => {
     it("Admin -> 201", async () => {
       mockRequireUser.mockResolvedValueOnce(AUTH_ADMIN);
       repoMocks.create.mockResolvedValueOnce(
-        Urgency.restore({ id: "new-1", ...payload, descricao: null, isActive: false, createdAt: "2026-09-16T10:00:00Z" }),
+        Urgency.restore({ unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null, id: "new-1", ...payload, descricao: null, isActive: false, createdAt: "2026-09-16T10:00:00Z" }),
       );
 
       const response = await urgencyController.create(fakeRequest(payload));
@@ -149,7 +128,7 @@ describe("UrgencyController", () => {
     it("Voluntário -> 201", async () => {
       mockRequireUser.mockResolvedValueOnce(AUTH_VOLUNTARIO);
       repoMocks.create.mockResolvedValueOnce(
-        Urgency.restore({ id: "new-2", ...payload, descricao: null, isActive: false, createdAt: "2026-09-16T10:00:00Z" }),
+        Urgency.restore({ unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null, id: "new-2", ...payload, descricao: null, isActive: false, createdAt: "2026-09-16T10:00:00Z" }),
       );
 
       const response = await urgencyController.create(fakeRequest(payload));
@@ -182,6 +161,7 @@ describe("UrgencyController", () => {
       repoMocks.findById.mockResolvedValueOnce(SAMPLE_URGENCY);
       repoMocks.update.mockResolvedValueOnce(
         Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
           id: SAMPLE_URGENCY.id,
           titulo: "Cirurgia urgente - atualizado",
           descricao: SAMPLE_URGENCY.descricao,
@@ -193,7 +173,7 @@ describe("UrgencyController", () => {
       );
 
       const response = await urgencyController.update(fakeRequest({ titulo: "Cirurgia urgente - atualizado" }), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
 
       expect(response.status).toBe(200);
@@ -205,7 +185,7 @@ describe("UrgencyController", () => {
       repoMocks.update.mockResolvedValueOnce(SAMPLE_URGENCY);
 
       const response = await urgencyController.update(fakeRequest({ isActive: false }), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
 
       expect(response.status).toBe(200);
@@ -215,7 +195,7 @@ describe("UrgencyController", () => {
       mockRequireUser.mockResolvedValueOnce(AUTH_ADMIN);
 
       const response = await urgencyController.update(fakeRequest({ titulo: "x" }), {
-        params: { id: "nao-e-uuid" },
+        params: Promise.resolve({ id: "nao-e-uuid" }),
       });
 
       expect(response.status).toBe(400);
@@ -229,7 +209,7 @@ describe("UrgencyController", () => {
       repoMocks.remove.mockResolvedValueOnce(undefined);
 
       const response = await urgencyController.delete(fakeRequest(), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
       const body = await response.json();
 
@@ -242,7 +222,7 @@ describe("UrgencyController", () => {
       repoMocks.remove.mockRejectedValueOnce(new ForbiddenError());
 
       const response = await urgencyController.delete(fakeRequest(), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
 
       expect(response.status).toBe(403);
@@ -252,7 +232,7 @@ describe("UrgencyController", () => {
       mockRequireUser.mockRejectedValueOnce(new UnauthorizedError());
 
       const response = await urgencyController.delete(fakeRequest(), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
 
       expect(response.status).toBe(401);
@@ -266,6 +246,7 @@ describe("UrgencyController", () => {
       repoMocks.findById.mockResolvedValueOnce(SAMPLE_URGENCY);
       repoMocks.updateValorArrecadado.mockResolvedValueOnce(
         Urgency.restore({
+        unidade: "R$", prioridade: "importante", tipo: "outros", dataLimite: null,
           id: SAMPLE_URGENCY.id,
           titulo: SAMPLE_URGENCY.titulo,
           descricao: SAMPLE_URGENCY.descricao,
@@ -277,7 +258,7 @@ describe("UrgencyController", () => {
       );
 
       const response = await urgencyController.registerDonation(fakeRequest({ valor: 200 }), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
       const body = await response.json();
 
@@ -292,7 +273,7 @@ describe("UrgencyController", () => {
       repoMocks.updateValorArrecadado.mockRejectedValueOnce(new ForbiddenError());
 
       const response = await urgencyController.registerDonation(fakeRequest({ valor: 200 }), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
 
       expect(response.status).toBe(403);
@@ -302,7 +283,7 @@ describe("UrgencyController", () => {
       mockRequireUser.mockResolvedValueOnce(AUTH_ADMIN);
 
       const response = await urgencyController.registerDonation(fakeRequest({ valor: 0 }), {
-        params: { id: SAMPLE_URGENCY.id },
+        params: Promise.resolve({ id: SAMPLE_URGENCY.id }),
       });
 
       expect(response.status).toBe(400);

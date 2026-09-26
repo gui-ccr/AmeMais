@@ -1,13 +1,15 @@
 import type { Animal } from "./domain/animal.entity";
 import type { AnimalStatusValue } from "./domain/animal-status.vo";
 
-/**
- * DTO de saída: o formato exato que a API devolve pro cliente. É o use
- * case quem monta esse DTO a partir da entidade de domínio — o controller
- * e as camadas HTTP só enxergam este formato, nunca a entidade. `status`
- * aqui é a string crua, não o Value Object — um DTO nunca vaza instâncias
- * de domínio, só valores serializáveis.
- */
+/** DTO de saída: o formato exato que a API devolve pro cliente. */
+export interface AdotanteDTO {
+  nome: string;
+  idade: number;
+  /** Só os 8 dígitos. */
+  cep: string;
+  localidade: string;
+}
+
 export interface AnimalDTO {
   id: string;
   nome: string;
@@ -17,6 +19,8 @@ export interface AnimalDTO {
   urlFoto: string | null;
   larTemporarioId: string | null;
   adotanteId: string | null;
+  /** Dados de quem adotou (pessoais): só existem para animais `adotado`. */
+  adotante: AdotanteDTO | null;
   dataAdocao: string | null;
   createdAt: string;
 }
@@ -31,6 +35,14 @@ export function toAnimalDTO(animal: Animal): AnimalDTO {
     urlFoto: animal.urlFoto,
     larTemporarioId: animal.larTemporarioId,
     adotanteId: animal.adotanteId,
+    adotante: animal.adotante
+      ? {
+          nome: animal.adotante.nome,
+          idade: animal.adotante.idade,
+          cep: animal.adotante.cep,
+          localidade: animal.adotante.localidade,
+        }
+      : null,
     dataAdocao: animal.dataAdocao,
     createdAt: animal.createdAt,
   };

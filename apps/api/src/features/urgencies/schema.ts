@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { PRIORIDADES_URGENCIA, TIPOS_DOACAO, UNIDADES_META } from "./domain/urgency-options";
+
+/** Dia no formato AAAA-MM-DD (a existência real da data é conferida na entidade). */
+const diaSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "dataLimite deve estar no formato AAAA-MM-DD");
 
 /**
  * Schemas Zod: validam o FORMATO do que chega pela requisição HTTP (tipos,
@@ -16,6 +20,10 @@ export const createUrgencySchema = z.object({
   descricao: z.string().optional().nullable(),
   metaArrecadacao: z.number().nonnegative("metaArrecadacao não pode ser negativa").optional().nullable(),
   valorArrecadado: z.number().nonnegative("valorArrecadado não pode ser negativo").default(0),
+  unidade: z.enum(UNIDADES_META).optional(),
+  prioridade: z.enum(PRIORIDADES_URGENCIA).optional(),
+  tipo: z.enum(TIPOS_DOACAO).optional(),
+  dataLimite: diaSchema.optional().nullable(),
   isActive: z.boolean().default(false),
 });
 export type CreateUrgencyDTO = z.infer<typeof createUrgencySchema>;
@@ -25,6 +33,10 @@ export const updateUrgencySchema = z.object({
   descricao: z.string().optional().nullable(),
   metaArrecadacao: z.number().nonnegative("metaArrecadacao não pode ser negativa").optional().nullable(),
   valorArrecadado: z.number().nonnegative("valorArrecadado não pode ser negativo").optional(),
+  unidade: z.enum(UNIDADES_META).optional(),
+  prioridade: z.enum(PRIORIDADES_URGENCIA).optional(),
+  tipo: z.enum(TIPOS_DOACAO).optional(),
+  dataLimite: diaSchema.optional().nullable(),
   isActive: z.boolean().optional(),
 });
 export type UpdateUrgencyDTO = z.infer<typeof updateUrgencySchema>;

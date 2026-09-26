@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Caveat, Patrick_Hand } from "next/font/google";
+import { ToastProvider } from "@/components/ui/toast";
 import { QueryProvider } from "@/lib/query-provider";
 import "./globals.css";
 
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${caveat.variable} ${patrickHand.variable}`}>
       <body className="font-sans antialiased">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </QueryProvider>
       </body>
     </html>
   );

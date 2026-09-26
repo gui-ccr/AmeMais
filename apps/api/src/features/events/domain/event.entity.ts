@@ -122,6 +122,9 @@ export class Event {
    * entidade transitar para um estado inválido.
    */
   update(input: UpdateEventProps): void {
+    const estavaPublicado = this.props.isActive;
+    const dataAnterior = this.props.dataEvento;
+
     if (input.titulo !== undefined) {
       const titulo = input.titulo.trim();
       if (!titulo || titulo.length < 2) {
@@ -142,6 +145,13 @@ export class Event {
       this.props.isActive = input.isActive;
     }
 
-    Event.validarPublicacao(this.props.isActive, this.props.dataEvento);
+    // A regra de publicação só vale quando algo relevante a ela muda: o
+    // evento está passando a ficar publicado, ou o dia dele mudou. Sem isso,
+    // um evento já publicado que chega ao dia (ou passa dele) ficava
+    // impossível de editar — nem o título dava para corrigir sem despublicar.
+    const dataMudou = !EventDate.mesmoDia(dataAnterior, this.props.dataEvento);
+    if (this.props.isActive && (!estavaPublicado || dataMudou)) {
+      Event.validarPublicacao(this.props.isActive, this.props.dataEvento);
+    }
   }
 }

@@ -1,39 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
-import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
-import type { Animal } from "./domain/animal.entity";
-import type { AnimalStatus } from "./domain/animal-status.vo";
-import type { CreateAnimalDTO } from "./schema";
+import { mapAdocaoToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
+import type { Animal, AnimalCreationData } from "./domain/animal.entity";
 
 const TABLE = "animais";
 const COLUMNS =
-  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, created_at";
+  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
 
-/**
- * Contrato que os use cases dependem de (Dependency Inversion): eles não
- * conhecem o Supabase, só esta interface, e trabalham com a entidade de
- * domínio (`Animal`) — nunca com a linha crua do banco. Facilita trocar a
- * implementação (ex.: um repository fake em teste) sem tocar nos use cases.
- */
+/** Contrato de persistência que os use cases usam. */
 export interface IAnimalRepository {
   list(): Promise<Animal[]>;
   findById(id: string): Promise<Animal>;
-  create(input: CreateAnimalDTO): Promise<Animal>;
-  updateStatus(id: string, status: AnimalStatus): Promise<Animal>;
+  create(input: AnimalCreationData): Promise<Animal>;
+  updateStatus(animal: Animal): Promise<Animal>;
   remove(id: string): Promise<void>;
 }
 
-/**
- * Única camada que fala com o Supabase. Não sabe nada de HTTP, request,
- * headers, cookies ou auth — recebe dados já validados e devolve a
- * entidade interna (via mapper).
- *
- * Recebe o client já autenticado como o usuário que fez a requisição (ver
- * lib/supabase.ts, createSupabaseForUser) — não a service role. Quem pode
- * ler/criar/editar/apagar é decidido pela RLS da tabela `animais`, não por
- * uma checagem repetida aqui.
- */
+/** Única camada que fala com o Supabase. */
 export class AnimalRepository implements IAnimalRepository {
   constructor(private readonly db: SupabaseClient) {}
 
@@ -54,7 +38,7 @@ export class AnimalRepository implements IAnimalRepository {
     return mapRowToEntity(data);
   }
 
-  async create(input: CreateAnimalDTO): Promise<Animal> {
+  async create(input: AnimalCreationData): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
       .insert(mapCreateDTOToRow(input))
@@ -66,11 +50,12 @@ export class AnimalRepository implements IAnimalRepository {
     return mapRowToEntity(data);
   }
 
-  async updateStatus(id: string, status: AnimalStatus): Promise<Animal> {
+  /** Grava o status e os dados da adoção juntos, a partir da entidade. */
+  async updateStatus(animal: Animal): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
-      .update({ status_adocao: status.valor })
-      .eq("id", id)
+      .update({ status_adocao: animal.status.valor, ...mapAdocaoToRow(animal) })
+      .eq("id", animal.id)
       .select(COLUMNS)
       .single();
 

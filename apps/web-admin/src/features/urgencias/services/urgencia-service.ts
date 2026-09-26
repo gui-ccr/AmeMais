@@ -1,64 +1,55 @@
-import type { Urgencia, UrgenciaFormValues } from "../types";
+import { api } from "@/lib/axios";
+import type { Urgencia, UrgenciaFormValues, UrgencyDTO } from "../types";
 
-/**
- * MOCK TEMPORÁRIO: dados em memória, sem persistência real (somem ao recarregar
- * a página). O back ainda não tem `/api/urgencias` — quando existir, troque o
- * corpo destas funções por chamadas Axios ao `apps/api`, no mesmo formato de
- * `apps/web-example/src/features/_example-demo/services/example-service.ts`.
- */
+/** Do formato da API (`metaArrecadacao`, `isActive`...) para o modelo usado nas telas. */
+export function paraUrgencia(dto: UrgencyDTO): Urgencia {
+  return {
+    id: dto.id,
+    titulo: dto.titulo,
+    descricao: dto.descricao ?? "",
+    prioridade: dto.prioridade,
+    tipo: dto.tipo,
+    dataLimite: dto.dataLimite,
+    meta: dto.metaArrecadacao,
+    unidade: dto.unidade,
+    arrecadado: dto.valorArrecadado,
+    ativo: dto.isActive,
+    createdAt: dto.createdAt,
+  };
+}
 
-let urgencias: Urgencia[] = [
-  {
-    id: crypto.randomUUID(),
-    titulo: "Ração medicada (20kg)",
-    descricao: "Para animais em tratamento no lar temporário.",
-    ativo: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: crypto.randomUUID(),
-    titulo: "Patês e sachês",
-    descricao: "Para filhotes e animais debilitados.",
-    ativo: true,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-function delay<T>(value: T, ms = 300): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
+/** Do modelo das telas para o corpo que a API espera em POST/PATCH `/api/urgencias`. */
+function paraPayload(values: UrgenciaFormValues) {
+  return {
+    titulo: values.titulo,
+    descricao: values.descricao,
+    prioridade: values.prioridade,
+    tipo: values.tipo,
+    dataLimite: values.dataLimite,
+    metaArrecadacao: values.meta,
+    unidade: values.unidade,
+    valorArrecadado: values.arrecadado,
+    isActive: values.ativo,
+  };
 }
 
 export const urgenciaService = {
   async list(): Promise<Urgencia[]> {
-    const ordenadas = [...urgencias].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-    return delay(ordenadas);
+    const { data } = await api.get<{ data: UrgencyDTO[] }>("/api/urgencias");
+    return data.data.map(paraUrgencia);
   },
 
   async create(input: UrgenciaFormValues): Promise<Urgencia> {
-    const nova: Urgencia = {
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      ...input,
-    };
-    urgencias = [nova, ...urgencias];
-    return delay(nova);
+    const { data } = await api.post<{ data: UrgencyDTO }>("/api/urgencias", paraPayload(input));
+    return paraUrgencia(data.data);
   },
 
   async update(id: string, input: UrgenciaFormValues): Promise<Urgencia> {
-    let atualizada: Urgencia | undefined;
-    urgencias = urgencias.map((urgencia) => {
-      if (urgencia.id !== id) return urgencia;
-      atualizada = { ...urgencia, ...input };
-      return atualizada;
-    });
-    if (!atualizada) throw new Error("Urgência não encontrada");
-    return delay(atualizada);
+    const { data } = await api.patch<{ data: UrgencyDTO }>(`/api/urgencias/${id}`, paraPayload(input));
+    return paraUrgencia(data.data);
   },
 
   async remove(id: string): Promise<void> {
-    urgencias = urgencias.filter((urgencia) => urgencia.id !== id);
-    return delay(undefined);
+    await api.delete(`/api/urgencias/${id}`);
   },
 };
