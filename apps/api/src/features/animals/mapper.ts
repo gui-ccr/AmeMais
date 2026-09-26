@@ -40,6 +40,11 @@ export function mapRowToEntity(row: AnimalRow): Animal {
     urlFoto: row.url_foto,
     larTemporarioId: row.lar_temporario_id,
     adotanteId: row.adotante_id,
+    // A tabela "animais" ainda não tem colunas para o retrato do adotante
+    // (nome/idade/cep/localidade) — só a FK `adotante_id` pra uma conta em
+    // "adotantes". Persistir/ler esse retrato é um gap de infraestrutura
+    // fora do escopo desta tarefa (ver relatório).
+    adotante: null,
     dataAdocao: row.data_adocao,
     createdAt: row.created_at,
   });
