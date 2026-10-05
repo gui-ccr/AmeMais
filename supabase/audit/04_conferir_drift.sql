@@ -25,7 +25,9 @@ FROM (
                   WHERE conrelid = 'public.animais'::regclass AND conname = x.nome)
   FROM unnest(ARRAY['animais_status_adocao_check', 'animais_especie_check',
                     'animais_adotante_idade_check', 'animais_adotante_cep_check',
-                    'animais_dados_adotante_status_check']) AS x(nome)
+                    'animais_dados_adotante_status_check',
+                    'animais_adotante_completo_check',
+                    'animais_dados_adocao_somente_adotado_check']) AS x(nome)
 
   UNION ALL
   -- urgency_items: colunas (20260925210000)

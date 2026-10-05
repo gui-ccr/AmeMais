@@ -1,3 +1,5 @@
+-- >>> JÁ VIROU MIGRATION: supabase/migrations/20261005160000_reconciliar_banco_real.sql
+-- >>> Esta proposta foi aplicada no banco e fica aqui só como registro. Não rode de novo.
 -- ==============================================================================
 -- KAN-101 — PROPOSTA: faz o banco real bater com o que o código e as migrations
 -- esperam. NÃO É UMA MIGRATION (mesmo esquema da proposta 03).

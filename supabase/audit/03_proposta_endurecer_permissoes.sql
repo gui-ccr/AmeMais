@@ -1,3 +1,5 @@
+-- >>> JÁ VIROU MIGRATION: supabase/migrations/20261005160100_endurecer_permissoes_anon.sql
+-- >>> Esta proposta foi aplicada no banco e fica aqui só como registro. Não rode de novo.
 -- ==============================================================================
 -- KAN-101 — PROPOSTA de endurecimento de permissões. NÃO É UMA MIGRATION.
 -- ==============================================================================
