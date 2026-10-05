@@ -6,7 +6,7 @@
 //   node --env-file=apps/web-admin/.env.local supabase/audit/02_testar_anon.mjs
 //
 // Por padrão é SOMENTE LEITURA: só conta quantas linhas o anon consegue ver em
-// cada tabela (não imprime nenhum dado).
+// cada tabela (a consulta usa limit(0), então nenhum dado é trazido nem impresso).
 //
 // Teste de escrita (opcional) — SÓ em projeto de TESTE, nunca em produção:
 //
@@ -86,7 +86,7 @@ async function confirmar() {
 
 function classificarLeitura(error, count) {
   if (error) {
-    // 42501 = permission denied; PGRST301/401 = sem acesso; 42P01 = tabela não existe
+    // 42501 = permission denied; 42P01 / PGRST205 = a tabela não existe no banco
     if (error.code === "42P01" || error.code === "PGRST205") return { status: "NAO_EXISTE", detalhe: error.message };
     return { status: "BLOQUEADO", detalhe: `${error.code ?? ""} ${error.message}`.trim() };
   }
@@ -110,9 +110,10 @@ if (probarInsert && !(await confirmar())) {
 const resultados = [];
 
 for (const tabela of TABELAS) {
-  const { error, count } = await supabase
-    .from(tabela)
-    .select("*", { count: "exact", head: true });
+  // GET com limit(0): traz a contagem sem devolver linha nenhuma. Não usar
+  // HEAD: o supabase-js trata um 404 sem corpo (tabela inexistente) como
+  // sucesso, e a tabela apareceria como "LE_VAZIO".
+  const { error, count } = await supabase.from(tabela).select("*", { count: "exact" }).limit(0);
   const leitura = classificarLeitura(error, count ?? 0);
 
   let escrita = { status: "NAO_TESTADO", detalhe: "" };
