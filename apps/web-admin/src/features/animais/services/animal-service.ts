@@ -1,6 +1,22 @@
 import { api } from "@/lib/axios";
 import { formatCEP } from "@/utils";
-import { ESPECIES, type Animal, type AnimalDTO, type Especie, type NovoAnimalInput } from "../types";
+import {
+  ESPECIES,
+  type Adocao,
+  type AlterarStatusInput,
+  type Animal,
+  type AnimalDTO,
+  type Especie,
+  type NovoAnimalInput,
+} from "../types";
+
+/** Dados da adoção no formato da API: o CEP vai só com os 8 dígitos. */
+function paraCorpoDaAdocao({ adotante, dataAdocao }: Adocao) {
+  return {
+    adotante: { ...adotante, cep: adotante.cep.replace(/\D/g, "") },
+    dataAdocao,
+  };
+}
 
 /** Animais antigos podem ter espécie fora da lista (ou vazia): caem em "Outro". */
 function paraEspecie(valor: string | null): Especie {
@@ -29,7 +45,8 @@ export const animalService = {
   },
 
   /**
-   * Cadastra um animal JÁ ADOTADO (o formulário registra a adoção junto).
+   * Cadastra um animal resgatado, no status escolhido. Os dados da adoção só vão
+   * junto quando o animal já nasce `adotado` (a API recusa nos outros status).
    *
    * É UM pedido só (multipart): `dados` com o JSON do animal e `foto` com o
    * arquivo. A API valida tudo, sobe a foto e grava o animal — e se a gravação
@@ -44,19 +61,30 @@ export const animalService = {
         nome: input.nome,
         especie: input.especie,
         raca: input.raca,
-        status: "adotado",
-        adotante: {
-          nome: input.adotante.nome,
-          idade: input.adotante.idade,
-          cep: input.adotante.cep.replace(/\D/g, ""),
-          localidade: input.adotante.localidade,
-        },
-        dataAdocao: input.dataAdocao,
+        status: input.status,
+        ...(input.adocao ? paraCorpoDaAdocao(input.adocao) : {}),
       }),
     );
     corpo.append("foto", input.foto);
 
     const { data } = await api.post<{ data: AnimalDTO }>("/api/animals", corpo);
     return paraAnimal(data.data);
+  },
+
+  /**
+   * Troca o status do animal. É um `PATCH` (a API não tem `PUT`: o status é a única
+   * coisa que se altera depois do cadastro). Ao passar para `adotado` os dados da
+   * adoção são obrigatórios; ao sair de `adotado` a API apaga os dados do adotante.
+   */
+  async updateStatus(id: string, input: AlterarStatusInput): Promise<Animal> {
+    const { data } = await api.patch<{ data: AnimalDTO }>(`/api/animals/${id}`, {
+      status: input.status,
+      ...(input.adocao ? paraCorpoDaAdocao(input.adocao) : {}),
+    });
+    return paraAnimal(data.data);
+  },
+
+  async remove(id: string): Promise<void> {
+    await api.delete(`/api/animals/${id}`);
   },
 };

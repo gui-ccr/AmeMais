@@ -50,12 +50,35 @@ export interface Animal {
   createdAt: string;
 }
 
-/** O que o formulário de cadastro envia: o animal já adotado, com a foto ainda como arquivo. */
+/**
+ * Status com que a API aceita cadastrar um animal — espelha
+ * `Animal.STATUSES_PERMITIDOS_NA_CRIACAO` em apps/api/.../domain/animal.entity.ts.
+ * `em_lar_temporario` fica de fora: o animal só vai para um lar temporário depois,
+ * pela troca de status.
+ */
+export const STATUS_NO_CADASTRO = ["disponivel", "em_tratamento", "adotado"] as const;
+export type StatusNoCadastro = (typeof STATUS_NO_CADASTRO)[number];
+
+/** Dados da adoção: a API exige os dois sempre que o animal é cadastrado ou passa a `adotado`. */
+export interface Adocao {
+  adotante: Adotante;
+  /** Dia da adoção no formato AAAA-MM-DD. */
+  dataAdocao: string;
+}
+
+/** O que o formulário de cadastro envia: o animal resgatado, com a foto ainda como arquivo. */
 export interface NovoAnimalInput {
   nome: string;
   especie: Especie;
   raca: string;
   foto: File;
-  adotante: Adotante;
-  dataAdocao: string;
+  status: StatusNoCadastro;
+  /** Obrigatório quando `status` é `adotado`; nos demais status não pode ser enviado. */
+  adocao?: Adocao;
+}
+
+/** O que a troca de status envia. `adocao` só existe (e é obrigatória) quando o novo status é `adotado`. */
+export interface AlterarStatusInput {
+  status: StatusAnimal;
+  adocao?: Adocao;
 }
