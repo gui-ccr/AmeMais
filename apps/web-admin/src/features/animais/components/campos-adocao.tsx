@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { CepNaoEncontradoError, buscarCep } from "@/lib/viacep";
 import { diaDeHoje, formatCEP } from "@/utils";
 import type { AdocaoFormEntrada } from "../adocao";
-import { MensagemErro } from "./mensagem-erro";
+import { MensagemErro } from "@/components/ui/mensagem-erro";
 
 type BuscaCep =
   | { estado: "ocioso" }

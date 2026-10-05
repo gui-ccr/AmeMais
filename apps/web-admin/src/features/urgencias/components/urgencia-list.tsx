@@ -11,7 +11,7 @@ import { PRIORIDADE_INFO, TIPO_INFO, formatarQuantidade } from "../opcoes";
 import { calcularPercentual, compararUrgencias, formatarDia, getSituacaoUrgencia, extrairDia } from "../situacao";
 import type { Urgencia } from "../types";
 
-function ProgressoMeta({ urgencia, atendida }: { urgencia: Urgencia; atendida: boolean }) {
+export function ProgressoMeta({ urgencia, atendida }: { urgencia: Urgencia; atendida: boolean }) {
   const percentual = calcularPercentual(urgencia.meta, urgencia.arrecadado);
   if (percentual === null || urgencia.meta === null) return null;
 

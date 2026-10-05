@@ -34,7 +34,3 @@ export const TRANSICOES_STATUS: Record<StatusAnimal, readonly StatusAnimal[]> = 
   adotado: ["disponivel", "em_tratamento"],
 };
 
-export const TIPOS_FOTO_ACEITOS = ["image/jpeg", "image/png", "image/webp"] as const;
-/** Igual ao limite da API e do bucket: a Vercel corta requisições acima de ~4,5 MB. */
-export const TAMANHO_MAXIMO_FOTO_MB = 4;
-export const TAMANHO_MAXIMO_FOTO_BYTES = TAMANHO_MAXIMO_FOTO_MB * 1024 * 1024;

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm, useWatch, type FieldErrors, type FieldPath } from "react-hook-form";
 import { z } from "zod";
@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { FotoDropzone } from "@/components/ui/foto-dropzone";
+import { IndicadorDePassos } from "@/components/ui/indicador-de-passos";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
-import { cn } from "@/lib/cn";
+import { mensagemDeFotoInvalida } from "@/lib/foto";
 import {
   ADOCAO_VAZIA,
   adocaoSchema,
@@ -20,18 +22,10 @@ import {
   paraAdocao,
 } from "../adocao";
 import { useCreateAnimal } from "../hooks/use-animais";
-import {
-  ESPECIE_INFO,
-  STATUS_DESCRICAO,
-  STATUS_INFO,
-  TAMANHO_MAXIMO_FOTO_BYTES,
-  TAMANHO_MAXIMO_FOTO_MB,
-  TIPOS_FOTO_ACEITOS,
-} from "../opcoes";
+import { ESPECIE_INFO, STATUS_DESCRICAO, STATUS_INFO } from "../opcoes";
 import { ESPECIES, STATUS_NO_CADASTRO } from "../types";
 import { CamposAdocao } from "./campos-adocao";
-import { FotoDropzone } from "./foto-dropzone";
-import { MensagemErro } from "./mensagem-erro";
+import { MensagemErro } from "@/components/ui/mensagem-erro";
 
 const MENSAGEM_ESPECIE = "Selecione a espécie";
 const MENSAGEM_STATUS = "Selecione o status do animal";
@@ -44,11 +38,11 @@ export const animalSchema = z
     foto: z.custom<File | null>().superRefine((arquivo, ctx) => {
       if (!(arquivo instanceof File)) {
         ctx.addIssue({ code: "custom", message: "Envie uma foto do animal" });
-      } else if (!TIPOS_FOTO_ACEITOS.some((tipo) => tipo === arquivo.type)) {
-        ctx.addIssue({ code: "custom", message: "A foto deve ser JPG, PNG ou WebP" });
-      } else if (arquivo.size > TAMANHO_MAXIMO_FOTO_BYTES) {
-        ctx.addIssue({ code: "custom", message: `A foto deve ter no máximo ${TAMANHO_MAXIMO_FOTO_MB} MB` });
+        return;
       }
+
+      const problema = mensagemDeFotoInvalida(arquivo);
+      if (problema) ctx.addIssue({ code: "custom", message: problema });
     }),
     status: z.enum(STATUS_NO_CADASTRO, { required_error: MENSAGEM_STATUS, invalid_type_error: MENSAGEM_STATUS }),
     ...camposDaAdocaoSoltos,
@@ -62,36 +56,6 @@ type FormSaida = z.output<typeof animalSchema>;
 const CAMPOS_ANIMAL: FieldPath<FormEntrada>[] = ["nome", "especie", "raca", "foto", "status"];
 
 const PASSOS = ["Animal", "Adoção"] as const;
-
-function IndicadorDePassos({ passoAtual }: { passoAtual: number }) {
-  return (
-    <ol className="mb-5 flex items-center gap-2" aria-label="Etapas do cadastro">
-      {PASSOS.map((titulo, indice) => {
-        const concluido = indice < passoAtual;
-        const atual = indice === passoAtual;
-
-        return (
-          <li key={titulo} aria-current={atual ? "step" : undefined} className="flex items-center gap-2">
-            <span
-              className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-full border-2 text-sm font-semibold",
-                concluido && "border-status-success-fg bg-status-success-fg text-white",
-                atual && "border-primary bg-primary text-white",
-                !concluido && !atual && "border-border-muted text-muted-foreground",
-              )}
-            >
-              {concluido ? <Check className="h-4 w-4" aria-hidden="true" /> : indice + 1}
-            </span>
-            <span className={cn("text-sm font-medium", atual ? "text-foreground" : "text-muted-foreground")}>
-              {titulo}
-            </span>
-            {indice < PASSOS.length - 1 && <span aria-hidden="true" className="mx-1 h-0.5 w-8 bg-border-subtle" />}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
 
 interface AnimalFormProps {
   onFechar: VoidFunction;
@@ -190,7 +154,7 @@ export function AnimalForm({ onFechar }: AnimalFormProps) {
 
   return (
     <div>
-      {jaAdotado && <IndicadorDePassos passoAtual={passo} />}
+      {jaAdotado && <IndicadorDePassos passos={PASSOS} passoAtual={passo} />}
 
       <FormProvider {...metodos}>
         <form

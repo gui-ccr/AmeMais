@@ -16,7 +16,7 @@ import { useUpdateAnimalStatus } from "../hooks/use-animais";
 import { STATUS_DESCRICAO, STATUS_INFO, TRANSICOES_STATUS } from "../opcoes";
 import { STATUS_ANIMAL, type Animal } from "../types";
 import { CamposAdocao } from "./campos-adocao";
-import { MensagemErro } from "./mensagem-erro";
+import { MensagemErro } from "@/components/ui/mensagem-erro";
 
 const MENSAGEM_STATUS = "Selecione o novo status";
 
