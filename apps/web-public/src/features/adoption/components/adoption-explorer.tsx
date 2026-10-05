@@ -11,6 +11,7 @@ const SPECIES_OPTIONS: { value: Species | "todos"; label: string }[] = [
   { value: "todos", label: "todos" },
   { value: "cão", label: "🐶 cães" },
   { value: "gato", label: "🐱 gatos" },
+  { value: "outro", label: "🐾 outros" },
 ];
 
 const SIZE_OPTIONS: { value: Size | "todos"; label: string }[] = [
