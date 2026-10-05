@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { gsap } from "@/lib/gsap";
-import { PETS } from "../data/pets";
-import type { AgeGroup, Size, Species } from "../types";
+import type { AgeGroup, Pet, Size, Species } from "../types";
 import { PetGrid } from "./pet-grid";
+import { PetsNotice } from "./pets-notice";
 
 const SPECIES_OPTIONS: { value: Species | "todos"; label: string }[] = [
   { value: "todos", label: "todos" },
@@ -28,20 +28,20 @@ const AGE_OPTIONS: { value: AgeGroup | "todos"; label: string }[] = [
   { value: "idoso", label: "idoso" },
 ];
 
-export function AdoptionExplorer() {
+export function AdoptionExplorer({ pets }: { pets: Pet[] }) {
   const [species, setSpecies] = useState<Species | "todos">("todos");
   const [size, setSize] = useState<Size | "todos">("todos");
   const [ageGroup, setAgeGroup] = useState<AgeGroup | "todos">("todos");
 
   const filtered = useMemo(
     () =>
-      PETS.filter(
+      pets.filter(
         (pet) =>
           (species === "todos" || pet.species === species) &&
           (size === "todos" || pet.size === size) &&
           (ageGroup === "todos" || pet.ageGroup === ageGroup),
       ),
-    [species, size, ageGroup],
+    [pets, species, size, ageGroup],
   );
 
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -105,7 +105,18 @@ export function AdoptionExplorer() {
           {filtered.length === 1 ? "1 amigo encontrado" : `${filtered.length} amigos encontrados`}
         </p>
 
-        <PetGrid pets={filtered} />
+        {pets.length === 0 ? (
+          <PetsNotice title="Nenhum amigo disponível agora">
+            Todos os nossos animais encontraram um lar ou estão em tratamento. Fale com a gente para saber quando
+            chegam novos amigos.
+          </PetsNotice>
+        ) : filtered.length === 0 ? (
+          <PetsNotice title="Nenhum amigo com esse perfil">
+            Tente outros filtros, ou fale com a gente: às vezes temos um amigo que ainda não está no site.
+          </PetsNotice>
+        ) : (
+          <PetGrid pets={filtered} />
+        )}
       </div>
     </div>
   );
