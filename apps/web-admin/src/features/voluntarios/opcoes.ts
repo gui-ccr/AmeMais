@@ -1,4 +1,9 @@
-import type { AreaDeAjuda, TipoVoluntario } from "./types";
+import type { AreaDeAjuda, StatusVoluntario, TipoVoluntario } from "./types";
+
+export const STATUS_VOLUNTARIO_INFO: Record<StatusVoluntario, { rotulo: string; variante: "success" | "muted" }> = {
+  ativo: { rotulo: "Ativo", variante: "success" },
+  inativo: { rotulo: "Inativo", variante: "muted" },
+};
 
 export const TIPO_VOLUNTARIO_INFO: Record<TipoVoluntario, { rotulo: string }> = {
   veterinario: { rotulo: "Veterinário(a)" },

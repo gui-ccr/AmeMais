@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { isValidTelefone } from "@/lib/validations/telefone";
-import { formatPhone } from "@/utils";
 import { AREAS_DE_AJUDA, TIPOS_VOLUNTARIO, type NovoVoluntarioInput, type Voluntario } from "./types";
 
 const MENSAGEM_TIPO = "Selecione o tipo de voluntário";
@@ -53,15 +52,15 @@ export function paraValoresDoFormulario(voluntario: Voluntario): VoluntarioFormE
 const vazioParaNull = (valor: string): string | null => valor.trim() || null;
 
 /**
- * Dos valores validados para o que o service recebe. O telefone sai sempre com a
- * máscara (mesmo que tenha sido colado só com números) e as áreas sem repetição,
- * na ordem de `AREAS_DE_AJUDA`.
+ * Dos valores validados para o que o service recebe. O telefone sai só com os dígitos
+ * (a API e o banco guardam sem máscara; a máscara é só para a tela) e as áreas sem
+ * repetição, na ordem de `AREAS_DE_AJUDA`.
  */
 export function paraDadosDoVoluntario(valores: VoluntarioFormSaida): NovoVoluntarioInput {
   return {
     nome: valores.nome,
     email: vazioParaNull(valores.email),
-    telefone: formatPhone(valores.telefone),
+    telefone: valores.telefone.replace(/\D/g, ""),
     tipo: valores.tipo,
     bairro: vazioParaNull(valores.bairro),
     areasDeAjuda: AREAS_DE_AJUDA.filter((area) => valores.areasDeAjuda.includes(area)),

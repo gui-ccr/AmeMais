@@ -1,13 +1,15 @@
+import { formatPhone } from "@/utils";
 import type { EditarVoluntarioInput, NovoVoluntarioInput, Voluntario, VoluntarioDTO } from "../types";
 
-/** Do formato da API para o modelo usado nas telas. */
+/** Do formato da API para o modelo usado nas telas. A API manda o telefone só com dígitos; a tela recebe com máscara. */
 export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
   return {
     id: dto.id,
     nome: dto.nome,
     email: dto.email ?? "",
-    telefone: dto.telefone,
+    telefone: formatPhone(dto.telefone),
     tipo: dto.tipo,
+    status: dto.status,
     bairro: dto.bairro ?? "",
     areasDeAjuda: [...dto.areasDeAjuda],
     createdAt: dto.createdAt,
@@ -22,44 +24,52 @@ export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
  * `PUT /api/voluntarios/:id` (corpo = `NovoVoluntarioInput`), todas respondendo
  * `{ data: VoluntarioDTO }` (ou `{ data: VoluntarioDTO[] }` na lista).
  *
- * O que falta no back para essa troca funcionar (back fora do escopo do front):
- * - não existe rota de voluntários na API;
- * - a tabela `voluntarios` só tem `usuario_id` (chave e FK para `usuarios`, que nasce de
- *   uma conta de login), `telefone` e `tipo`. Ou seja: hoje só dá para ter voluntário
- *   que tem conta no sistema. Para a ONG cadastrar voluntários pelo painel, o back precisa
- *   decidir se a tabela ganha `id` próprio + `nome`/`email` (sem exigir conta) ou se o
- *   cadastro cria/convida um usuário. Também faltam `bairro`, `areas_de_ajuda`, `created_at`
- *   e a RLS (não há módulo "voluntarios" no RBAC).
- * - `tipo` no banco é 'Veterinário'/'Apoio Geral'; a API proposta usa `veterinario`/`apoio_geral`.
+ * Este formato (`nome`, `email`, `telefone` só com dígitos, `tipo`, `status`, `bairro`,
+ * `areasDeAjuda`) foi adotado pelo time como referência para a API e a tabela, que ainda
+ * não existem (back fora do escopo do front). O `tipo` no banco antigo é
+ * 'Veterinário'/'Apoio Geral'; a API usa `veterinario`/`apoio_geral`.
  */
+
+/**
+ * `crypto.randomUUID` só existe em contexto seguro (https ou localhost): abrindo o admin
+ * pelo IP da rede ele não existe. Por isso o id não é gerado no carregamento do módulo e
+ * tem alternativa — o mock é temporário, a API real é quem vai gerar os ids.
+ */
+function gerarId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `mock-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 let voluntarios: VoluntarioDTO[] = [
   {
-    id: crypto.randomUUID(),
+    id: "exemplo-voluntario-1",
     nome: "Mariana Souza (exemplo)",
     email: "mariana.exemplo@amemais.org",
-    telefone: "(33) 99876-5432",
+    telefone: "33998765432",
     tipo: "apoio_geral",
+    status: "ativo",
     bairro: "Centro",
     areasDeAjuda: ["lar_temporario", "eventos"],
     createdAt: "2026-09-20T14:00:00.000Z",
   },
   {
-    id: crypto.randomUUID(),
+    id: "exemplo-voluntario-2",
     nome: "Dr. Paulo Lima (exemplo)",
     email: null,
-    telefone: "(33) 3521-0000",
+    telefone: "3335210000",
     tipo: "veterinario",
+    status: "ativo",
     bairro: null,
     areasDeAjuda: [],
     createdAt: "2026-09-12T10:30:00.000Z",
   },
   {
-    id: crypto.randomUUID(),
+    id: "exemplo-voluntario-3",
     nome: "João Pedro Alves (exemplo)",
     email: null,
-    telefone: "(33) 98888-1111",
+    telefone: "33988881111",
     tipo: "apoio_geral",
+    status: "inativo",
     bairro: "São Jacinto",
     areasDeAjuda: ["transporte", "divulgacao"],
     createdAt: "2026-10-02T19:15:00.000Z",
@@ -100,22 +110,29 @@ export const voluntarioService = {
   async create(input: NovoVoluntarioInput): Promise<Voluntario> {
     garantirEmailLivre(input.email);
 
+    // `status` vem depois do spread: todo voluntário nasce ativo, mesmo que o objeto recebido traga outro.
     const novo: VoluntarioDTO = {
-      id: crypto.randomUUID(),
+      id: gerarId(),
       createdAt: new Date().toISOString(),
       ...input,
+      status: "ativo",
       areasDeAjuda: [...input.areasDeAjuda],
     };
     voluntarios = [...voluntarios, novo];
     return delay(paraVoluntario(novo));
   },
 
-  /** `createdAt` fica como estava. */
+  /** `createdAt` e `status` ficam como estavam: o status muda por uma operação própria. */
   async update(id: string, input: EditarVoluntarioInput): Promise<Voluntario> {
     const atual = buscar(id);
     garantirEmailLivre(input.email, id);
 
-    const atualizado: VoluntarioDTO = { ...atual, ...input, areasDeAjuda: [...input.areasDeAjuda] };
+    const atualizado: VoluntarioDTO = {
+      ...atual,
+      ...input,
+      status: atual.status,
+      areasDeAjuda: [...input.areasDeAjuda],
+    };
     voluntarios = voluntarios.map((voluntario) => (voluntario.id === id ? atualizado : voluntario));
     return delay(paraVoluntario(atualizado));
   },
