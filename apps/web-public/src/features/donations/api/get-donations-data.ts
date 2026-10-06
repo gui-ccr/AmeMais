@@ -1,6 +1,7 @@
 import { publicCollectionPointListSchema, publicUrgencyListSchema } from "@amemais/shared-types";
 import { apiGet } from "@/lib/api";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { loadList, type ListResult } from "@/lib/load-list";
 import type { CollectionPoint, Urgency } from "../types";
 import { mapCollectionPoint } from "./map-collection-point";
 import { mapUrgency } from "./map-urgency";
@@ -20,4 +21,14 @@ export async function getCollectionPoints(): Promise<CollectionPoint[]> {
     tags: [CACHE_TAGS.pontosColeta],
   });
   return pontos.map(mapCollectionPoint);
+}
+
+/** Como `getUrgencies`, mas nunca lança: falha vira `unavailable: true`. Usar nas páginas. */
+export function loadUrgencies(): Promise<ListResult<Urgency>> {
+  return loadList("urgências", getUrgencies);
+}
+
+/** Como `getCollectionPoints`, mas nunca lança: falha vira `unavailable: true`. Usar nas páginas. */
+export function loadCollectionPoints(): Promise<ListResult<CollectionPoint>> {
+  return loadList("pontos de coleta", getCollectionPoints);
 }

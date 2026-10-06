@@ -1,6 +1,7 @@
 import { publicAnimalListSchema } from "@amemais/shared-types";
 import { apiGet } from "@/lib/api";
 import { CACHE_TAGS } from "@/lib/cache-tags";
+import { loadList } from "@/lib/load-list";
 import type { Pet } from "../types";
 import { mapPet } from "./map-pet";
 
@@ -24,10 +25,6 @@ export interface PetsResult {
  * servidor, sem detalhe para o visitante). Usar nas páginas.
  */
 export async function loadPets(): Promise<PetsResult> {
-  try {
-    return { pets: await getPets(), unavailable: false };
-  } catch (error) {
-    console.error("[web-public] não foi possível carregar os animais", error);
-    return { pets: [], unavailable: true };
-  }
+  const { items, unavailable } = await loadList("animais", getPets);
+  return { pets: items, unavailable };
 }

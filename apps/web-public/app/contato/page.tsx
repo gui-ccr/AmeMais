@@ -4,7 +4,8 @@ import { buildPageMetadata } from "@/lib/site";
 import { ContactInfo } from "@/features/contact/components/contact-info";
 import { MapEmbed } from "@/features/donations/components/map-embed";
 import { CollectionPointsList } from "@/features/donations/components/collection-points-list";
-import { COLLECTION_POINTS } from "@/features/donations/data/collection-points";
+import { CollectionPointsNotice } from "@/features/donations/components/donation-notices";
+import { loadCollectionPoints } from "@/features/donations/api/get-donations-data";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Contato",
@@ -13,7 +14,12 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/contato",
 });
 
-export default function ContatoPage() {
+// Literal de propósito (ver app/doe/page.tsx).
+export const revalidate = 30;
+
+export default async function ContatoPage() {
+  const points = await loadCollectionPoints();
+
   return (
     <div className="mx-auto max-w-6xl px-6 pt-11 pb-15">
       <PageHeader
@@ -27,7 +33,11 @@ export default function ContatoPage() {
         <div>
           <MapEmbed height={250} />
           <div className="mt-3">
-            <CollectionPointsList points={COLLECTION_POINTS} showHours />
+            {points.items.length === 0 ? (
+              <CollectionPointsNotice unavailable={points.unavailable} />
+            ) : (
+              <CollectionPointsList points={points.items} showHours />
+            )}
           </div>
         </div>
       </div>
