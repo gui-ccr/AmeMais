@@ -4,6 +4,8 @@ import { MessageCircle } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { buildPageMetadata } from "@/lib/site";
 import { AdoptionExplorer } from "@/features/adoption/components/adoption-explorer";
+import { PetsNotice } from "@/features/adoption/components/pets-notice";
+import { loadPets } from "@/features/adoption/api/get-pets";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Adote um Amigo",
@@ -12,7 +14,14 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/adote",
 });
 
-export default function AdotePage() {
+// Literal de propósito: o Next só lê esta opção se for um número escrito aqui (não importado).
+// Mesmo valor de DEFAULT_REVALIDATE_SECONDS em src/lib/api.ts. Sem isto, uma página gerada
+// quando a API estava fora do ar nunca seria atualizada. Ver ADR 0009.
+export const revalidate = 30;
+
+export default async function AdotePage() {
+  const { pets, unavailable } = await loadPets();
+
   return (
     <div className="mx-auto max-w-6xl px-6 pt-11 pb-15">
       <PageHeader
@@ -21,7 +30,14 @@ export default function AdotePage() {
         description="Todos os animais são castrados, vacinados e vermifugados antes da adoção. Use os filtros para encontrar seu companheiro."
       />
 
-      <AdoptionExplorer />
+      {unavailable ? (
+        <PetsNotice title="Não conseguimos carregar os animais agora">
+          Tente de novo em alguns minutos, ou fale com a gente pelo WhatsApp que mostramos quem está esperando por um
+          lar.
+        </PetsNotice>
+      ) : (
+        <AdoptionExplorer pets={pets} />
+      )}
 
       <div className="mt-7 flex flex-wrap items-center gap-4 rounded-2xl border-2 border-border bg-brand-sand p-5.5">
         <MessageCircle className="size-9 shrink-0 text-primary" />

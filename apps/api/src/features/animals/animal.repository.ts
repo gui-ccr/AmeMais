@@ -8,12 +8,7 @@ const TABLE = "animais";
 const COLUMNS =
   "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
 
-/**
- * Contrato que os use cases dependem de (Dependency Inversion): eles não
- * conhecem o Supabase, só esta interface, e trabalham com a entidade de
- * domínio (`Animal`) — nunca com a linha crua do banco. Facilita trocar a
- * implementação (ex.: um repository fake em teste) sem tocar nos use cases.
- */
+/** Contrato de persistência que os use cases usam. */
 export interface IAnimalRepository {
   list(): Promise<Animal[]>;
   findById(id: string): Promise<Animal>;
@@ -22,16 +17,7 @@ export interface IAnimalRepository {
   remove(id: string): Promise<void>;
 }
 
-/**
- * Única camada que fala com o Supabase. Não sabe nada de HTTP, request,
- * headers, cookies ou auth — recebe dados já validados e devolve a
- * entidade interna (via mapper).
- *
- * Recebe o client já autenticado como o usuário que fez a requisição (ver
- * lib/supabase.ts, createSupabaseForUser) — não a service role. Quem pode
- * ler/criar/editar/apagar é decidido pela RLS da tabela `animais`, não por
- * uma checagem repetida aqui.
- */
+/** Única camada que fala com o Supabase. */
 export class AnimalRepository implements IAnimalRepository {
   constructor(private readonly db: SupabaseClient) {}
 
@@ -64,11 +50,7 @@ export class AnimalRepository implements IAnimalRepository {
     return mapRowToEntity(data);
   }
 
-  /**
-   * Grava o status E os dados da adoção a partir do estado da entidade, na mesma
-   * escrita: ao virar `adotado` guarda adotante/data; ao deixar de ser `adotado`
-   * a entidade já zerou tudo (privacidade do adotante; o CHECK da tabela exige).
-   */
+  /** Grava o status e os dados da adoção juntos, a partir da entidade. */
   async updateStatus(animal: Animal): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)

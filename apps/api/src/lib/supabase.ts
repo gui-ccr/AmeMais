@@ -28,6 +28,22 @@ export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
 });
 
 /**
+ * Client anônimo: anon key SEM token de usuário. É o que um visitante do site
+ * público teria. Usado só pelas rotas `/api/public/*`.
+ *
+ * Nunca trocar por `supabaseAdmin` nelas: com o client anônimo a RLS continua
+ * sendo a barreira no banco, então um erro no código da rota não vira vazamento.
+ */
+export function createSupabaseAnon(): SupabaseClient {
+  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+/**
  * Client autenticado como o próprio usuário (anon key + o access_token dele
  * no header Authorization), em vez da service role.
  *

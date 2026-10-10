@@ -1,4 +1,4 @@
-export type Species = "cão" | "gato";
+export type Species = "cão" | "gato" | "outro";
 export type Size = "P" | "M" | "G";
 export type AgeGroup = "filhote" | "adulto" | "idoso";
 

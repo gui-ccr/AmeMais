@@ -13,13 +13,24 @@ export function PetCard({ pet }: { pet: Pet }) {
           style={{ borderRadius: "42% 58% 61% 39% / 44% 41% 59% 56%" }}
         >
           <div className="relative size-full overflow-hidden" style={{ borderRadius: "42% 58% 61% 39% / 44% 41% 59% 56%" }}>
-            <Image
-              src={pet.photo}
-              alt={pet.name}
-              fill
-              sizes="(min-width: 768px) 25vw, 50vw"
-              className="object-cover"
-            />
+            {pet.photo ? (
+              <Image
+                src={pet.photo}
+                alt={pet.name}
+                fill
+                sizes="(min-width: 768px) 25vw, 50vw"
+                className="object-cover"
+              />
+            ) : (
+              // Animal sem foto cadastrada: um <Image src=""> lançaria erro e derrubaria a página.
+              <div
+                role="img"
+                aria-label={`${pet.name} ainda não tem foto`}
+                className="flex size-full items-center justify-center bg-brand-sand text-6xl"
+              >
+                🐾
+              </div>
+            )}
           </div>
         </div>
         <Badge
