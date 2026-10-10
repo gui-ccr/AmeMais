@@ -24,11 +24,7 @@ function validarDataAdocao(valor: string): string {
   return valor;
 }
 
-/**
- * Estado completo de um animal já persistido (tem id e createdAt, que só
- * existem depois que o banco cria o registro). `status` é o Value Object
- * `AnimalStatus`, não a string crua — ver animal-status.vo.ts.
- */
+/** Estado de um animal já salvo no banco. */
 export interface AnimalProps {
   id: string;
   nome: string;
@@ -45,11 +41,7 @@ export interface AnimalProps {
   createdAt: string;
 }
 
-/**
- * Dados de entrada para cadastrar um animal novo, ainda sem id/createdAt.
- * `status` aqui ainda é a string crua (é o formato de entrada) — vira VO
- * dentro de `Animal.create()`; `adotante` também (vira o VO `Adotante`).
- */
+/** Dados de entrada para cadastrar um animal novo, ainda sem id/createdAt. */
 export interface NewAnimalProps {
   nome: string;
   especie?: string | null;
@@ -69,21 +61,9 @@ export interface AdocaoInput {
 /** Dados já validados e normalizados por `Animal.create()`, prontos para persistir. */
 export type AnimalCreationData = Omit<AnimalProps, "id" | "createdAt">;
 
-/**
- * Entidade de domínio (DDD): tem identidade (`id`) e é dona das regras que
- * garantem que um Animal nunca fique num estado inválido.
- *
- * O estado (`props`) é privado — ninguém fora da entidade consegue, por
- * exemplo, trocar o `status` direto sem passar pela matriz de transição.
- * É a diferença entre uma entidade "rica" e um DTO anêmico: aqui o
- * comportamento (`changeStatus`) mora junto do dado que ele protege.
- */
+/** Entidade Animal: guarda as regras para nunca ficar num estado inválido. */
 export class Animal {
-  /**
-   * Status com os quais um animal pode nascer no sistema — ver create().
-   * `adotado` entra porque o admin também registra animais que já foram
-   * adotados (cadastro retroativo, com os dados da adoção).
-   */
+  /** Status com os quais um animal pode nascer no sistema — ver create(). */
   private static readonly STATUSES_PERMITIDOS_NA_CRIACAO: readonly AnimalStatusValue[] = [
     "disponivel",
     "em_tratamento",
@@ -92,28 +72,12 @@ export class Animal {
 
   private constructor(private props: AnimalProps) {}
 
-  /**
-   * Reconstrói a entidade a partir de dados já persistidos (chamado só
-   * pelo mapper, ao ler uma linha do banco). Não revalida invariantes de
-   * criação porque o dado já passou por elas quando foi criado.
-   */
+  /** Reconstrói a entidade a partir de dados já persistidos (chamado só pelo mapper, ao ler uma linha do banco). */
   static restore(props: AnimalProps): Animal {
     return new Animal(props);
   }
 
-  /**
-   * Valida as regras de negócio de cadastro e devolve os dados prontos
-   * para persistir. É uma Factory (padrão de projeto) que garante que não
-   * existe caminho para criar um Animal fora das invariantes do domínio —
-   * não importa se quem chama é um controller HTTP, um script ou um teste.
-   *
-   * Regras centralizadas aqui:
-   * 1. nome com pelo menos 2 caracteres; espécie, se informada, da lista fixa.
-   * 2. status inicial: disponivel, em_tratamento ou adotado.
-   * 3. animal `adotado` exige os dados do adotante e a data da adoção (que não
-   *    pode ser futura); qualquer outro status NÃO aceita esses dados — dado
-   *    pessoal de adotante só existe enquanto o animal está adotado.
-   */
+  /** Valida as regras de negócio de cadastro e devolve os dados prontos para persistir. */
   static create(input: NewAnimalProps): AnimalCreationData {
     const nome = input.nome?.trim();
     if (!nome || nome.length < 2) {
@@ -136,6 +100,12 @@ export class Animal {
     let dataAdocao: string | null = null;
 
     if (statusValue === "adotado") {
+      if (!input.especie?.trim()) {
+        throw new ValidationError("especie é obrigatória para cadastrar um animal já adotado");
+      }
+      if (!input.raca?.trim()) {
+        throw new ValidationError("raca é obrigatória para cadastrar um animal já adotado");
+      }
       if (!input.adotante) {
         throw new ValidationError("adotante é obrigatório para um animal adotado");
       }
@@ -195,21 +165,7 @@ export class Animal {
     return this.props.createdAt;
   }
 
-  /**
-   * Único jeito de mudar o status de um animal. A checagem da transição é
-   * responsabilidade do próprio Value Object (`podeTransicionarPara`), que
-   * por baixo usa a matriz de transição encapsulada em `animal-status.vo.ts`
-   * — a entidade só aciona a regra, não a reimplementa.
-   *
-   * Adoção: mudar para `adotado` EXIGE os dados do adotante e a data da adoção
-   * (mesmas regras do cadastro); qualquer outro status NÃO aceita esses dados.
-   * Tudo é validado antes de alterar o estado — se algo falhar, o animal fica
-   * exatamente como estava.
-   *
-   * Se o animal deixa de estar `adotado` (devolução), os dados da adoção são
-   * apagados junto: dado pessoal do adotante não pode sobrar num animal que
-   * volta a ser exibido no site.
-   */
+  /** Único jeito de mudar o status de um animal. */
   changeStatus(novoStatus: AnimalStatus, adocao?: AdocaoInput): void {
     if (!this.props.status.podeTransicionarPara(novoStatus)) {
       throw new ValidationError(

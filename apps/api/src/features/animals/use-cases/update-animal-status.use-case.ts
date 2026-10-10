@@ -3,13 +3,7 @@ import { AnimalStatus, type AnimalStatusValue } from "../domain/animal-status.vo
 import type { IAnimalRepository } from "../animal.repository";
 import { toAnimalDTO, type AnimalDTO } from "../animal.dto";
 
-/**
- * A regra de transição de status mora no Value Object `AnimalStatus`
- * (acionada via `Animal.changeStatus`), não aqui: o use case só orquestra
- * — recebe a string já validada pelo Zod do controller, converte pro VO,
- * busca a entidade, pede pra ela mudar de estado (que lança
- * `ValidationError` se a transição não é permitida) e persiste o resultado.
- */
+/** A regra de transição mora no `AnimalStatus`; aqui só orquestra. */
 export class UpdateAnimalStatusUseCase {
   constructor(private readonly repository: IAnimalRepository) {}
 

@@ -88,7 +88,7 @@ describe("Animal.create() — cadastro de animal já adotado", () => {
 
   it("aceita adoção registrada hoje", () => {
     expect(() =>
-      Animal.create({ nome: "Thor", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-25" }),
+      Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-25" }),
     ).not.toThrow();
   });
 
@@ -96,28 +96,28 @@ describe("Animal.create() — cadastro de animal já adotado", () => {
     vi.setSystemTime(new Date("2026-09-26T02:00:00.000Z"));
 
     expect(() =>
-      Animal.create({ nome: "Thor", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-25" }),
+      Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-25" }),
     ).not.toThrow();
     expect(() =>
-      Animal.create({ nome: "Thor", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-26" }),
+      Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-26" }),
     ).toThrow(ValidationError);
   });
 
   it("rejeita data de adoção futura", () => {
     expect(() =>
-      Animal.create({ nome: "Thor", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-26" }),
+      Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-26" }),
     ).toThrow(/futura/);
   });
 
   it("rejeita data que não existe no calendário", () => {
     expect(() =>
-      Animal.create({ nome: "Thor", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-02-30" }),
+      Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-02-30" }),
     ).toThrow(ValidationError);
   });
 
   it("exige adotante e data quando o status é adotado", () => {
-    expect(() => Animal.create({ nome: "Thor", status: "adotado", dataAdocao: "2026-09-10" })).toThrow(/adotante/);
-    expect(() => Animal.create({ nome: "Thor", status: "adotado", adotante: ADOTANTE })).toThrow(/dataAdocao/);
+    expect(() => Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", dataAdocao: "2026-09-10" })).toThrow(/adotante/);
+    expect(() => Animal.create({ nome: "Thor", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE })).toThrow(/dataAdocao/);
   });
 
   it("NÃO aceita dados de adotante em animal que não está adotado", () => {
@@ -133,6 +133,13 @@ describe("Animal.create() — cadastro de animal já adotado", () => {
     expect(() => Animal.create({ nome: "Thor", especie: "Cachorro" })).not.toThrow();
     expect(() => Animal.create({ nome: "Thor", especie: "Outro" })).not.toThrow();
     expect(() => Animal.create({ nome: "Thor", especie: "Dragão" })).toThrow(ValidationError);
+  });
+
+  it("exige espécie e raça para cadastrar um animal já adotado", () => {
+    const base = { nome: "Thor", status: "adotado" as const, adotante: ADOTANTE, dataAdocao: "2026-09-10" };
+
+    expect(() => Animal.create({ ...base, raca: "SRD" })).toThrow(/especie/);
+    expect(() => Animal.create({ ...base, especie: "Cachorro" })).toThrow(/raca/);
   });
 
   it("animal disponível nasce sem dados de adoção", () => {
@@ -264,7 +271,7 @@ describe("mapper e DTO", () => {
 
   it("mapCreateDTOToRow grava os dados normalizados em snake_case", () => {
     const row = mapCreateDTOToRow(
-      Animal.create({ nome: " Thor ", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-10" }),
+      Animal.create({ nome: " Thor ", especie: "Cachorro", raca: "SRD", status: "adotado", adotante: ADOTANTE, dataAdocao: "2026-09-10" }),
     );
 
     expect(row).toMatchObject({
@@ -306,11 +313,22 @@ describe("createAnimalSchema", () => {
       raca: "SRD",
       urlFoto: "https://exemplo.com/animais/abc.jpg",
       status: "adotado",
-      adotante: { nome: "Maria Souza", idade: 34, cep: "39800-000", localidade: "Teófilo Otoni - MG" },
+      adotante: { nome: "Maria Souza", idade: 34, cep: "39800000", localidade: "Teófilo Otoni - MG" },
       dataAdocao: "2026-09-10",
     });
 
     expect(parsed.adotante?.idade).toBe(34);
+  });
+
+  it("rejeita, campo a campo, adotante com idade/CEP fora das faixas (CEP só com dígitos)", () => {
+    const ok = { nome: "Thor", status: "adotado", dataAdocao: "2026-09-10" };
+    const adotante = { nome: "Maria Souza", idade: 34, cep: "39800000", localidade: "Teófilo Otoni" };
+
+    expect(createAnimalSchema.safeParse({ ...ok, adotante }).success).toBe(true);
+    expect(createAnimalSchema.safeParse({ ...ok, adotante: { ...adotante, idade: 0 } }).success).toBe(false);
+    expect(createAnimalSchema.safeParse({ ...ok, adotante: { ...adotante, idade: 34.5 } }).success).toBe(false);
+    expect(createAnimalSchema.safeParse({ ...ok, adotante: { ...adotante, cep: "39800-000" } }).success).toBe(false);
+    expect(createAnimalSchema.safeParse({ ...ok, adotante: { ...adotante, cep: "3980000" } }).success).toBe(false);
   });
 
   it("rejeita espécie fora da lista e data em formato errado", () => {
@@ -328,7 +346,10 @@ describe("CreateAnimalUseCase", () => {
     const useCase = new CreateAnimalUseCase({ create } as unknown as AnimalRepository);
     const dto = await useCase.execute({
       nome: "  Thor  ",
+      especie: "Cachorro",
+      raca: "SRD",
       status: "adotado",
+      urlFoto: "https://exemplo.com/foto.jpg",
       adotante: ADOTANTE,
       dataAdocao: "2026-09-10",
     });

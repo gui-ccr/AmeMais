@@ -8,7 +8,7 @@ import {
 import { updateAnimalStatusSchema } from "../src/features/animals/schema";
 import { DatabaseError, ValidationError } from "../src/core/errors";
 
-const ADOTANTE = { nome: "Maria Souza", idade: 34, cep: "39800-000", localidade: "Teófilo Otoni - MG" };
+const ADOTANTE = { nome: "Maria Souza", idade: 34, cep: "39800000", localidade: "Teófilo Otoni - MG" };
 const FOTO = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0]);
 const HOJE = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
@@ -16,6 +16,7 @@ const HOJE = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Pau
 const ANIMAL_ADOTADO = {
   nome: "Thor",
   especie: "Cachorro" as const,
+  raca: "SRD",
   status: "adotado" as const,
   adotante: ADOTANTE,
   dataAdocao: HOJE,
@@ -91,6 +92,13 @@ describe("CreateAnimalUseCase — a foto só fica no Storage se o animal for gra
 
     expect(fotos.enviar).not.toHaveBeenCalled();
     expect(repository.create.mock.calls[0]![0].urlFoto).toBe("https://exemplo.com/foto.jpg");
+  });
+
+  it("animal adotado sem foto (nem arquivo, nem urlFoto) é recusado antes de qualquer envio", async () => {
+    await expect(useCase.execute(ANIMAL_ADOTADO)).rejects.toThrow(/foto é obrigatória/);
+
+    expect(fotos.enviar).not.toHaveBeenCalled();
+    expect(repository.create).not.toHaveBeenCalled();
   });
 
   it("recusa foto e urlFoto ao mesmo tempo", async () => {

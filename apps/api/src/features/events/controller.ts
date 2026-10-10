@@ -10,18 +10,6 @@ import { CreateEventUseCase } from "./use-cases/create-event.use-case";
 import { UpdateEventUseCase } from "./use-cases/update-event.use-case";
 import { DeleteEventUseCase } from "./use-cases/delete-event.use-case";
 
-/**
- * Controller da feature Events: 1 método por endpoint. Cada método:
- * 1. extrai contexto HTTP (auth, params, body);
- * 2. valida a entrada com Zod;
- * 3. instancia o repository (com um client Supabase autenticado como o
- *    próprio usuário — a RLS de `events` decide o que ele pode fazer) e o
- *    use case correspondente;
- * 4. executa o use case com os dados já validados e devolve a resposta.
- *
- * Nunca fala com o Supabase diretamente — quem faz isso é o repository,
- * por dentro do use case.
- */
 export class EventController {
   list = async (request: NextRequest) => {
     try {
