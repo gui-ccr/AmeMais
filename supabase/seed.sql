@@ -1,3 +1,6 @@
+-- SÓ PARA AMBIENTE LOCAL: roda em todo `supabase db reset` (config.toml).
+-- Nunca rode este arquivo no banco real do projeto.
+
 -- SEED: 8 Lares Temporários com diferentes status e capacidades
 INSERT INTO public.lares_temporarios (id, nome_responsavel, contato, capacidade, status, endereco_regiao, is_active)
 VALUES
