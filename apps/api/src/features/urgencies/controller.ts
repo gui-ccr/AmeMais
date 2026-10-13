@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { ok, created, fail } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
+import { avisarSiteDepois } from "@/lib/public-site";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
   createUrgencySchema,
@@ -56,6 +57,7 @@ export class UrgencyController {
       const useCase = new CreateUrgencyUseCase(new UrgencyRepository(db));
       const urgency = await useCase.execute(input);
 
+      avisarSiteDepois("urgencias");
       return created(urgency);
     } catch (error) {
       return fail(error);
@@ -73,6 +75,7 @@ export class UrgencyController {
       const useCase = new UpdateUrgencyUseCase(new UrgencyRepository(db));
       const urgency = await useCase.execute(id, input);
 
+      avisarSiteDepois("urgencias");
       return ok(urgency);
     } catch (error) {
       return fail(error);
@@ -88,6 +91,7 @@ export class UrgencyController {
       const useCase = new DeleteUrgencyUseCase(new UrgencyRepository(db));
       await useCase.execute(id);
 
+      avisarSiteDepois("urgencias");
       return ok({ deleted: true });
     } catch (error) {
       return fail(error);
@@ -105,6 +109,7 @@ export class UrgencyController {
       const useCase = new RegisterDonationUseCase(new UrgencyRepository(db));
       const urgency = await useCase.execute(id, valor);
 
+      avisarSiteDepois("urgencias");
       return ok(urgency);
     } catch (error) {
       return fail(error);

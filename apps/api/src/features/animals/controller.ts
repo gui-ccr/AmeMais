@@ -5,6 +5,7 @@ import { deleteFile, uploadFile } from "@/core/storage";
 import { TAMANHO_MAXIMO_IMAGEM_BYTES } from "@/features/uploads/image-rules";
 import { UploadImageUseCase } from "@/features/uploads/upload-image.use-case";
 import { requireUser } from "@/middleware/auth";
+import { avisarSiteDepois } from "@/lib/public-site";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
   createAnimalSchema,
@@ -126,6 +127,7 @@ export class AnimalController {
       const useCase = new CreateAnimalUseCase(new AnimalRepository(db), fotos);
       const animal = await useCase.execute(input, foto);
 
+      avisarSiteDepois("animais");
       return created(animal);
     } catch (error) {
       return fail(error);
@@ -143,6 +145,7 @@ export class AnimalController {
       const useCase = new UpdateAnimalStatusUseCase(new AnimalRepository(db));
       const animal = await useCase.execute(id, status, adotante || dataAdocao ? { adotante, dataAdocao } : undefined);
 
+      avisarSiteDepois("animais");
       return ok(animal);
     } catch (error) {
       return fail(error);
@@ -158,6 +161,7 @@ export class AnimalController {
       const useCase = new DeleteAnimalUseCase(new AnimalRepository(db));
       await useCase.execute(id);
 
+      avisarSiteDepois("animais");
       return ok({ deleted: true });
     } catch (error) {
       return fail(error);
