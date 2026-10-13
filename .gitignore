@@ -41,3 +41,8 @@ Thumbs.db
 /docs/sprint-planning
 .vercel
 .env*
+
+# Cypress (artefatos gerados nos testes e2e)
+**/cypress/downloads/
+**/cypress/screenshots/
+**/cypress/videos/
