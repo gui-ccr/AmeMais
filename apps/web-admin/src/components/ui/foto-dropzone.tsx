@@ -3,13 +3,17 @@
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useEffect, useState, type DragEvent } from "react";
 import { cn } from "@/lib/cn";
-import { TAMANHO_MAXIMO_FOTO_MB, TIPOS_FOTO_ACEITOS } from "../opcoes";
+import { TAMANHO_MAXIMO_FOTO_MB, TIPOS_FOTO_ACEITOS } from "@/lib/foto";
 
 interface FotoDropzoneProps {
   id: string;
   value: File | null;
   onChange: (arquivo: File | null) => void;
   hasError?: boolean;
+  /** Foto que o registro já tem (edição): aparece enquanto nenhum arquivo novo for escolhido. */
+  urlAtual?: string | null;
+  /** Chamado ao clicar em "Remover" na foto atual. Sem ele, a foto atual não mostra o botão. */
+  onRemoverAtual?: VoidFunction;
 }
 
 function formatarTamanho(bytes: number): string {
@@ -26,7 +30,7 @@ function formatarTamanho(bytes: number): string {
  * mas focável): Enter/Espaço abrem o seletor pelo teclado e o foco aparece no
  * quadro pontilhado.
  */
-export function FotoDropzone({ id, value, onChange, hasError }: FotoDropzoneProps) {
+export function FotoDropzone({ id, value, onChange, hasError, urlAtual, onRemoverAtual }: FotoDropzoneProps) {
   const [arrastando, setArrastando] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -90,6 +94,28 @@ export function FotoDropzone({ id, value, onChange, hasError }: FotoDropzoneProp
           }}
         />
       </label>
+
+      {!value && urlAtual && (
+        <div className="flex items-center gap-3 rounded-xl border-2 border-border-subtle bg-white p-2.5">
+          {/* Foto já gravada (URL pública do Storage): sem domínio fixo para o next/image. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={urlAtual} alt="Foto atual" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-sm font-medium text-foreground">Foto atual</span>
+            <span className="text-xs text-muted-foreground">Escolha outra acima para trocar.</span>
+          </div>
+          {onRemoverAtual && (
+            <button
+              type="button"
+              onClick={onRemoverAtual}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm text-destructive hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Remover
+            </button>
+          )}
+        </div>
+      )}
 
       {value && (
         <div className="flex items-center gap-3 rounded-xl border-2 border-border-subtle bg-white p-2.5">

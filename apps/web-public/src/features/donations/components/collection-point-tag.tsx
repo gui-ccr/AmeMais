@@ -25,7 +25,8 @@ export function CollectionPointTag({ point, index }: { point: CollectionPoint; i
         <div>
           <b className="text-lg">{point.name}</b>
           <p className="text-sm text-muted-foreground">
-            {point.address} · {point.hours}
+            {point.address}
+            {point.hours ? ` · ${point.hours}` : ""}
           </p>
         </div>
       </div>

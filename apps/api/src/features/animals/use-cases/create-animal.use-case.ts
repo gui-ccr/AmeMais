@@ -42,6 +42,12 @@ export class CreateAnimalUseCase {
     // input cru, que é persistido. Antes de tocar no Storage.
     const data = Animal.create(input);
 
+    // O animal já adotado é registrado com foto (arquivo ou URL). Confere antes
+    // de enviar qualquer coisa ao Storage.
+    if (data.status.valor === "adotado" && !foto && !input.urlFoto?.trim()) {
+      throw new ValidationError("foto é obrigatória para cadastrar um animal já adotado");
+    }
+
     let imagem: UploadedImage | undefined;
     if (foto && this.fotos) {
       imagem = await this.fotos.enviar(foto);

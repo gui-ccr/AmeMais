@@ -1,92 +1,15 @@
 "use client";
 
 import { AlertTriangle, PawPrint } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/cn";
-import { formatISODateToBR } from "@/utils";
-import { useAnimais } from "../hooks/use-animais";
-import { ESPECIE_INFO, STATUS_INFO } from "../opcoes";
+import { useToast } from "@/components/ui/toast";
+import { mensagemDeErroDaApi } from "@/lib/api-error";
+import { useAnimais, useDeleteAnimal } from "../hooks/use-animais";
 import type { Animal } from "../types";
+import { AnimalCard, AnimalLinha } from "./animal-card";
 
 export type VisaoAnimais = "grade" | "lista";
-
-function FotoAnimal({ animal, className }: { animal: Animal; className?: string }) {
-  if (!animal.urlFoto) {
-    return (
-      <div className={cn("flex items-center justify-center bg-card-muted", className)}>
-        <PawPrint className="h-8 w-8 text-muted-dark" aria-hidden="true" />
-      </div>
-    );
-  }
-
-  return (
-    // Foto vinda de uma URL qualquer (ou data URL, no mock): sem domínio fixo para o next/image.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={animal.urlFoto} alt={`Foto de ${animal.nome}`} className={cn("object-cover", className)} loading="lazy" />
-  );
-}
-
-/** "Adotado por Fulano · 10/09/2026" — só existe para animal adotado; os demais mostram só o selo de status. */
-function textoAdocao(animal: Animal): string | null {
-  if (!animal.adotante) return null;
-
-  const data = formatISODateToBR(animal.dataAdocao);
-  return data ? `Adotado por ${animal.adotante.nome} · ${data}` : `Adotado por ${animal.adotante.nome}`;
-}
-
-function SeloStatus({ status }: { status: Animal["status"] }) {
-  return (
-    <Badge variant={STATUS_INFO[status].variante} size="sm" dot>
-      {STATUS_INFO[status].rotulo}
-    </Badge>
-  );
-}
-
-function AnimalCard({ animal }: { animal: Animal }) {
-  return (
-    <Card className="flex h-full flex-col overflow-hidden p-0">
-      <FotoAnimal animal={animal} className="aspect-4/3 w-full" />
-      <div className="flex flex-col gap-1.5 p-4">
-        <h3 className="font-display text-2xl font-bold leading-tight text-foreground">{animal.nome}</h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="neutral" size="sm">
-            {ESPECIE_INFO[animal.especie].rotulo}
-          </Badge>
-          <SeloStatus status={animal.status} />
-          <span className="text-sm text-muted-dark">{animal.raca}</span>
-        </div>
-        {textoAdocao(animal) && <p className="text-xs text-muted-foreground">{textoAdocao(animal)}</p>}
-      </div>
-    </Card>
-  );
-}
-
-function AnimalLinha({ animal }: { animal: Animal }) {
-  return (
-    <Card className="flex items-center gap-4 p-3">
-      <FotoAnimal animal={animal} className="h-16 w-16 shrink-0 rounded-lg" />
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-foreground">{animal.nome}</span>
-          <Badge variant="neutral" size="sm">
-            {ESPECIE_INFO[animal.especie].rotulo}
-          </Badge>
-          <SeloStatus status={animal.status} />
-        </div>
-        <span className="truncate text-sm text-muted-dark">{animal.raca}</span>
-      </div>
-      {animal.adotante && (
-        <p className="hidden shrink-0 text-right text-xs text-muted-foreground sm:block">
-          {textoAdocao(animal)}
-          <br />
-          {animal.adotante.localidade}
-        </p>
-      )}
-    </Card>
-  );
-}
 
 function AnimalCardSkeleton() {
   return (
@@ -125,10 +48,27 @@ const CLASSES_LISTA: Record<VisaoAnimais, string> = {
 interface AnimalListProps {
   visao: VisaoAnimais;
   onNovo: VoidFunction;
+  onAlterarStatus: (animal: Animal) => void;
 }
 
-export function AnimalList({ visao, onNovo }: AnimalListProps) {
+export function AnimalList({ visao, onNovo, onAlterarStatus }: AnimalListProps) {
   const { data: animais, isPending, isError, refetch, isRefetching } = useAnimais();
+  const excluirAnimal = useDeleteAnimal();
+  const { toast } = useToast();
+
+  function handleExcluir(animal: Animal) {
+    if (!window.confirm(`Excluir o animal "${animal.nome}"? Essa ação não pode ser desfeita.`)) return;
+
+    excluirAnimal.mutate(animal.id, {
+      onSuccess: () => toast({ tipo: "sucesso", titulo: "Animal excluído", descricao: `${animal.nome} saiu da lista.` }),
+      onError: (erro) =>
+        toast({
+          tipo: "erro",
+          titulo: `Não foi possível excluir ${animal.nome}`,
+          descricao: mensagemDeErroDaApi(erro, "Tente novamente em instantes."),
+        }),
+    });
+  }
 
   // `isPending` (ainda sem dados), e não `isLoading`: com a busca pausada (sem internet ou aba
   // em segundo plano) `isLoading` é false e a tela mostraria "nenhum animal" sem ter carregado nada.
@@ -172,9 +112,19 @@ export function AnimalList({ visao, onNovo }: AnimalListProps) {
 
   return (
     <ul className={CLASSES_LISTA[visao]}>
-      {animais.map((animal) => (
-        <li key={animal.id}>{visao === "grade" ? <AnimalCard animal={animal} /> : <AnimalLinha animal={animal} />}</li>
-      ))}
+      {animais.map((animal) => {
+        const acoes = {
+          onAlterarStatus,
+          onExcluir: handleExcluir,
+          excluindo: excluirAnimal.isPending && excluirAnimal.variables === animal.id,
+        };
+
+        return (
+          <li key={animal.id}>
+            {visao === "grade" ? <AnimalCard animal={animal} acoes={acoes} /> : <AnimalLinha animal={animal} acoes={acoes} />}
+          </li>
+        );
+      })}
     </ul>
   );
 }

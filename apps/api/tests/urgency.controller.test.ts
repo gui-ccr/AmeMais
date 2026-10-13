@@ -3,30 +3,6 @@ import type { NextRequest } from "next/server";
 import { Urgency } from "../src/features/urgencies/domain/urgency.entity";
 import { UnauthorizedError, ForbiddenError, NotFoundError } from "../src/core/errors";
 
-/**
- * O Controller de Urgências não faz checagem de cargo em código — quem
- * decide o que Admin/Voluntário podem fazer é a política de RLS
- * (check_user_access) da tabela `urgency_items` no Postgres, exatamente
- * como em Events/Animals (ver controller.ts). Por isso, estes testes
- * unitários simulam a fronteira de autorização no nível do repository:
- * quando o "usuário" do teste representa alguém sem permissão de escrita,
- * o método correspondente do repository fake rejeita com `ForbiddenError`
- * — o mesmo erro que `throwOnWriteError` (core/supabase-errors.ts) geraria
- * a partir do código 42501 que o Postgres devolveria na vida real.
- *
- * O que este arquivo garante:
- * 1. o Controller exige autenticação (`requireUser`) antes de tudo — sem
- *    token válido, sempre 401, e o use case nunca é executado;
- * 2. o Controller instancia e executa o use case certo pra cada endpoint,
- *    repassando id/body validados;
- * 3. o Controller propaga corretamente pra HTTP qualquer erro que vier do
- *    repository (403 da RLS, 404 de não encontrado etc.) via `fail()`.
- *
- * A validação real de "Admin pode, Voluntário de escrita pode, DELETE só
- * Admin" contra o Postgres de verdade é o teste manual do item 16 do
- * ticket — não algo que dá pra provar com mock.
- */
-
 const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() => {
   return {
     mockRequireUser: vi.fn(),

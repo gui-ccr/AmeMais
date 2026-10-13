@@ -20,7 +20,7 @@ export function CollectionPointsList({
             <b className="text-lg">{point.name}</b>
             <p className="text-base text-muted-foreground">
               {point.address}
-              {showHours ? ` · ${point.hours}` : ""}
+              {showHours && point.hours ? ` · ${point.hours}` : ""}
             </p>
           </div>
         </div>
