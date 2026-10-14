@@ -43,3 +43,88 @@ jobs:
           # Váriaveis fake só pro Next.js conseguir fazer o build no CI
           NEXT_PUBLIC_SUPABASE_URL: "https://fake-project.supabase.co"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "fake-anon-key"
+
+  # ---------------------------------------------------------
+  # TESTES LENTOS (job separado: não seguram o pipeline acima)
+  # Supabase local + as 3 apps no ar. Ver docs/testes-integracao-e2e.md.
+  # ---------------------------------------------------------
+  testes-integracao-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      REVALIDATE_SECRET: segredo-e2e-ci
+      ALLOWED_ORIGINS: http://localhost:3002,http://localhost:3003
+      WEB_PUBLIC_URL: http://localhost:3002
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      API_URL: http://localhost:3001
+      NEXT_PUBLIC_SITE_URL: http://localhost:3002
+    steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js (via .nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'yarn'
+
+      - name: 📦 Cache do binário do Cypress
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      - name: 📦 Ativar Corepack e Instalar Dependências
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+
+      - name: 🗄️ Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: 🗄️ Subir o Supabase local (migrations + seed)
+        run: |
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,mailpit,postgres-meta
+          eval "$(supabase status -o env)"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "SUPABASE_JWT_SECRET=$JWT_SECRET"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+          } >> "$GITHUB_ENV"
+
+      - name: 🔐 5. Testes de Integração (RLS no Postgres de verdade)
+        run: yarn workspace @amemais/api test:integration
+
+      - name: 🏗️ Build das apps contra o Supabase local
+        run: |
+          yarn workspace @amemais/api build
+          yarn workspace @amemais/web-admin build
+          yarn workspace @amemais/web-public build
+
+      - name: 🚀 Subir API, admin e site
+        run: |
+          yarn workspace @amemais/api start > api.log 2>&1 &
+          yarn workspace @amemais/web-admin start > admin.log 2>&1 &
+          yarn workspace @amemais/web-public start > public.log 2>&1 &
+          for porta in 3001 3002 3003; do
+            timeout 60 bash -c "until curl -s -o /dev/null http://localhost:$porta; do sleep 1; done"
+          done
+          node apps/web-public/cypress/criar-usuario-e2e.mjs
+
+      - name: 🧭 6. Testes E2E (admin -> site público)
+        run: yarn workspace @amemais/web-public cypress run
+
+      - name: 📎 Logs e screenshots se falhar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-falha
+          path: |
+            *.log
+            apps/web-public/cypress/screenshots
+          if-no-files-found: ignore

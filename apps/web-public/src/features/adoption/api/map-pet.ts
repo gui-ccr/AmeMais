@@ -17,7 +17,7 @@ export function mapPet(animal: PublicAnimal): Pet {
     ageGroup: animal.faixaEtaria,
     tag: `${animal.porte} · ${animal.idadeTexto ?? animal.faixaEtaria}`,
     description: animal.descricao ?? "",
-    // Sem foto fica vazio por enquanto; a imagem de reserva é o KAN-112.
+    // Sem foto fica vazio: o cartão mostra a imagem de reserva (ver PetPhoto).
     photo: animal.urlFoto ?? "",
   };
 }

@@ -23,6 +23,7 @@ Diferente dos ADRs (que registram uma decisão pontual), guias explicam *como ap
 
 | Guia | Conteúdo |
 | --- | --- |
+| [Testes de integração e e2e](./testes-integracao-e2e.md) | Como rodar e escrever os testes de RLS (Supabase local) e o e2e admin → site, local e no CI |
 | [Arquitetura e boas práticas do backend](./guia-arquitetura-backend.md) | Guia ultra-didático (❌ sem o padrão / ✅ com o padrão) de camadas, SOLID, padrões de projeto, DDD (entidade + Value Object), feature-based vs pasta-por-tipo e clean code, tudo com exemplo real em `features/animals` |
 
 ## Como adicionar um novo ADR
