@@ -11,13 +11,59 @@ const COLUMNS =
   "id, nome_responsavel, contato, capacidade, status, endereco_regiao, is_active, created_at";
 
 /**
+ * View com a ocupação calculada (migration 20261006170000) — só tem
+ * `id, capacidade, ocupacao, vagas`. `nome_responsavel`/`status`/
+ * `endereco_regiao` continuam só em `lares_temporarios`; como a view é
+ * calculada (GROUP BY), o PostgREST não consegue "embutir" ela numa consulta
+ * a `lares_temporarios` (o embed depende de FK real no catálogo do Postgres,
+ * que uma view agregada não tem) — por isso as duas são consultadas
+ * separadamente e combinadas aqui.
+ */
+const VIEW_OCUPACAO = "lares_com_ocupacao";
+
+export interface ListSheltersFiltros {
+  status?: ShelterStatusValue;
+  busca?: string;
+  comVagas?: boolean;
+  limit: number;
+  offset: number;
+}
+
+/** `ocupacao`/`vagas` vêm da view — nunca recalculados aqui (ver VIEW_OCUPACAO acima). */
+export interface OcupacaoDoLar {
+  ocupacao: number;
+  vagas: number;
+}
+
+export interface ShelterComOcupacao {
+  shelter: Shelter;
+  ocupacao: number;
+  vagas: number;
+}
+
+export interface ListSheltersResultado {
+  items: ShelterComOcupacao[];
+  total: number;
+}
+
+
+function escaparTermoBusca(termo: string): string {
+  return termo.replace(/[,()]/g, "").replace(/[%_]/g, (caractere) => `\\${caractere}`);
+}
+
+function construirFiltroBusca(termoBruto: string): string {
+  const termo = escaparTermoBusca(termoBruto);
+  return `nome_responsavel.ilike.%${termo}%,endereco_regiao.ilike.%${termo}%`;
+}
+
+/**
  * Contrato que os use cases dependem (Dependency Inversion): eles não
  * conhecem o Supabase, só esta interface, e trabalham com a entidade de
  * domínio (`Shelter`) — nunca com a linha crua do banco. Facilita trocar a
  * implementação (ex.: um repository fake em teste) sem tocar nos use cases.
  */
 export interface IShelterRepository {
-  list(): Promise<Shelter[]>;
+  list(filtros: ListSheltersFiltros): Promise<ListSheltersResultado>;
   findById(id: string): Promise<Shelter>;
   create(input: CreateShelterDTO): Promise<Shelter>;
   updateStatus(id: string, status: ShelterStatus | ShelterStatusValue): Promise<Shelter>;
@@ -37,14 +83,51 @@ export interface IShelterRepository {
 export class ShelterRepository implements IShelterRepository {
   constructor(private readonly db: SupabaseClient) {}
 
-  async list(): Promise<Shelter[]> {
-    const { data, error } = await this.db
-      .from(TABLE)
-      .select(COLUMNS)
-      .order("created_at", { ascending: false });
+  async list(filtros: ListSheltersFiltros): Promise<ListSheltersResultado> {
+    
+    let ocupacaoElegiveis: Map<string, OcupacaoDoLar> | null = null;
+    if (filtros.comVagas) {
+      const { data, error } = await this.db.from(VIEW_OCUPACAO).select("id, ocupacao, vagas").gt("vagas", 0);
+      if (error) throw new DatabaseError(error);
+      ocupacaoElegiveis = new Map((data ?? []).map((linha) => [linha.id as string, linha as OcupacaoDoLar]));
+
+      if (ocupacaoElegiveis.size === 0) {
+        return { items: [], total: 0 };
+      }
+    }
+
+    let query = this.db.from(TABLE).select(COLUMNS, { count: "exact" });
+
+    if (filtros.status) query = query.eq("status", filtros.status);
+    if (filtros.busca) query = query.or(construirFiltroBusca(filtros.busca));
+    if (ocupacaoElegiveis) query = query.in("id", [...ocupacaoElegiveis.keys()]);
+
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(filtros.offset, filtros.offset + filtros.limit - 1);
 
     if (error) throw new DatabaseError(error);
-    return (data ?? []).map(mapRowToEntity);
+
+    const shelters = (data ?? []).map(mapRowToEntity);
+    const ocupacaoPorId = ocupacaoElegiveis ?? (await this.buscarOcupacao(shelters.map((s) => s.id)));
+
+    const items: ShelterComOcupacao[] = shelters.map((shelter) => {
+      
+      const info = ocupacaoPorId.get(shelter.id);
+      return { shelter, ocupacao: info?.ocupacao ?? 0, vagas: info?.vagas ?? shelter.capacidade };
+    });
+
+    return { items, total: count ?? 0 };
+  }
+
+  
+  private async buscarOcupacao(ids: string[]): Promise<Map<string, OcupacaoDoLar>> {
+    if (ids.length === 0) return new Map();
+
+    const { data, error } = await this.db.from(VIEW_OCUPACAO).select("id, ocupacao, vagas").in("id", ids);
+    if (error) throw new DatabaseError(error);
+    return new Map((data ?? []).map((linha) => [linha.id as string, linha as OcupacaoDoLar]));
   }
 
   async findById(id: string): Promise<Shelter> {
