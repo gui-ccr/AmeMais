@@ -4,8 +4,8 @@ import type { EditarVoluntarioInput, NovoVoluntarioInput } from "../types";
 
 /**
  * Chave de todas as consultas de voluntários. A lista usa exatamente esta chave e cada
- * voluntário usa `[...VOLUNTARIOS_QUERY_KEY, id]`; por isso invalidar `VOLUNTARIOS_QUERY_KEY`
- * atualiza a lista E os detalhes abertos de uma vez.
+ * voluntário usa `[...VOLUNTARIOS_QUERY_KEY, id]`; invalidar `VOLUNTARIOS_QUERY_KEY` sem
+ * `exact` atualiza a lista E os detalhes abertos de uma vez.
  */
 export const VOLUNTARIOS_QUERY_KEY = ["voluntarios"] as const;
 
@@ -38,14 +38,19 @@ export function useCreateVoluntario() {
   });
 }
 
-/** Edita um voluntário. Depois de salvar, a lista e o detalhe são recarregados sozinhos. */
+/**
+ * Edita um voluntário. O detalhe recebe na hora o voluntário que a API devolveu (não
+ * pisca nem busca de novo) e a lista é recarregada sozinha.
+ */
 export function useUpdateVoluntario() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: EditarVoluntarioInput }) => voluntarioService.update(id, input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY });
+    onSuccess: (voluntario, { id }) => {
+      queryClient.setQueryData([...VOLUNTARIOS_QUERY_KEY, id], voluntario);
+      // `exact`: só a lista; o detalhe já está certo e invalidá-lo faria buscar de novo.
+      queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY, exact: true });
     },
   });
 }
