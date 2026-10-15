@@ -1,8 +1,4 @@
-/**
- * Perfis do voluntário. São os dois valores do `CHECK` da coluna `voluntarios.tipo`
- * no banco ('Veterinário' e 'Apoio Geral'), escritos no padrão das outras rotas da
- * API (sem acento e com `_`); quem traduz para o texto do banco é o back.
- */
+/** Perfis do voluntário: os mesmos valores do `CHECK` de `voluntarios.tipo` e de `TIPOS_VOLUNTARIO` do back. */
 export const TIPOS_VOLUNTARIO = ["veterinario", "apoio_geral"] as const;
 export type TipoVoluntario = (typeof TIPOS_VOLUNTARIO)[number];
 
@@ -15,14 +11,15 @@ export const AREAS_DE_AJUDA = ["lar_temporario", "transporte", "eventos", "divul
 export type AreaDeAjuda = (typeof AREAS_DE_AJUDA)[number];
 
 /**
- * Formato PROPOSTO para `/api/voluntarios` (a rota ainda não existe — ver
- * `voluntario-service.ts`). Só o service conhece esse formato: as telas usam `Voluntario`.
+ * Formato que a API devolve em `/api/voluntarios` — espelha
+ * apps/api/src/features/voluntarios/voluntario.dto.ts. Só o `voluntario-service.ts`
+ * conhece esse formato: as telas usam `Voluntario`.
  */
 export interface VoluntarioDTO {
   id: string;
   nome: string;
   email: string | null;
-  /** Só dígitos (10 ou 11, com DDD), sem máscara. Ex.: "33998765432". */
+  /** Só dígitos (10 ou 11, com DDD), sem máscara. Ex.: "33998765432". Vem `""` em registro antigo sem telefone. */
   telefone: string;
   tipo: TipoVoluntario;
   status: StatusVoluntario;
