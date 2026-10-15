@@ -33,7 +33,6 @@ export function toShelterDTO(shelter: Shelter): ShelterDTO {
   };
 }
 
-
 export interface ShelterListItemDTO extends ShelterDTO {
   ocupacao: number;
   vagas: number;
