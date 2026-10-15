@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { ValidationError } from "@/core/errors";
 import { paginated, created, ok, fail } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
@@ -27,6 +28,14 @@ function lerQueryParams(searchParams: URLSearchParams) {
   };
 }
 
+/** `request.json()` lança em corpo vazio/malformado — isso é erro do cliente (400), não 500. */
+async function lerCorpoJson(request: NextRequest): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    throw new ValidationError("JSON inválido");
+  }
+}
 
 export class VoluntarioController {
   list = async (request: NextRequest) => {
@@ -48,7 +57,7 @@ export class VoluntarioController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = createVoluntarioSchema.parse(body);
 
       const useCase = new CreateVoluntarioUseCase(new VoluntarioRepository(db));
@@ -80,7 +89,7 @@ export class VoluntarioController {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
       const { id } = voluntarioIdParamSchema.parse(await params);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = updateVoluntarioSchema.parse(body);
 
       const useCase = new UpdateVoluntarioUseCase(new VoluntarioRepository(db));

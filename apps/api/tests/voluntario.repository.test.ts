@@ -202,6 +202,15 @@ describe("VoluntarioRepository.list()", () => {
     expect(orCall?.args[0]).toBe("nome.ilike.%anateste\\%\\_%,email.ilike.%anateste\\%\\_%");
   });
 
+  it("escapa a própria barra invertida antes de % e _ no termo de busca", async () => {
+    const { client, calls } = stubSupabase({ data: [], error: null, count: 0 });
+    const repository = new VoluntarioRepository(client);
+
+    await repository.list(filtrosBase({ busca: "a\\%" }));
+
+    expect(calls.find((c) => c.method === "or")?.args[0]).toBe("nome.ilike.%a\\\\\\%%,email.ilike.%a\\\\\\%%");
+  });
+
   it("filtra por tipo", async () => {
     const { client, calls } = stubSupabase({ data: [], error: null, count: 0 });
     const repository = new VoluntarioRepository(client);
@@ -324,6 +333,15 @@ describe("VoluntarioRepository.existsByEmail()", () => {
     expect(calls.find((c) => c.method === "ilike")?.args).toEqual(["email", "ana\\_b\\%c@exemplo.com"]);
   });
 
+  it("escapa a barra invertida do e-mail antes de % e _", async () => {
+    const { client, calls } = stubSupabase({ data: [], error: null });
+    const repository = new VoluntarioRepository(client);
+
+    await repository.existsByEmail("a\\b@exemplo.com");
+
+    expect(calls.find((c) => c.method === "ilike")?.args).toEqual(["email", "a\\\\b@exemplo.com"]);
+  });
+
   it("lança DatabaseError se a consulta falhar", async () => {
     const { client } = stubSupabase({ data: null, error: { message: "conexão perdida" } });
     const repository = new VoluntarioRepository(client);
@@ -408,11 +426,11 @@ describe("VoluntarioRepository.findById()", () => {
     await expect(repository.findById("inexistente")).rejects.toThrowError(NotFoundError);
   });
 
-  it("lança NotFoundError também quando o Supabase devolve um erro (ex.: id em formato errado)", async () => {
-    const { client } = stubSupabase({ data: null, error: { message: "invalid input syntax" } });
+  it("lança DatabaseError (não NotFoundError) quando o Supabase devolve um erro real", async () => {
+    const { client } = stubSupabase({ data: null, error: { message: "conexão perdida" } });
     const repository = new VoluntarioRepository(client);
 
-    await expect(repository.findById("vol-1")).rejects.toThrowError(NotFoundError);
+    await expect(repository.findById("vol-1")).rejects.toThrowError(DatabaseError);
   });
 });
 
@@ -553,10 +571,12 @@ describe("VoluntarioRepository.update()", () => {
     await expect(repository.update("vol-1", voluntarioParaAtualizar())).rejects.toThrowError(ForbiddenError);
   });
 
-  it("lança NotFoundError se o id não corresponder a nenhuma linha (sem erro explícito)", async () => {
-    const { client } = stubSupabase({ data: null, error: null });
+  it("lança ForbiddenError quando o UPDATE afeta 0 linhas (filtrado pela RLS, ex.: nível 'leitura'), não 500", async () => {
+    const { client, calls } = stubSupabase({ data: null, error: null });
     const repository = new VoluntarioRepository(client);
 
-    await expect(repository.update("inexistente", voluntarioParaAtualizar())).rejects.toThrowError(NotFoundError);
+    await expect(repository.update("vol-1", voluntarioParaAtualizar())).rejects.toThrowError(ForbiddenError);
+    expect(calls.some((c) => c.method === "maybeSingle")).toBe(true);
+    expect(calls.some((c) => c.method === "single")).toBe(false);
   });
 });

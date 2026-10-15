@@ -234,6 +234,53 @@ describe("VoluntarioController.list", () => {
   });
 });
 
+describe("VoluntarioController - corpo JSON inválido", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const requestComJsonQuebrado = () =>
+    ({
+      json: async () => {
+        throw new SyntaxError("Unexpected end of JSON input");
+      },
+    }) as unknown as NextRequest;
+
+  it("POST com JSON malformado/vazio -> 400 (não 500)", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+
+    const response = await voluntarioController.create(requestComJsonQuebrado());
+
+    expect(response.status).toBe(400);
+    expect(repoMocks.create).not.toHaveBeenCalled();
+  });
+
+  it("PUT com JSON malformado/vazio -> 400 (não 500)", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+
+    const response = await voluntarioController.update(requestComJsonQuebrado(), {
+      params: Promise.resolve({ id: ID_VALIDO }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(repoMocks.update).not.toHaveBeenCalled();
+  });
+
+  it("PUT sem email/bairro/areasDeAjuda -> 400 (não apaga dados silenciosamente)", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+    const semOpcionais: Record<string, unknown> = { ...CORPO_VALIDO };
+    delete semOpcionais.email;
+    delete semOpcionais.bairro;
+    delete semOpcionais.areasDeAjuda;
+
+    const { request, context } = fakePutRequest(ID_VALIDO, semOpcionais);
+    const response = await voluntarioController.update(request, context);
+
+    expect(response.status).toBe(400);
+    expect(repoMocks.update).not.toHaveBeenCalled();
+  });
+});
+
 describe("VoluntarioController.create", () => {
   beforeEach(() => {
     vi.clearAllMocks();

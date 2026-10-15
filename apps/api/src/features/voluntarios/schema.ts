@@ -47,5 +47,15 @@ export const voluntarioIdParamSchema = z.object({
 });
 
 
-export const updateVoluntarioSchema = createVoluntarioSchema;
-export type UpdateVoluntarioDTO = CreateVoluntarioDTO;
+/**
+ * PUT substitui o recurso inteiro: `email`, `bairro` e `areasDeAjuda` são obrigatórios (as chaves
+ * precisam vir no corpo; `null` apaga de propósito). Assim, omitir um campo não apaga o dado por acidente.
+ */
+export const updateVoluntarioSchema = createVoluntarioSchema.extend({
+  email: z.string().email("email inválido").nullable(),
+  bairro: z.string().nullable(),
+  areasDeAjuda: z
+    .array(z.enum(AREAS_DE_AJUDA))
+    .refine((areas) => new Set(areas).size === areas.length, "areasDeAjuda não pode conter valores repetidos"),
+});
+export type UpdateVoluntarioDTO = z.infer<typeof updateVoluntarioSchema>;

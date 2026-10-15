@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ConflictError, DatabaseError, NotFoundError } from "@/core/errors";
+import { ConflictError, DatabaseError, ForbiddenError, NotFoundError } from "@/core/errors";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import type { LarVinculadoDTO } from "./voluntario.dto";
 import { mapCreateDTOToRow, mapRowToEntity, mapUpdateDTOToRow } from "./mapper";
@@ -35,7 +35,7 @@ export interface ListVoluntariosResultado {
 
 
 function escaparTermoBusca(termo: string): string {
-  return termo.replace(/[,()]/g, "").replace(/[%_]/g, (caractere) => `\\${caractere}`);
+  return termo.replace(/[,()]/g, "").replace(/[\\%_]/g, "\\$&");
 }
 
 
@@ -94,9 +94,10 @@ export class VoluntarioRepository implements IVoluntarioRepository {
   }
 
   async findById(id: string): Promise<Voluntario> {
-    const { data, error } = await this.db.from(TABLE).select(COLUMNS).eq("id", id).single();
+    const { data, error } = await this.db.from(TABLE).select(COLUMNS).eq("id", id).maybeSingle();
 
-    if (error || !data) throw new NotFoundError("Voluntário");
+    if (error) throw new DatabaseError(error);
+    if (!data) throw new NotFoundError("Voluntário");
     return mapRowToEntity(data);
   }
 
@@ -116,7 +117,7 @@ export class VoluntarioRepository implements IVoluntarioRepository {
   }
 
   async existsByEmail(email: string, excludingId?: string): Promise<boolean> {
-    const emailEscapado = email.replace(/[%_]/g, (caractere) => `\\${caractere}`);
+    const emailEscapado = email.replace(/[\\%_]/g, "\\$&");
     let query = this.db.from(TABLE).select("id").ilike("email", emailEscapado);
     if (excludingId) query = query.neq("id", excludingId);
 
@@ -150,7 +151,7 @@ export class VoluntarioRepository implements IVoluntarioRepository {
       .update(mapUpdateDTOToRow(voluntario))
       .eq("id", id)
       .select(COLUMNS)
-      .single();
+      .maybeSingle();
 
     if (error) {
       if (error.code === UNIQUE_VIOLATION_CODE) {
@@ -158,7 +159,8 @@ export class VoluntarioRepository implements IVoluntarioRepository {
       }
       throwOnWriteError(error);
     }
-    if (!data) throw new NotFoundError("Voluntário");
+    // O use case já leu o registro, então ele existe: 0 linhas afetadas = UPDATE filtrado pela RLS (sem permissão de escrita).
+    if (!data) throw new ForbiddenError();
     return mapRowToEntity(data);
   }
 }
