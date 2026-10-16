@@ -3,17 +3,29 @@ import { ZodError } from "zod";
 import { withCors } from "@/middleware/cors";
 import { AppError } from "./errors";
 
-/**
- * Ponto único de formato de resposta HTTP da API. Todo controller deve
- * responder via ok/created/fail em vez de montar NextResponse na mão, para
- * o formato ficar igual entre todas as features.
- */
+
 export function ok<T>(data: T) {
   return withCors(NextResponse.json({ data }));
 }
 
 export function created<T>(data: T) {
   return withCors(NextResponse.json({ data }, { status: 201 }));
+}
+
+
+export function paginated<T>(data: T[], meta: { page: number; limit: number; total: number }) {
+  return withCors(
+    NextResponse.json(
+      { data },
+      {
+        headers: {
+          "X-Page": String(meta.page),
+          "X-Limit": String(meta.limit),
+          "X-Total-Count": String(meta.total),
+        },
+      },
+    ),
+  );
 }
 
 export function fail(error: unknown) {

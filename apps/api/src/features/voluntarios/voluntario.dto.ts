@@ -3,13 +3,7 @@ import type { TipoVoluntarioValue } from "./domain/tipo-voluntario.vo";
 import type { AreaDeAjudaValue } from "./domain/area-de-ajuda.vo";
 import type { StatusVoluntarioValue } from "./domain/status-voluntario.vo";
 
-/**
- * DTO de saída: o formato exato que a API devolve pro cliente — igual ao
- * contrato proposto pelo frontend (PR #67, `apps/web-admin/src/features/
- * voluntarios/opcoes.ts` e `types.ts`) mais o campo `status`, pedido pelo
- * KAN-81. `tipo`/`areasDeAjuda`/`status` aqui são os valores crus dos Value
- * Objects, nunca as instâncias — um DTO não vaza tipo de domínio.
- */
+
 export interface VoluntarioDTO {
   id: string;
   nome: string;
@@ -34,4 +28,19 @@ export function toVoluntarioDTO(voluntario: Voluntario): VoluntarioDTO {
     areasDeAjuda: voluntario.areasDeAjuda.map((area) => area.valor),
     createdAt: voluntario.createdAt,
   };
+}
+
+
+export interface LarVinculadoDTO {
+  id: string;
+  enderecoRegiao: string;
+}
+
+
+export interface VoluntarioDetalheDTO extends VoluntarioDTO {
+  larTemporario: LarVinculadoDTO | null;
+}
+
+export function toVoluntarioDetalheDTO(voluntario: Voluntario, larTemporario: LarVinculadoDTO | null): VoluntarioDetalheDTO {
+  return { ...toVoluntarioDTO(voluntario), larTemporario };
 }
