@@ -32,3 +32,12 @@ export function toShelterDTO(shelter: Shelter): ShelterDTO {
     createdAt: shelter.createdAt,
   };
 }
+
+export interface ShelterListItemDTO extends ShelterDTO {
+  ocupacao: number;
+  vagas: number;
+}
+
+export function toShelterListItemDTO(shelter: Shelter, ocupacao: number, vagas: number): ShelterListItemDTO {
+  return { ...toShelterDTO(shelter), ocupacao, vagas };
+}

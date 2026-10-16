@@ -21,7 +21,9 @@ export function paraLar(dto: ShelterDTO): Lar {
  */
 export const larService = {
   async list(): Promise<Lar[]> {
-    const { data } = await api.get<{ data: ShelterDTO[] }>("/api/lares");
+    // A API pagina por padrão (limit 20, máx. 100). Pedimos o máximo para a lista não vir
+    // truncada em silêncio; paginação de verdade no front fica para a tarefa LAR-FE-2.
+    const { data } = await api.get<{ data: ShelterDTO[] }>("/api/lares", { params: { limit: 100 } });
     return data.data.map(paraLar);
   },
 
