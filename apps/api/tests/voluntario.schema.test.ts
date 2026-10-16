@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createVoluntarioSchema } from "../src/features/voluntarios/schema";
+import { createVoluntarioSchema, updateVoluntarioSchema } from "../src/features/voluntarios/schema";
 
 function corpoValido(overrides: Record<string, unknown> = {}) {
   return {
@@ -12,6 +12,25 @@ function corpoValido(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe("updateVoluntarioSchema (PUT exige as chaves)", () => {
+  it("aceita corpo completo, inclusive com email/bairro null e areasDeAjuda vazia", () => {
+    expect(updateVoluntarioSchema.safeParse(corpoValido()).success).toBe(true);
+    expect(
+      updateVoluntarioSchema.safeParse(corpoValido({ email: null, bairro: null, areasDeAjuda: [] })).success,
+    ).toBe(true);
+  });
+
+  it.each(["email", "bairro", "areasDeAjuda"])("rejeita corpo sem a chave %s", (chave) => {
+    const corpo = corpoValido() as Record<string, unknown>;
+    delete corpo[chave];
+    expect(updateVoluntarioSchema.safeParse(corpo).success).toBe(false);
+  });
+
+  it("rejeita areasDeAjuda repetidas", () => {
+    expect(updateVoluntarioSchema.safeParse(corpoValido({ areasDeAjuda: ["eventos", "eventos"] })).success).toBe(false);
+  });
+});
 
 describe("createVoluntarioSchema", () => {
   it("aceita um corpo completo e válido", () => {

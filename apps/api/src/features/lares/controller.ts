@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
-import { ok, created, fail } from "@/core/http";
+import { ok, created, paginated, fail } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
   createShelterSchema,
   updateShelterStatusSchema,
   shelterIdParamSchema,
+  listSheltersQuerySchema,
 } from "./schema";
 import { ShelterRepository } from "./shelter.repository";
 import { ListSheltersUseCase } from "./use-cases/list-shelters.use-case";
@@ -13,6 +14,18 @@ import { GetShelterUseCase } from "./use-cases/get-shelter.use-case";
 import { CreateShelterUseCase } from "./use-cases/create-shelter.use-case";
 import { UpdateShelterStatusUseCase } from "./use-cases/update-shelter-status.use-case";
 import { DeleteShelterUseCase } from "./use-cases/delete-shelter.use-case";
+
+/** Extrai os query params como objeto para o Zod — ausente vira `undefined` (não `null`), pra `.optional()`/`.default()` funcionarem. */
+function lerQueryParams(searchParams: URLSearchParams) {
+  const pick = (chave: string) => searchParams.get(chave) ?? undefined;
+  return {
+    status: pick("status"),
+    busca: pick("busca"),
+    comVagas: pick("comVagas"),
+    limit: pick("limit"),
+    offset: pick("offset"),
+  };
+}
 
 /**
  * Controller da feature Lares Temporários: 1 método por endpoint. Cada método:
@@ -30,11 +43,12 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      const query = listSheltersQuerySchema.parse(lerQueryParams(request.nextUrl.searchParams));
 
       const useCase = new ListSheltersUseCase(new ShelterRepository(db));
-      const shelters = await useCase.execute();
+      const resultado = await useCase.execute(query);
 
-      return ok(shelters);
+      return paginated(resultado.items, { limit: query.limit, offset: query.offset, total: resultado.total });
     } catch (error) {
       return fail(error);
     }

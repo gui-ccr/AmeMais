@@ -193,3 +193,76 @@ describe("Voluntario.restore()", () => {
     expect(voluntario.areasDeAjuda.map((a) => a.valor)).toEqual(["eventos", "divulgacao"]);
   });
 });
+
+function voluntarioPersistido(overrides: Partial<NewVoluntarioProps> = {}) {
+  const criado = Voluntario.create(inputValido(overrides));
+  return Voluntario.restore({ id: "vol-1", createdAt: "2026-10-13T00:00:00.000Z", ...criado });
+}
+
+describe("Voluntario.update() — KAN-84", () => {
+  it("atualiza os campos editáveis preservando id, createdAt e status", () => {
+    const voluntario = voluntarioPersistido();
+    const antes = { id: voluntario.id, createdAt: voluntario.createdAt, status: voluntario.status.valor };
+
+    voluntario.update(inputValido({ nome: "Maria Silva Atualizada", bairro: "Novo Bairro" }));
+
+    expect(voluntario.nome).toBe("Maria Silva Atualizada");
+    expect(voluntario.bairro).toBe("Novo Bairro");
+    expect(voluntario.id).toBe(antes.id);
+    expect(voluntario.createdAt).toBe(antes.createdAt);
+    expect(voluntario.status.valor).toBe(antes.status);
+  });
+
+  it("preserva o status mesmo quando não é o padrão 'ativo' (ex.: um voluntário já inativo)", () => {
+    const criado = Voluntario.create(inputValido());
+    const voluntario = Voluntario.restore({
+      id: "vol-2",
+      createdAt: "2026-10-13T00:00:00.000Z",
+      ...criado,
+      status: StatusVoluntario.from("inativo"),
+    });
+
+    voluntario.update(inputValido({ nome: "Outro Nome" }));
+
+    expect(voluntario.status.valor).toBe("inativo");
+    expect(voluntario.nome).toBe("Outro Nome");
+  });
+
+  it("revalida as mesmas regras do cadastro (ex.: telefone com quantidade inválida de dígitos)", () => {
+    const voluntario = voluntarioPersistido();
+
+    expect(() => voluntario.update(inputValido({ telefone: "123" }))).toThrowError(ValidationError);
+  });
+
+  it("não altera nada quando a validação falha", () => {
+    const voluntario = voluntarioPersistido();
+    const nomeOriginal = voluntario.nome;
+
+    expect(() => voluntario.update(inputValido({ nome: "A" }))).toThrowError(ValidationError);
+    expect(voluntario.nome).toBe(nomeOriginal);
+  });
+
+  it("normaliza o telefone com máscara, igual ao cadastro", () => {
+    const voluntario = voluntarioPersistido();
+
+    voluntario.update(inputValido({ telefone: "(33) 99999-0000" }));
+
+    expect(voluntario.telefone).toBe("33999990000");
+  });
+
+  it("aceita email: null na edição", () => {
+    const voluntario = voluntarioPersistido();
+
+    voluntario.update(inputValido({ email: null }));
+
+    expect(voluntario.email).toBeNull();
+  });
+
+  it("aceita areasDeAjuda: [] na edição", () => {
+    const voluntario = voluntarioPersistido();
+
+    voluntario.update(inputValido({ areasDeAjuda: [] }));
+
+    expect(voluntario.areasDeAjuda).toEqual([]);
+  });
+});

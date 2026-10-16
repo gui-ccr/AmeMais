@@ -24,3 +24,33 @@ export const shelterIdParamSchema = z.object({
   id: z.string().uuid("id inválido"),
 });
 
+
+export const listSheltersQuerySchema = z.object({
+  status: z.enum(ShelterStatusValue).optional(),
+  busca: z
+    .string()
+    .optional()
+    .transform((valor) => valor?.trim() || undefined),
+  comVagas: z
+    .string()
+    .optional()
+    .refine((valor) => valor === undefined || valor === "true" || valor === "false", {
+      message: "comVagas deve ser 'true' ou 'false'",
+    })
+    .transform((valor) => (valor === undefined ? undefined : valor === "true")),
+  limit: z.preprocess(
+    (valor) => (valor === "" ? NaN : valor),
+    z.coerce
+      .number()
+      .int("limit deve ser um número inteiro")
+      .min(1, "limit deve ser no mínimo 1")
+      .max(100, "limit deve ser no máximo 100")
+      .default(20),
+  ),
+  offset: z.preprocess(
+    (valor) => (valor === "" ? NaN : valor),
+    z.coerce.number().int("offset deve ser um número inteiro").min(0, "offset não pode ser negativo").default(0),
+  ),
+});
+export type ListSheltersQuery = z.infer<typeof listSheltersQuerySchema>;
+

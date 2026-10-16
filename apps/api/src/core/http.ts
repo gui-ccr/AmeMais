@@ -3,17 +3,32 @@ import { ZodError } from "zod";
 import { withCors } from "@/middleware/cors";
 import { AppError } from "./errors";
 
-/**
- * Ponto único de formato de resposta HTTP da API. Todo controller deve
- * responder via ok/created/fail em vez de montar NextResponse na mão, para
- * o formato ficar igual entre todas as features.
- */
+
 export function ok<T>(data: T) {
   return withCors(NextResponse.json({ data }));
 }
 
 export function created<T>(data: T) {
   return withCors(NextResponse.json({ data }, { status: 201 }));
+}
+
+/**
+ * Resposta de listagem paginada: corpo { data } e total/limit nos headers
+ * X-Total-Count e X-Limit, mais X-Page (paginação por página) ou X-Offset
+ * (paginação por deslocamento), conforme o que o chamador informar. Os headers
+ * são expostos ao browser via Access-Control-Expose-Headers em middleware/cors.ts.
+ */
+export function paginated<T>(
+  data: T[],
+  meta: { limit: number; total: number } & ({ page: number; offset?: never } | { offset: number; page?: never }),
+) {
+  const headers: Record<string, string> = {
+    "X-Total-Count": String(meta.total),
+    "X-Limit": String(meta.limit),
+  };
+  if (meta.page !== undefined) headers["X-Page"] = String(meta.page);
+  if (meta.offset !== undefined) headers["X-Offset"] = String(meta.offset);
+  return withCors(NextResponse.json({ data }, { headers }));
 }
 
 export function fail(error: unknown) {
