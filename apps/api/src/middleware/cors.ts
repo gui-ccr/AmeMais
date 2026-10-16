@@ -17,7 +17,7 @@ export function corsHeaders(): HeadersInit {
     "Access-Control-Allow-Origin": defaultOrigin,
     "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Expose-Headers": "X-Total-Count, X-Limit, X-Offset",
+    "Access-Control-Expose-Headers": "X-Total-Count, X-Limit, X-Page, X-Offset",
   };
 }
 

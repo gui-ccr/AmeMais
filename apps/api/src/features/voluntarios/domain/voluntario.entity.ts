@@ -3,15 +3,9 @@ import { AreaDeAjuda } from "./area-de-ajuda.vo";
 import { StatusVoluntario } from "./status-voluntario.vo";
 import { TipoVoluntario, type TipoVoluntarioValue } from "./tipo-voluntario.vo";
 
-/** Formato bem simples de e-mail — o mesmo que o schema Zod usa na borda (`z.string().email()`). */
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Remove tudo que não é dígito. Único ponto de normalização de telefone —
- * usado tanto pelo schema Zod (na borda) quanto por `Voluntario.create()`
- * (no domínio), pra nunca haver dois resultados diferentes dependendo de
- * quem chama primeiro.
- */
+
 export function normalizarTelefone(valor: string): string {
   return (valor ?? "").replace(/\D/g, "");
 }
@@ -29,11 +23,6 @@ export interface VoluntarioProps {
   createdAt: string;
 }
 
-/**
- * Dados de entrada para cadastrar um voluntário novo. Sem `status`: todo
- * voluntário nasce "ativo" — mudar de status é operação própria (fora do
- * escopo desta tarefa, ver ticket KAN-81).
- */
 export interface NewVoluntarioProps {
   nome: string;
   email?: string | null;
@@ -46,12 +35,7 @@ export interface NewVoluntarioProps {
 /** Dados já validados e normalizados por `Voluntario.create()`, prontos para persistir. */
 export type VoluntarioCreationData = Omit<VoluntarioProps, "id" | "createdAt">;
 
-/**
- * Entidade de domínio Voluntario: tem identidade (`id`) e centraliza as
- * invariantes que garantem que um voluntário nunca fique num estado
- * inválido (nome curto, telefone com tamanho errado, e-mail malformado,
- * área de ajuda desconhecida ou repetida).
- */
+
 export class Voluntario {
   private constructor(private props: VoluntarioProps) {}
 
@@ -62,6 +46,24 @@ export class Voluntario {
 
   /** Valida as regras de cadastro e devolve os dados prontos para persistir. */
   static create(input: NewVoluntarioProps): VoluntarioCreationData {
+    return {
+      ...Voluntario.validarDados(input),
+      status: StatusVoluntario.from("ativo"),
+    };
+  }
+
+  update(input: NewVoluntarioProps): void {
+    const dados = Voluntario.validarDados(input);
+    this.props.nome = dados.nome;
+    this.props.email = dados.email;
+    this.props.telefone = dados.telefone;
+    this.props.tipo = dados.tipo;
+    this.props.bairro = dados.bairro;
+    this.props.areasDeAjuda = dados.areasDeAjuda;
+  }
+
+  /** Regras de validação/normalização compartilhadas por `create()` e `update()`. */
+  private static validarDados(input: NewVoluntarioProps): Omit<VoluntarioCreationData, "status"> {
     const nome = input.nome?.trim();
     if (!nome || nome.length < 2) {
       throw new ValidationError("nome deve ter pelo menos 2 caracteres");
@@ -80,22 +82,10 @@ export class Voluntario {
 
     const areasDeAjuda = Voluntario.validarAreasDeAjuda(input.areasDeAjuda ?? []);
 
-    return {
-      nome,
-      email,
-      telefone,
-      tipo,
-      bairro,
-      areasDeAjuda,
-      status: StatusVoluntario.from("ativo"),
-    };
+    return { nome, email, telefone, tipo, bairro, areasDeAjuda };
   }
 
-  /**
-   * `null`/`undefined` = não informado (permitido pelo contrato). Qualquer
-   * outro valor passa pela validação de formato — nunca é silenciosamente
-   * trocado por `null` só porque está malformado.
-   */
+
   private static validarEmail(email: string | null | undefined): string | null {
     if (email === null || email === undefined) return null;
 

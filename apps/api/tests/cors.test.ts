@@ -5,7 +5,7 @@ import { paginated } from "@/core/http";
 describe("CORS", () => {
   it("expõe os headers de paginação ao browser", () => {
     const headers = corsHeaders() as Record<string, string>;
-    expect(headers["Access-Control-Expose-Headers"]).toBe("X-Total-Count, X-Limit, X-Offset");
+    expect(headers["Access-Control-Expose-Headers"]).toBe("X-Total-Count, X-Limit, X-Page, X-Offset");
   });
 
   it("paginated() devolve os headers de paginação junto do Expose-Headers", () => {

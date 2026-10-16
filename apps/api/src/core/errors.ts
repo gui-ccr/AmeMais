@@ -47,6 +47,15 @@ export class NotFoundError extends AppError {
   }
 }
 
+/** Para violações de regras de unicidade (ex.: e-mail já cadastrado). */
+export class ConflictError extends AppError {
+  readonly statusCode = 409;
+
+  constructor(message = "Conflito com o estado atual do recurso") {
+    super(message);
+  }
+}
+
 /**
  * Falha inesperada ao acessar o banco. A mensagem pro cliente é sempre a
  * mesma, fixa — o erro real do Supabase (nome de tabela/coluna, SQL etc.)
