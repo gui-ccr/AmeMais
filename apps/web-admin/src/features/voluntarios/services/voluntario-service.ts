@@ -1,3 +1,4 @@
+import { api } from "@/lib/axios";
 import { formatPhone } from "@/utils";
 import type { EditarVoluntarioInput, NovoVoluntarioInput, Voluntario, VoluntarioDTO } from "../types";
 
@@ -17,123 +18,53 @@ export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
 }
 
 /**
- * MOCK TEMPORÁRIO: dados em memória, no formato `VoluntarioDTO` (somem ao recarregar
- * a página). Quando o back criar a rota, troque o corpo destas funções por chamadas
- * Axios (`@/lib/axios`), como em `features/lares/services/lar-service.ts`:
- * `GET /api/voluntarios`, `GET /api/voluntarios/:id`, `POST /api/voluntarios` e
- * `PUT /api/voluntarios/:id` (corpo = `NovoVoluntarioInput`), todas respondendo
- * `{ data: VoluntarioDTO }` (ou `{ data: VoluntarioDTO[] }` na lista).
+ * Chamadas à API de voluntários (`/api/voluntarios`). O formato de resposta é o de
+ * apps/api/src/features/voluntarios/voluntario.dto.ts; o corpo do cadastro segue o
+ * `createVoluntarioSchema` de lá (telefone só com dígitos e sem `status`: todo
+ * voluntário nasce "ativo").
  *
- * Este formato (`nome`, `email`, `telefone` só com dígitos, `tipo`, `status`, `bairro`,
- * `areasDeAjuda`) foi adotado pelo time como referência para a API e a tabela, que ainda
- * não existem (back fora do escopo do front). O `tipo` no banco antigo é
- * 'Veterinário'/'Apoio Geral'; a API usa `veterinario`/`apoio_geral`.
+ * As rotas vêm do PR #74 (`feat/listar-voluntarios`, já na main). O `PUT` exige o corpo
+ * completo (`email`, `bairro` e `areasDeAjuda` sempre presentes, `null` quando vazios),
+ * que é o que `paraDadosDoVoluntario` já monta. E-mail repetido volta 409 com
+ * `{ error }` — nas telas, mostre com `mensagemDeErroDaApi`.
  */
 
-/**
- * `crypto.randomUUID` só existe em contexto seguro (https ou localhost): abrindo o admin
- * pelo IP da rede ele não existe. Por isso o id não é gerado no carregamento do módulo e
- * tem alternativa — o mock é temporário, a API real é quem vai gerar os ids.
- */
-function gerarId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  return `mock-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-let voluntarios: VoluntarioDTO[] = [
-  {
-    id: "exemplo-voluntario-1",
-    nome: "Mariana Souza (exemplo)",
-    email: "mariana.exemplo@amemais.org",
-    telefone: "33998765432",
-    tipo: "apoio_geral",
-    status: "ativo",
-    bairro: "Centro",
-    areasDeAjuda: ["lar_temporario", "eventos"],
-    createdAt: "2026-09-20T14:00:00.000Z",
-  },
-  {
-    id: "exemplo-voluntario-2",
-    nome: "Dr. Paulo Lima (exemplo)",
-    email: null,
-    telefone: "3335210000",
-    tipo: "veterinario",
-    status: "ativo",
-    bairro: null,
-    areasDeAjuda: [],
-    createdAt: "2026-09-12T10:30:00.000Z",
-  },
-  {
-    id: "exemplo-voluntario-3",
-    nome: "João Pedro Alves (exemplo)",
-    email: null,
-    telefone: "33988881111",
-    tipo: "apoio_geral",
-    status: "inativo",
-    bairro: "São Jacinto",
-    areasDeAjuda: ["transporte", "divulgacao"],
-    createdAt: "2026-10-02T19:15:00.000Z",
-  },
-];
-
-function delay<T>(value: T, ms = 300): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
-}
-
-/** O e-mail é único na tabela `usuarios` do banco; o mock recusa repetição do mesmo jeito. */
-function garantirEmailLivre(email: string | null, idIgnorado?: string) {
-  if (!email) return;
-
-  const repetido = voluntarios.some(
-    (voluntario) => voluntario.id !== idIgnorado && voluntario.email?.toLowerCase() === email.toLowerCase(),
-  );
-  if (repetido) throw new Error("Já existe um voluntário com este e-mail.");
-}
-
-function buscar(id: string): VoluntarioDTO {
-  const encontrado = voluntarios.find((voluntario) => voluntario.id === id);
-  if (!encontrado) throw new Error("Voluntário não encontrado.");
-  return encontrado;
-}
+/** O maior `limit` que o back aceita em `GET /api/voluntarios`. */
+const LIMITE_POR_PAGINA = 100;
+/** Trava contra laço infinito se o back um dia ignorar `page` (100 × 50 = 5 000 voluntários). */
+const MAXIMO_DE_PAGINAS = 50;
 
 export const voluntarioService = {
-  /** Em ordem alfabética de nome. */
+  /**
+   * Todos os voluntários, em ordem de nome. A API é paginada (20 por página se nada for
+   * pedido) e o total vem no cabeçalho `X-Total-Count`, que o navegador não consegue ler
+   * (a API não o libera no CORS). Por isso busca de 100 em 100 até vir uma página incompleta.
+   */
   async list(): Promise<Voluntario[]> {
-    const ordenados = [...voluntarios].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-    return delay(ordenados.map(paraVoluntario));
+    const todos: VoluntarioDTO[] = [];
+    for (let page = 1; page <= MAXIMO_DE_PAGINAS; page++) {
+      const { data } = await api.get<{ data: VoluntarioDTO[] }>("/api/voluntarios", {
+        params: { page, limit: LIMITE_POR_PAGINA },
+      });
+      todos.push(...data.data);
+      if (data.data.length < LIMITE_POR_PAGINA) break;
+    }
+    return todos.map(paraVoluntario);
   },
 
   async get(id: string): Promise<Voluntario> {
-    return delay(paraVoluntario(buscar(id)));
+    const { data } = await api.get<{ data: VoluntarioDTO }>(`/api/voluntarios/${id}`);
+    return paraVoluntario(data.data);
   },
 
   async create(input: NovoVoluntarioInput): Promise<Voluntario> {
-    garantirEmailLivre(input.email);
-
-    // `status` vem depois do spread: todo voluntário nasce ativo, mesmo que o objeto recebido traga outro.
-    const novo: VoluntarioDTO = {
-      id: gerarId(),
-      createdAt: new Date().toISOString(),
-      ...input,
-      status: "ativo",
-      areasDeAjuda: [...input.areasDeAjuda],
-    };
-    voluntarios = [...voluntarios, novo];
-    return delay(paraVoluntario(novo));
+    const { data } = await api.post<{ data: VoluntarioDTO }>("/api/voluntarios", input);
+    return paraVoluntario(data.data);
   },
 
-  /** `createdAt` e `status` ficam como estavam: o status muda por uma operação própria. */
+  /** Edita os dados do voluntário. O status não muda por aqui: ele tem operação própria. */
   async update(id: string, input: EditarVoluntarioInput): Promise<Voluntario> {
-    const atual = buscar(id);
-    garantirEmailLivre(input.email, id);
-
-    const atualizado: VoluntarioDTO = {
-      ...atual,
-      ...input,
-      status: atual.status,
-      areasDeAjuda: [...input.areasDeAjuda],
-    };
-    voluntarios = voluntarios.map((voluntario) => (voluntario.id === id ? atualizado : voluntario));
-    return delay(paraVoluntario(atualizado));
+    const { data } = await api.put<{ data: VoluntarioDTO }>(`/api/voluntarios/${id}`, input);
+    return paraVoluntario(data.data);
   },
 };
