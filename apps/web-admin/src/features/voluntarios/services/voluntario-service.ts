@@ -23,8 +23,7 @@ export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
  * `createVoluntarioSchema` de lá (telefone só com dígitos e sem `status`: todo
  * voluntário nasce "ativo").
  *
- * ATENÇÃO — DEPENDE DO BACK: as rotas chegam com o PR #74 (`feat/listar-voluntarios`);
- * antes dele entrar na main, estas chamadas voltam 404. O `PUT` do #74 exige o corpo
+ * As rotas vêm do PR #74 (`feat/listar-voluntarios`, já na main). O `PUT` exige o corpo
  * completo (`email`, `bairro` e `areasDeAjuda` sempre presentes, `null` quando vazios),
  * que é o que `paraDadosDoVoluntario` já monta. E-mail repetido volta 409 com
  * `{ error }` — nas telas, mostre com `mensagemDeErroDaApi`.
