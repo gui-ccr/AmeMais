@@ -1,6 +1,13 @@
 import { api } from "@/lib/axios";
 import { formatPhone } from "@/utils";
-import type { EditarVoluntarioInput, NovoVoluntarioInput, Voluntario, VoluntarioDTO } from "../types";
+import type {
+  EditarVoluntarioInput,
+  NovoVoluntarioInput,
+  Voluntario,
+  VoluntarioDetalhe,
+  VoluntarioDetalheDTO,
+  VoluntarioDTO,
+} from "../types";
 
 /** Do formato da API para o modelo usado nas telas. A API manda o telefone só com dígitos; a tela recebe com máscara. */
 export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
@@ -14,6 +21,14 @@ export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
     bairro: dto.bairro ?? "",
     areasDeAjuda: [...dto.areasDeAjuda],
     createdAt: dto.createdAt,
+  };
+}
+
+export function paraVoluntarioDetalhe(dto: VoluntarioDetalheDTO): VoluntarioDetalhe {
+  const lar = dto.larTemporario;
+  return {
+    ...paraVoluntario(dto),
+    larTemporario: lar ? { id: lar.id, enderecoRegiao: lar.enderecoRegiao ?? "" } : null,
   };
 }
 
@@ -52,9 +67,10 @@ export const voluntarioService = {
     return todos.map(paraVoluntario);
   },
 
-  async get(id: string): Promise<Voluntario> {
-    const { data } = await api.get<{ data: VoluntarioDTO }>(`/api/voluntarios/${id}`);
-    return paraVoluntario(data.data);
+  /** Um voluntário com o lar temporário dele (só esta rota traz o lar). */
+  async get(id: string): Promise<VoluntarioDetalhe> {
+    const { data } = await api.get<{ data: VoluntarioDetalheDTO }>(`/api/voluntarios/${id}`);
+    return paraVoluntarioDetalhe(data.data);
   },
 
   async create(input: NovoVoluntarioInput): Promise<Voluntario> {
