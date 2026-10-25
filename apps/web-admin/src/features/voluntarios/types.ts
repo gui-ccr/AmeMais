@@ -28,6 +28,17 @@ export interface VoluntarioDTO {
   createdAt: string;
 }
 
+/** O lar temporário ligado ao voluntário — espelha `LarVinculadoDTO` do back. */
+export interface LarVinculadoDTO {
+  id: string;
+  enderecoRegiao: string | null;
+}
+
+/** Cada item de `GET /api/voluntarios` e o que `GET /api/voluntarios/:id` devolve: o voluntário e o lar dele. */
+export interface VoluntarioDetalheDTO extends VoluntarioDTO {
+  larTemporario: LarVinculadoDTO | null;
+}
+
 /** Voluntário da ONG. Modelo usado pelas telas. */
 export interface Voluntario {
   id: string;
@@ -43,6 +54,17 @@ export interface Voluntario {
   /** Como a pessoa quer ajudar; pode estar vazia. */
   areasDeAjuda: AreaDeAjuda[];
   createdAt: string;
+}
+
+export interface LarVinculado {
+  id: string;
+  /** Vazio se o lar não tem endereço/região cadastrado. */
+  enderecoRegiao: string;
+}
+
+/** Voluntário com o lar temporário dele (`null` se não tem lar). A lista e a busca por id trazem o lar. */
+export interface VoluntarioDetalhe extends Voluntario {
+  larTemporario: LarVinculado | null;
 }
 
 /**

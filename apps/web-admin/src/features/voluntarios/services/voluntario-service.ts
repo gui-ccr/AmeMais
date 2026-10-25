@@ -1,6 +1,13 @@
 import { api } from "@/lib/axios";
 import { formatPhone } from "@/utils";
-import type { EditarVoluntarioInput, NovoVoluntarioInput, Voluntario, VoluntarioDTO } from "../types";
+import type {
+  EditarVoluntarioInput,
+  NovoVoluntarioInput,
+  Voluntario,
+  VoluntarioDetalhe,
+  VoluntarioDetalheDTO,
+  VoluntarioDTO,
+} from "../types";
 
 /** Do formato da API para o modelo usado nas telas. A API manda o telefone só com dígitos; a tela recebe com máscara. */
 export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
@@ -14,6 +21,14 @@ export function paraVoluntario(dto: VoluntarioDTO): Voluntario {
     bairro: dto.bairro ?? "",
     areasDeAjuda: [...dto.areasDeAjuda],
     createdAt: dto.createdAt,
+  };
+}
+
+export function paraVoluntarioDetalhe(dto: VoluntarioDetalheDTO): VoluntarioDetalhe {
+  const lar = dto.larTemporario;
+  return {
+    ...paraVoluntario(dto),
+    larTemporario: lar ? { id: lar.id, enderecoRegiao: lar.enderecoRegiao ?? "" } : null,
   };
 }
 
@@ -36,25 +51,28 @@ const MAXIMO_DE_PAGINAS = 50;
 
 export const voluntarioService = {
   /**
-   * Todos os voluntários, em ordem de nome. A API é paginada (20 por página se nada for
-   * pedido) e o total vem no cabeçalho `X-Total-Count`, que o navegador não consegue ler
-   * (a API não o libera no CORS). Por isso busca de 100 em 100 até vir uma página incompleta.
+   * Todos os voluntários, em ordem de nome, cada um com o lar temporário dele. A API é
+   * paginada (20 por página se nada for pedido) e manda o total no cabeçalho
+   * `X-Total-Count` (liberado no CORS): busca de 100 em 100 até ter todos ou vir uma
+   * página incompleta.
    */
-  async list(): Promise<Voluntario[]> {
-    const todos: VoluntarioDTO[] = [];
+  async list(): Promise<VoluntarioDetalhe[]> {
+    const todos: VoluntarioDetalheDTO[] = [];
     for (let page = 1; page <= MAXIMO_DE_PAGINAS; page++) {
-      const { data } = await api.get<{ data: VoluntarioDTO[] }>("/api/voluntarios", {
+      const { data, headers } = await api.get<{ data: VoluntarioDetalheDTO[] }>("/api/voluntarios", {
         params: { page, limit: LIMITE_POR_PAGINA },
       });
       todos.push(...data.data);
-      if (data.data.length < LIMITE_POR_PAGINA) break;
+      const total = Number(headers["x-total-count"]);
+      if (data.data.length < LIMITE_POR_PAGINA || todos.length >= total) break;
     }
-    return todos.map(paraVoluntario);
+    return todos.map(paraVoluntarioDetalhe);
   },
 
-  async get(id: string): Promise<Voluntario> {
-    const { data } = await api.get<{ data: VoluntarioDTO }>(`/api/voluntarios/${id}`);
-    return paraVoluntario(data.data);
+  /** Um voluntário com o lar temporário dele. */
+  async get(id: string): Promise<VoluntarioDetalhe> {
+    const { data } = await api.get<{ data: VoluntarioDetalheDTO }>(`/api/voluntarios/${id}`);
+    return paraVoluntarioDetalhe(data.data);
   },
 
   async create(input: NovoVoluntarioInput): Promise<Voluntario> {

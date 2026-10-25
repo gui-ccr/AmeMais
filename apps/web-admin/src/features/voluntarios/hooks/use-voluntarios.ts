@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { voluntarioService } from "../services/voluntario-service";
-import type { EditarVoluntarioInput, NovoVoluntarioInput } from "../types";
+import type { EditarVoluntarioInput, NovoVoluntarioInput, VoluntarioDetalhe } from "../types";
 
 /**
  * Chave de todas as consultas de voluntários. A lista usa exatamente esta chave e cada
@@ -17,7 +17,7 @@ export function useVoluntarios() {
   });
 }
 
-/** Busca um voluntário. Sem `id`, não busca nada. */
+/** Busca um voluntário, com o lar temporário dele. Sem `id`, não busca nada. */
 export function useVoluntario(id: string | null | undefined) {
   return useQuery({
     queryKey: [...VOLUNTARIOS_QUERY_KEY, id],
@@ -33,7 +33,8 @@ export function useCreateVoluntario() {
   return useMutation({
     mutationFn: (input: NovoVoluntarioInput) => voluntarioService.create(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY });
+      // `exact`: só a lista. Um cadastro novo não muda os detalhes já abertos dos outros voluntários.
+      queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY, exact: true });
     },
   });
 }
@@ -48,7 +49,11 @@ export function useUpdateVoluntario() {
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: EditarVoluntarioInput }) => voluntarioService.update(id, input),
     onSuccess: (voluntario, { id }) => {
-      queryClient.setQueryData([...VOLUNTARIOS_QUERY_KEY, id], voluntario);
+      // O PUT devolve o voluntário sem o lar: mescla com o detalhe em cache para não perder o
+      // `larTemporario`. Sem detalhe em cache não grava nada (ele é buscado quando for usado).
+      queryClient.setQueryData<VoluntarioDetalhe>([...VOLUNTARIOS_QUERY_KEY, id], (atual) =>
+        atual ? { ...atual, ...voluntario } : undefined,
+      );
       // `exact`: só a lista; o detalhe já está certo e invalidá-lo faria buscar de novo.
       queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY, exact: true });
     },
