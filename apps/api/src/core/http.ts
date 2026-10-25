@@ -1,7 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { withCors } from "@/middleware/cors";
-import { AppError } from "./errors";
+import { AppError, ValidationError } from "./errors";
+
+/** `request.json()` lança em corpo vazio/malformado — isso é erro do cliente (400), não 500. */
+export async function lerCorpoJson(request: NextRequest): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    throw new ValidationError("JSON inválido");
+  }
+}
 
 
 export function ok<T>(data: T) {

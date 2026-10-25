@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { ok, created, fail } from "@/core/http";
+import { ok, created, fail, lerCorpoJson } from "@/core/http";
 import { ValidationError } from "@/core/errors";
 import { deleteFile, uploadFile } from "@/core/storage";
 import { TAMANHO_MAXIMO_IMAGEM_BYTES } from "@/features/uploads/image-rules";
@@ -31,7 +31,7 @@ import { DeleteAnimalUseCase } from "./use-cases/delete-animal.use-case";
 async function lerCorpoDoCadastro(request: NextRequest): Promise<{ input: CreateAnimalDTO; foto?: Uint8Array }> {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.includes("multipart/form-data")) {
-    return { input: createAnimalSchema.parse(await request.json()) };
+    return { input: createAnimalSchema.parse(await lerCorpoJson(request)) };
   }
 
   const form = await request.formData();
@@ -139,7 +139,7 @@ export class AnimalController {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
       const { id } = animalIdParamSchema.parse(await params);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const { status, adotante, dataAdocao } = updateAnimalStatusSchema.parse(body);
 
       const useCase = new UpdateAnimalStatusUseCase(new AnimalRepository(db));

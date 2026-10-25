@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { ok, created, fail } from "@/core/http";
+import { ok, created, fail, lerCorpoJson } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
 import { avisarSiteDepois } from "@/lib/public-site";
 import { createSupabaseForUser } from "@/lib/supabase";
@@ -51,7 +51,7 @@ export class UrgencyController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = createUrgencySchema.parse(body);
 
       const useCase = new CreateUrgencyUseCase(new UrgencyRepository(db));
@@ -69,7 +69,7 @@ export class UrgencyController {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
       const { id } = urgencyIdParamSchema.parse(await params);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = updateUrgencySchema.parse(body);
 
       const useCase = new UpdateUrgencyUseCase(new UrgencyRepository(db));
@@ -103,7 +103,7 @@ export class UrgencyController {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
       const { id } = urgencyIdParamSchema.parse(await params);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const { valor } = registerDonationSchema.parse(body);
 
       const useCase = new RegisterDonationUseCase(new UrgencyRepository(db));

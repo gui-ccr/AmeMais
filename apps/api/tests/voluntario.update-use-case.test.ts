@@ -30,6 +30,10 @@ class FakeVoluntarioRepository implements IVoluntarioRepository {
     return null;
   }
 
+  async findLaresVinculados(): Promise<Map<string, LarVinculadoDTO>> {
+    return new Map();
+  }
+
   async existsByEmail(email: string, excludingId?: string): Promise<boolean> {
     this.existsByEmailChamadoCom.push({ email, excludingId });
     return this.emailsDeOutros.has(email.toLowerCase());

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ConflictError, DatabaseError, ForbiddenError, NotFoundError } from "@/core/errors";
 import { throwOnWriteError } from "@/core/supabase-errors";
+import { escaparTermoIlike } from "@/core/postgrest";
 import type { LarVinculadoDTO } from "./voluntario.dto";
 import { mapCreateDTOToRow, mapRowToEntity, mapUpdateDTOToRow } from "./mapper";
 import { normalizarTelefone, type Voluntario, type VoluntarioCreationData } from "./domain/voluntario.entity";
@@ -34,16 +35,16 @@ export interface ListVoluntariosResultado {
 }
 
 
-function escaparTermoBusca(termo: string): string {
-  return termo.replace(/[,()]/g, "").replace(/[\\%_]/g, "\\$&");
-}
-
+/** Só dígitos e sinais de telefone ("(33) 9 9999-0000", "+55 33…"). */
+const PARECE_TELEFONE = /^[\d\s()+.-]+$/;
 
 function construirFiltroBusca(termoBruto: string): string {
-  const termo = escaparTermoBusca(termoBruto);
+  const termo = escaparTermoIlike(termoBruto);
   const clausulas = [`nome.ilike.%${termo}%`, `email.ilike.%${termo}%`];
 
-  const digitos = normalizarTelefone(termoBruto);
+  // Só compara o telefone quando o termo parece um telefone: senão "ana 33" traria todo
+  // mundo que tem "33" no número (o DDD da região), não só as Anas.
+  const digitos = PARECE_TELEFONE.test(termoBruto) ? normalizarTelefone(termoBruto) : "";
   if (digitos) clausulas.push(`telefone.ilike.%${digitos}%`);
 
   return clausulas.join(",");
@@ -55,6 +56,8 @@ export interface IVoluntarioRepository {
   findById(id: string): Promise<Voluntario>;
 
   findLarVinculado(voluntarioId: string): Promise<LarVinculadoDTO | null>;
+  /** Chave: id do voluntário. Quem não tem lar fica fora do Map. */
+  findLaresVinculados(voluntarioIds: string[]): Promise<Map<string, LarVinculadoDTO>>;
 
   existsByEmail(email: string, excludingId?: string): Promise<boolean>;
   create(input: VoluntarioCreationData): Promise<Voluntario>;
@@ -114,6 +117,27 @@ export class VoluntarioRepository implements IVoluntarioRepository {
     if (error) throw new DatabaseError(error);
     if (!data) return null;
     return { id: data.id, enderecoRegiao: data.endereco_regiao };
+  }
+
+  /** O mesmo que `findLarVinculado`, para vários voluntários numa consulta só (usado pela lista). */
+  async findLaresVinculados(voluntarioIds: string[]): Promise<Map<string, LarVinculadoDTO>> {
+    const lares = new Map<string, LarVinculadoDTO>();
+    if (voluntarioIds.length === 0) return lares;
+
+    const { data, error } = await this.db
+      .from(TABELA_LARES)
+      .select("id, endereco_regiao, voluntario_id")
+      .in("voluntario_id", voluntarioIds)
+      .order("created_at", { ascending: true });
+
+    if (error) throw new DatabaseError(error);
+    // Em ordem de criação: o primeiro lar de cada voluntário vence, como em findLarVinculado.
+    for (const linha of data ?? []) {
+      if (!lares.has(linha.voluntario_id)) {
+        lares.set(linha.voluntario_id, { id: linha.id, enderecoRegiao: linha.endereco_regiao });
+      }
+    }
+    return lares;
   }
 
   async existsByEmail(email: string, excludingId?: string): Promise<boolean> {

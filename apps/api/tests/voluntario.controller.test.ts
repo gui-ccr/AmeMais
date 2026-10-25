@@ -14,6 +14,7 @@ const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() 
       create: vi.fn(),
       findById: vi.fn(),
       findLarVinculado: vi.fn(),
+      findLaresVinculados: vi.fn(async () => new Map()),
       update: vi.fn(),
     },
   };

@@ -1,9 +1,9 @@
 import { ForbiddenError } from "@/core/errors";
 import type { IVoluntarioRepository, ListVoluntariosFiltros } from "../voluntario.repository";
-import { toVoluntarioDTO, type VoluntarioDTO } from "../voluntario.dto";
+import { toVoluntarioDetalheDTO, type VoluntarioDetalheDTO } from "../voluntario.dto";
 
 export interface ListVoluntariosResultadoDTO {
-  items: VoluntarioDTO[];
+  items: VoluntarioDetalheDTO[];
   total: number;
 }
 
@@ -18,6 +18,13 @@ export class ListVoluntariosUseCase {
     }
 
     const resultado = await this.repository.list(filtros);
-    return { items: resultado.items.map(toVoluntarioDTO), total: resultado.total };
+    // Cada item já leva o lar vinculado (uma consulta para a página toda), para a tela
+    // não precisar buscar o detalhe de cada voluntário só para mostrar o lar.
+    const lares = await this.repository.findLaresVinculados(resultado.items.map((voluntario) => voluntario.id));
+
+    return {
+      items: resultado.items.map((voluntario) => toVoluntarioDetalheDTO(voluntario, lares.get(voluntario.id) ?? null)),
+      total: resultado.total,
+    };
   }
 }

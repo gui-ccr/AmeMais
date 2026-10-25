@@ -11,6 +11,7 @@ import type {
   ListVoluntariosFiltros,
   ListVoluntariosResultado,
 } from "../src/features/voluntarios/voluntario.repository";
+import type { LarVinculadoDTO } from "../src/features/voluntarios/voluntario.dto";
 import { ForbiddenError } from "../src/core/errors";
 
 /** A interface ganhou métodos das KAN-83/84 (existsByEmail/create/findById/
@@ -42,6 +43,14 @@ class FakeVoluntarioRepository implements IVoluntarioRepository {
     return null;
   }
 
+  public lares = new Map<string, LarVinculadoDTO>();
+  public findLaresVinculadosChamadoCom: string[][] = [];
+
+  async findLaresVinculados(voluntarioIds: string[]): Promise<Map<string, LarVinculadoDTO>> {
+    this.findLaresVinculadosChamadoCom.push(voluntarioIds);
+    return this.lares;
+  }
+
   async update(): Promise<never> {
     throw new Error("não usado nos testes de listagem");
   }
@@ -54,7 +63,11 @@ class FakeVoluntarioRepository implements IVoluntarioRepository {
 }
 
 function voluntarioFixture(): Voluntario {
-  return Voluntario.restore({
+  return Voluntario.restore(voluntarioFixtureProps());
+}
+
+function voluntarioFixtureProps() {
+  return {
     id: "vol-1",
     nome: "Ana Silva",
     email: "ana@exemplo.com",
@@ -64,7 +77,7 @@ function voluntarioFixture(): Voluntario {
     areasDeAjuda: [AreaDeAjuda.from("eventos")],
     status: StatusVoluntario.from("ativo"),
     createdAt: "2026-10-14T00:00:00.000Z",
-  });
+  };
 }
 
 describe("ListVoluntariosUseCase", () => {
@@ -96,7 +109,21 @@ describe("ListVoluntariosUseCase", () => {
       bairro: "Centro",
       areasDeAjuda: ["eventos"],
       createdAt: "2026-10-14T00:00:00.000Z",
+      larTemporario: null,
     });
+  });
+
+  it("inclui o lar vinculado de cada voluntário, buscando os lares da página numa chamada só", async () => {
+    const repository = new FakeVoluntarioRepository();
+    const outro = Voluntario.restore({ ...voluntarioFixtureProps(), id: "vol-2", nome: "Bruno" });
+    repository.resultado = { items: [voluntarioFixture(), outro], total: 2 };
+    repository.lares.set("vol-2", { id: "lar-9", enderecoRegiao: "Zona Norte" });
+    const useCase = new ListVoluntariosUseCase(repository);
+
+    const resultado = await useCase.execute({ page: 1, limit: 20 });
+
+    expect(repository.findLaresVinculadosChamadoCom).toEqual([["vol-1", "vol-2"]]);
+    expect(resultado.items.map((item) => item.larTemporario)).toEqual([null, { id: "lar-9", enderecoRegiao: "Zona Norte" }]);
   });
 
   it("repassa os filtros recebidos para o repository sem alterá-los", async () => {

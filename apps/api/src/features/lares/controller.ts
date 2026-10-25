@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { ok, created, paginated, fail } from "@/core/http";
+import { ok, created, paginated, fail, lerCorpoJson } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
@@ -76,7 +76,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = createShelterSchema.parse(body);
 
       const useCase = new CreateShelterUseCase(new ShelterRepository(db));
@@ -96,7 +96,7 @@ export class ShelterController {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
       const { id } = shelterIdParamSchema.parse(await params);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const { status } = updateShelterStatusSchema.parse(body);
 
       const useCase = new UpdateShelterStatusUseCase(new ShelterRepository(db));

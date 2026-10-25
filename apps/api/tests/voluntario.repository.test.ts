@@ -32,6 +32,10 @@ function stubSupabase(finalResult: { data: unknown; error: unknown; count?: numb
       calls.push({ method: "neq", args });
       return chain;
     },
+    in: (...args: unknown[]) => {
+      calls.push({ method: "in", args });
+      return chain;
+    },
     contains: (...args: unknown[]) => {
       calls.push({ method: "contains", args });
       return chain;
@@ -190,6 +194,15 @@ describe("VoluntarioRepository.list()", () => {
 
     const orCall = calls.find((c) => c.method === "or");
     expect(orCall?.args[0]).toContain("telefone.ilike.%33999990000%");
+  });
+
+  it("não compara telefone quando o termo mistura letras e números ('ana 33' não traz todo DDD 33)", async () => {
+    const { client, calls } = stubSupabase({ data: [], error: null, count: 0 });
+    const repository = new VoluntarioRepository(client);
+
+    await repository.list(filtrosBase({ busca: "ana 33" }));
+
+    expect(calls.find((c) => c.method === "or")?.args[0]).toBe("nome.ilike.%ana 33%,email.ilike.%ana 33%");
   });
 
   it("remove delimitadores do DSL do .or() e escapa wildcards do ilike no termo de busca", async () => {
@@ -578,5 +591,43 @@ describe("VoluntarioRepository.update()", () => {
     await expect(repository.update("vol-1", voluntarioParaAtualizar())).rejects.toThrowError(ForbiddenError);
     expect(calls.some((c) => c.method === "maybeSingle")).toBe(true);
     expect(calls.some((c) => c.method === "single")).toBe(false);
+  });
+});
+
+describe("VoluntarioRepository.findLaresVinculados()", () => {
+  it("lista vazia de ids -> Map vazio, sem consultar o banco", async () => {
+    const { client, calls } = stubSupabase({ data: [], error: null });
+    const repository = new VoluntarioRepository(client);
+
+    expect((await repository.findLaresVinculados([])).size).toBe(0);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("busca os lares de todos os ids numa consulta só e fica com o primeiro lar (mais antigo) de cada voluntário", async () => {
+    const { client, calls } = stubSupabase({
+      data: [
+        { id: "lar-1", endereco_regiao: "Centro", voluntario_id: "vol-1" },
+        { id: "lar-2", endereco_regiao: "Zona Norte", voluntario_id: "vol-1" },
+        { id: "lar-3", endereco_regiao: "Zona Sul", voluntario_id: "vol-2" },
+      ],
+      error: null,
+    });
+    const repository = new VoluntarioRepository(client);
+
+    const lares = await repository.findLaresVinculados(["vol-1", "vol-2", "vol-3"]);
+
+    expect(calls.find((c) => c.method === "from")?.args).toEqual(["lares_temporarios"]);
+    expect(calls.find((c) => c.method === "in")?.args).toEqual(["voluntario_id", ["vol-1", "vol-2", "vol-3"]]);
+    expect(calls.find((c) => c.method === "order")?.args).toEqual(["created_at", { ascending: true }]);
+    expect(lares.get("vol-1")).toEqual({ id: "lar-1", enderecoRegiao: "Centro" });
+    expect(lares.get("vol-2")).toEqual({ id: "lar-3", enderecoRegiao: "Zona Sul" });
+    expect(lares.has("vol-3")).toBe(false);
+  });
+
+  it("lança DatabaseError se a consulta falhar", async () => {
+    const { client } = stubSupabase({ data: null, error: { message: "falhou" } });
+    const repository = new VoluntarioRepository(client);
+
+    await expect(repository.findLaresVinculados(["vol-1"])).rejects.toThrowError(DatabaseError);
   });
 });
