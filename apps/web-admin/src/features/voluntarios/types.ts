@@ -34,7 +34,7 @@ export interface LarVinculadoDTO {
   enderecoRegiao: string | null;
 }
 
-/** O que `GET /api/voluntarios/:id` devolve: o voluntário e o lar dele (a lista não traz o lar). */
+/** Cada item de `GET /api/voluntarios` e o que `GET /api/voluntarios/:id` devolve: o voluntário e o lar dele. */
 export interface VoluntarioDetalheDTO extends VoluntarioDTO {
   larTemporario: LarVinculadoDTO | null;
 }
@@ -62,7 +62,7 @@ export interface LarVinculado {
   enderecoRegiao: string;
 }
 
-/** Voluntário com o lar temporário dele (`null` se não tem lar). Só a busca por id traz o lar. */
+/** Voluntário com o lar temporário dele (`null` se não tem lar). A lista e a busca por id trazem o lar. */
 export interface VoluntarioDetalhe extends Voluntario {
   larTemporario: LarVinculado | null;
 }

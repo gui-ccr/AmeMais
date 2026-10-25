@@ -33,8 +33,7 @@ export function useCreateVoluntario() {
   return useMutation({
     mutationFn: (input: NovoVoluntarioInput) => voluntarioService.create(input),
     onSuccess: () => {
-      // `exact`: só a lista. Um cadastro novo não muda os outros voluntários, e cada linha da
-      // lista guarda o detalhe dela em cache (para o lar vinculado) — invalidar tudo refaria todas.
+      // `exact`: só a lista. Um cadastro novo não muda os detalhes já abertos dos outros voluntários.
       queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY, exact: true });
     },
   });

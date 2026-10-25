@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { FILTROS_VAZIOS, filtrarVoluntarios, type FiltrosVoluntarios } from "../filtros";
-import { useVoluntario, useVoluntarios } from "../hooks/use-voluntarios";
+import { useVoluntarios } from "../hooks/use-voluntarios";
 import { AREA_DE_AJUDA_INFO, STATUS_VOLUNTARIO_INFO, TIPO_VOLUNTARIO_INFO } from "../opcoes";
-import type { Voluntario } from "../types";
+import type { LarVinculado, VoluntarioDetalhe } from "../types";
 import { VoluntarioFiltros } from "./voluntario-filtros";
 
 function VoluntarioCardSkeleton() {
@@ -27,44 +27,22 @@ function VoluntarioCardSkeleton() {
   );
 }
 
-/**
- * O lar temporário do voluntário. A lista da API não traz o lar — só a busca por id
- * (`GET /api/voluntarios/:id`) — então cada linha busca o seu detalhe (fica em cache).
- * Sem lar, não mostra nada.
- */
-export function LarDoVoluntario({ voluntarioId }: { voluntarioId: string }) {
-  const { data, isPending, isError } = useVoluntario(voluntarioId);
-
-  if (isPending) {
-    return (
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-busy="true">
-        <Home className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        Verificando lar temporário…
-      </p>
-    );
-  }
-  if (isError) {
-    return (
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Home className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        Não foi possível verificar o lar temporário.
-      </p>
-    );
-  }
-  if (!data.larTemporario) return null;
+/** O lar temporário do voluntário (já vem em cada item da lista). Sem lar, não mostra nada. */
+export function LarDoVoluntario({ lar }: { lar: LarVinculado | null }) {
+  if (!lar) return null;
 
   return (
     <p className="flex min-w-0 items-center gap-1.5 text-sm text-foreground">
       <Home className="h-4 w-4 shrink-0 text-secondary" aria-hidden="true" />
       <span className="truncate">
-        <span className="font-medium">Lar temporário:</span> {data.larTemporario.enderecoRegiao || "endereço não informado"}
+        <span className="font-medium">Lar temporário:</span> {lar.enderecoRegiao || "endereço não informado"}
       </span>
     </p>
   );
 }
 
 /** Um voluntário: nome, tipo, status, áreas de ajuda, contato e o lar vinculado (se houver). */
-export function VoluntarioItem({ voluntario }: { voluntario: Voluntario }) {
+export function VoluntarioItem({ voluntario }: { voluntario: VoluntarioDetalhe }) {
   const status = STATUS_VOLUNTARIO_INFO[voluntario.status];
   const digitos = voluntario.telefone.replace(/\D/g, "");
 
@@ -123,7 +101,7 @@ export function VoluntarioItem({ voluntario }: { voluntario: Voluntario }) {
         <p className="text-xs text-muted-foreground">Nenhuma área de ajuda informada.</p>
       )}
 
-      <LarDoVoluntario voluntarioId={voluntario.id} />
+      <LarDoVoluntario lar={voluntario.larTemporario} />
     </Card>
   );
 }

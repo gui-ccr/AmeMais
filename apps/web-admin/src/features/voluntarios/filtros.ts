@@ -23,15 +23,15 @@ function normalizar(texto: string): string {
   return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-/** Só números e sinais de telefone ("(33) 9 9999", "3399…"): aí a busca compara os dígitos do telefone. */
-const PARECE_TELEFONE = /^[\d\s()+-]+$/;
+/** Só números e sinais de telefone ("(33) 9 9999", "3399…"): aí a busca compara os dígitos do telefone (igual ao back). */
+const PARECE_TELEFONE = /^[\d\s()+.-]+$/;
 
 /**
  * Filtra a lista já carregada (sem ir à API, então nada recarrega). A busca olha nome,
  * e-mail e telefone — os mesmos campos da busca do back (`construirFiltroBusca`) — e os
  * filtros de tipo/status/área funcionam como os parâmetros `tipo`, `status` e `area` da API.
  */
-export function filtrarVoluntarios(voluntarios: Voluntario[], filtros: FiltrosVoluntarios): Voluntario[] {
+export function filtrarVoluntarios<T extends Voluntario>(voluntarios: T[], filtros: FiltrosVoluntarios): T[] {
   const termo = filtros.busca.trim();
   const termoNormalizado = normalizar(termo);
   const digitosDoTermo = PARECE_TELEFONE.test(termo) ? termo.replace(/\D/g, "") : "";
