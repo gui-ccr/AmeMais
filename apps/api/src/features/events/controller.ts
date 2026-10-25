@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { ok, created, fail } from "@/core/http";
+import { ok, created, fail, lerCorpoJson } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import { createEventSchema, updateEventSchema, eventIdParamSchema } from "./schema";
@@ -44,7 +44,7 @@ export class EventController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = createEventSchema.parse(body);
 
       const useCase = new CreateEventUseCase(new EventRepository(db));
@@ -61,7 +61,7 @@ export class EventController {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
       const { id } = eventIdParamSchema.parse(await params);
-      const body = await request.json();
+      const body = await lerCorpoJson(request);
       const input = updateEventSchema.parse(body);
 
       const useCase = new UpdateEventUseCase(new EventRepository(db));

@@ -45,6 +45,10 @@ class FakeVoluntarioRepository implements IVoluntarioRepository {
     return null;
   }
 
+  async findLaresVinculados(): Promise<Map<string, never>> {
+    return new Map<string, never>();
+  }
+
   async update(): Promise<never> {
     throw new Error("não usado nos testes de cadastro");
   }

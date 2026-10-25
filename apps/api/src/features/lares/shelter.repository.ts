@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
+import { escaparTermoIlike } from "@/core/postgrest";
 import { DatabaseError, NotFoundError } from "@/core/errors";
 import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
 import type { Shelter } from "./domain/shelter.entity";
@@ -47,12 +48,8 @@ export interface ListSheltersResultado {
 }
 
 
-function escaparTermoBusca(termo: string): string {
-  return termo.replace(/[,()]/g, "").replace(/[%_]/g, (caractere) => `\\${caractere}`);
-}
-
 function construirFiltroBusca(termoBruto: string): string {
-  const termo = escaparTermoBusca(termoBruto);
+  const termo = escaparTermoIlike(termoBruto);
   return `nome_responsavel.ilike.%${termo}%,endereco_regiao.ilike.%${termo}%`;
 }
 

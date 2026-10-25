@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import { ValidationError } from "@/core/errors";
-import { paginated, created, ok, fail } from "@/core/http";
+import { paginated, created, ok, fail, lerCorpoJson } from "@/core/http";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
@@ -26,15 +25,6 @@ function lerQueryParams(searchParams: URLSearchParams) {
     page: pick("page"),
     limit: pick("limit"),
   };
-}
-
-/** `request.json()` lança em corpo vazio/malformado — isso é erro do cliente (400), não 500. */
-async function lerCorpoJson(request: NextRequest): Promise<unknown> {
-  try {
-    return await request.json();
-  } catch {
-    throw new ValidationError("JSON inválido");
-  }
 }
 
 export class VoluntarioController {

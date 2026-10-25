@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { describe, expect, it, vi } from "vitest";
-import { NotFoundError } from "../src/core/errors";
-import { created, fail, ok } from "../src/core/http";
+import { NotFoundError, ValidationError } from "../src/core/errors";
+import type { NextRequest } from "next/server";
+import { created, fail, lerCorpoJson, ok } from "../src/core/http";
 
 describe("ok/created", () => {
   it("ok responde 200 com { data }", async () => {
@@ -44,5 +45,18 @@ describe("fail", () => {
     await expect(response.json()).resolves.toEqual({ error: "Erro interno" });
 
     vi.restoreAllMocks();
+  });
+});
+
+describe("lerCorpoJson", () => {
+  it("devolve o corpo quando o JSON é válido", async () => {
+    const request = { json: async () => ({ a: 1 }) } as unknown as NextRequest;
+    await expect(lerCorpoJson(request)).resolves.toEqual({ a: 1 });
+  });
+
+  it("corpo vazio/malformado vira ValidationError (400), não erro interno", async () => {
+    const request = new Request("https://api.test", { method: "POST", body: "{quebrado" }) as unknown as NextRequest;
+    await expect(lerCorpoJson(request)).rejects.toThrowError(ValidationError);
+    expect(fail(new ValidationError("JSON inválido")).status).toBe(400);
   });
 });
