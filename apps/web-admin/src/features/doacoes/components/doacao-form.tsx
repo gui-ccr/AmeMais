@@ -18,6 +18,7 @@ import { IndicadorDePassos } from "@/components/ui/indicador-de-passos";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MensagemErro } from "@/components/ui/mensagem-erro";
+import { Opcional } from "@/components/ui/opcional";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { useNomeDoUsuario } from "@/features/auth/hooks/use-nome-do-usuario";
@@ -59,10 +60,6 @@ const ROTULO_VINCULO: Record<(typeof VINCULOS)[number], string> = {
   avulsa: "Doação avulsa",
   urgencia: "Vincular a uma urgência",
 };
-
-function Opcional() {
-  return <span className="font-normal text-muted-foreground">(opcional)</span>;
-}
 
 /**
  * Etapa 2 do wizard: dados do doador. Todos opcionais — só são validados (telefone e
