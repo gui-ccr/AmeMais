@@ -112,7 +112,7 @@ function contar(quantidade: number): string {
 }
 
 /** Lista de voluntários com busca e filtros (que filtram a lista já carregada, sem recarregar a página). */
-export function VoluntarioList() {
+export function VoluntarioList({ onNovo }: { onNovo?: VoidFunction }) {
   const { data: voluntarios, isPending, isError, error, refetch, isRefetching } = useVoluntarios();
   const [filtros, setFiltros] = useState<FiltrosVoluntarios>(FILTROS_VAZIOS);
 
@@ -148,6 +148,11 @@ export function VoluntarioList() {
         <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
           <Users className="h-8 w-8 text-muted-dark" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">Nenhum voluntário cadastrado ainda.</p>
+          {onNovo && (
+            <Button size="sm" onClick={onNovo}>
+              Cadastrar voluntário
+            </Button>
+          )}
         </div>
       ) : (
         <>
