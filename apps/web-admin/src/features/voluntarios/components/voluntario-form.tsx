@@ -14,22 +14,23 @@ import { useToast } from "@/components/ui/toast";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { cn } from "@/lib/cn";
 import { formatPhone } from "@/utils";
-import { useCreateVoluntario } from "../hooks/use-voluntarios";
+import { useCreateVoluntario, useUpdateVoluntario } from "../hooks/use-voluntarios";
 import { AREA_DE_AJUDA_INFO, TIPO_VOLUNTARIO_INFO } from "../opcoes";
 import {
   VOLUNTARIO_FORM_VAZIO,
   paraDadosDoVoluntario,
+  paraValoresDoFormulario,
   voluntarioSchema,
   type VoluntarioFormEntrada,
   type VoluntarioFormSaida,
 } from "../schema";
-import { AREAS_DE_AJUDA, TIPOS_VOLUNTARIO } from "../types";
+import { AREAS_DE_AJUDA, TIPOS_VOLUNTARIO, type Voluntario } from "../types";
 
-const MENSAGEM_PADRAO = "Não foi possível cadastrar o voluntário. Tente novamente.";
+const MENSAGEM_PADRAO = "Não foi possível salvar o voluntário. Tente novamente.";
 
 /**
- * Onde mostrar o erro do cadastro. O 409 da API é sempre e-mail repetido (único conflito
- * possível no `POST /api/voluntarios`), então vai para baixo do campo de e-mail; o resto
+ * Onde mostrar o erro do cadastro/edição. O 409 da API é sempre e-mail repetido (único conflito
+ * possível no `POST`/`PUT /api/voluntarios`), então vai para baixo do campo de e-mail; o resto
  * (sem permissão, sem conexão, erro do servidor) aparece como erro geral do formulário.
  */
 export function erroDoCadastro(erro: unknown): { campo: "email"; mensagem: string } | { campo: null; mensagem: string } {
@@ -45,12 +46,18 @@ function ariaDoCampo(id: string, temErro: boolean) {
 }
 
 interface VoluntarioFormProps {
+  /** Quando informado, o formulário edita este voluntário; sem ele, cadastra um novo. */
+  voluntario?: Voluntario;
   onFechar: VoidFunction;
 }
 
-/** Cadastro de um voluntário novo (abre num modal). Ele nasce "ativo": o status não é escolhido aqui. */
-export function VoluntarioForm({ onFechar }: VoluntarioFormProps) {
+/**
+ * Cadastro (abre num modal) ou edição de um voluntário. No cadastro ele nasce "ativo": o status
+ * não é escolhido aqui, nem na edição (tem botões próprios nos detalhes).
+ */
+export function VoluntarioForm({ voluntario: voluntarioEmEdicao, onFechar }: VoluntarioFormProps) {
   const criarVoluntario = useCreateVoluntario();
+  const atualizarVoluntario = useUpdateVoluntario();
   const { toast } = useToast();
   const [erroServidor, setErroServidor] = useState<string | null>(null);
 
@@ -63,19 +70,25 @@ export function VoluntarioForm({ onFechar }: VoluntarioFormProps) {
     formState: { errors },
   } = useForm<VoluntarioFormEntrada, unknown, VoluntarioFormSaida>({
     resolver: zodResolver(voluntarioSchema),
-    defaultValues: VOLUNTARIO_FORM_VAZIO,
+    defaultValues: voluntarioEmEdicao ? paraValoresDoFormulario(voluntarioEmEdicao) : VOLUNTARIO_FORM_VAZIO,
   });
 
   async function onSubmit(valores: VoluntarioFormSaida) {
     setErroServidor(null);
     try {
       // `paraDadosDoVoluntario` manda o telefone só com números (a API guarda assim).
-      const voluntario = await criarVoluntario.mutateAsync(paraDadosDoVoluntario(valores));
-      toast({
-        tipo: "sucesso",
-        titulo: "Voluntário cadastrado com sucesso!",
-        descricao: `${voluntario.nome} já aparece na lista de voluntários.`,
-      });
+      const dados = paraDadosDoVoluntario(valores);
+      if (voluntarioEmEdicao) {
+        const voluntario = await atualizarVoluntario.mutateAsync({ id: voluntarioEmEdicao.id, input: dados });
+        toast({ tipo: "sucesso", titulo: "Voluntário atualizado!", descricao: voluntario.nome });
+      } else {
+        const voluntario = await criarVoluntario.mutateAsync(dados);
+        toast({
+          tipo: "sucesso",
+          titulo: "Voluntário cadastrado com sucesso!",
+          descricao: `${voluntario.nome} já aparece na lista de voluntários.`,
+        });
+      }
       onFechar();
     } catch (erro) {
       const { campo, mensagem } = erroDoCadastro(erro);
@@ -88,7 +101,7 @@ export function VoluntarioForm({ onFechar }: VoluntarioFormProps) {
     }
   }
 
-  const salvando = criarVoluntario.isPending;
+  const salvando = criarVoluntario.isPending || atualizarVoluntario.isPending;
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -239,7 +252,7 @@ export function VoluntarioForm({ onFechar }: VoluntarioFormProps) {
           Cancelar
         </Button>
         <Button type="submit" disabled={salvando}>
-          {salvando ? "Salvando..." : "Cadastrar voluntário"}
+          {salvando ? "Salvando..." : voluntarioEmEdicao ? "Salvar alterações" : "Cadastrar voluntário"}
         </Button>
       </div>
     </form>

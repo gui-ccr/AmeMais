@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VoluntarioForm } from "@/features/voluntarios/components/voluntario-form";
+import { VoluntarioModal } from "@/features/voluntarios/components/voluntario-modal";
 import { VoluntarioList } from "@/features/voluntarios/components/voluntario-list";
 
 export default function VoluntariosPage() {
   const [cadastrando, setCadastrando] = useState(false);
+  const [voluntarioAbertoId, setVoluntarioAbertoId] = useState<string | null>(null);
 
   return (
     <section className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-12 max-w-5xl mx-auto flex flex-col gap-8">
@@ -25,7 +27,7 @@ export default function VoluntariosPage() {
         </Button>
       </div>
 
-      <VoluntarioList onNovo={() => setCadastrando(true)} />
+      <VoluntarioList onNovo={() => setCadastrando(true)} onAbrir={(voluntario) => setVoluntarioAbertoId(voluntario.id)} />
 
       <Dialog open={cadastrando} onOpenChange={setCadastrando}>
         <DialogContent className="max-w-xl">
@@ -36,6 +38,18 @@ export default function VoluntariosPage() {
             </DialogDescription>
           </DialogHeader>
           <VoluntarioForm onFechar={() => setCadastrando(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={voluntarioAbertoId !== null} onOpenChange={(aberto) => !aberto && setVoluntarioAbertoId(null)}>
+        <DialogContent className="max-w-xl">
+          {voluntarioAbertoId && (
+            <VoluntarioModal
+              key={voluntarioAbertoId}
+              voluntarioId={voluntarioAbertoId}
+              onFechar={() => setVoluntarioAbertoId(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </section>

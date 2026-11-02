@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
+import { cn } from "@/lib/cn";
 import { FILTROS_VAZIOS, filtrarVoluntarios, type FiltrosVoluntarios } from "../filtros";
 import { useVoluntarios } from "../hooks/use-voluntarios";
 import { AREA_DE_AJUDA_INFO, STATUS_VOLUNTARIO_INFO, TIPO_VOLUNTARIO_INFO } from "../opcoes";
@@ -41,15 +42,43 @@ export function LarDoVoluntario({ lar }: { lar: LarVinculado | null }) {
   );
 }
 
-/** Um voluntário: nome, tipo, status, áreas de ajuda, contato e o lar vinculado (se houver). */
-export function VoluntarioItem({ voluntario }: { voluntario: VoluntarioDetalhe }) {
+interface VoluntarioItemProps {
+  voluntario: VoluntarioDetalhe;
+  /** Chamado ao clicar no cartão (abre os detalhes). */
+  onAbrir?: (voluntario: VoluntarioDetalhe) => void;
+}
+
+/**
+ * Um voluntário: nome, tipo, status, áreas de ajuda, contato e o lar vinculado (se houver).
+ * O cartão todo é clicável: o botão do nome cobre o cartão (`after:absolute after:inset-0`) e os
+ * links de telefone/e-mail ficam acima dele (`relative z-10`), sem botão dentro de link.
+ */
+export function VoluntarioItem({ voluntario, onAbrir }: VoluntarioItemProps) {
   const status = STATUS_VOLUNTARIO_INFO[voluntario.status];
   const digitos = voluntario.telefone.replace(/\D/g, "");
 
   return (
-    <Card className="flex h-full flex-col gap-3 p-4">
+    <Card
+      className={cn(
+        "relative flex h-full flex-col gap-3 p-4",
+        onAbrir && "transition-colors focus-within:ring-2 focus-within:ring-primary hover:bg-card-muted",
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h3 className="min-w-0 break-words font-semibold text-foreground">{voluntario.nome}</h3>
+        <h3 className="min-w-0 break-words font-semibold text-foreground">
+          {onAbrir ? (
+            <button
+              type="button"
+              onClick={() => onAbrir(voluntario)}
+              aria-label={`Ver detalhes de ${voluntario.nome}`}
+              className="cursor-pointer text-left after:absolute after:inset-0 after:rounded-xl focus:outline-none"
+            >
+              {voluntario.nome}
+            </button>
+          ) : (
+            voluntario.nome
+          )}
+        </h3>
         <div className="flex shrink-0 flex-wrap gap-1.5">
           <Badge variant="neutral" size="sm">
             {TIPO_VOLUNTARIO_INFO[voluntario.tipo].rotulo}
@@ -64,7 +93,7 @@ export function VoluntarioItem({ voluntario }: { voluntario: VoluntarioDetalhe }
         {digitos ? (
           <a
             href={`tel:${digitos}`}
-            className="inline-flex w-fit items-center gap-1.5 hover:text-primary hover:underline"
+            className="relative z-10 inline-flex w-fit items-center gap-1.5 hover:text-primary hover:underline"
             aria-label={`Ligar para ${voluntario.nome}: ${voluntario.telefone}`}
           >
             <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -79,7 +108,7 @@ export function VoluntarioItem({ voluntario }: { voluntario: VoluntarioDetalhe }
         {voluntario.email && (
           <a
             href={`mailto:${voluntario.email}`}
-            className="inline-flex min-w-0 max-w-full items-center gap-1.5 hover:text-primary hover:underline"
+            className="relative z-10 inline-flex min-w-0 max-w-full items-center gap-1.5 hover:text-primary hover:underline"
           >
             <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="truncate">{voluntario.email}</span>
@@ -112,7 +141,13 @@ function contar(quantidade: number): string {
 }
 
 /** Lista de voluntários com busca e filtros (que filtram a lista já carregada, sem recarregar a página). */
-export function VoluntarioList({ onNovo }: { onNovo?: VoidFunction }) {
+export function VoluntarioList({
+  onNovo,
+  onAbrir,
+}: {
+  onNovo?: VoidFunction;
+  onAbrir?: (voluntario: VoluntarioDetalhe) => void;
+}) {
   const { data: voluntarios, isPending, isError, error, refetch, isRefetching } = useVoluntarios();
   const [filtros, setFiltros] = useState<FiltrosVoluntarios>(FILTROS_VAZIOS);
 
@@ -173,7 +208,7 @@ export function VoluntarioList({ onNovo }: { onNovo?: VoidFunction }) {
             <ul className="grid gap-3 lg:grid-cols-2">
               {filtrados.map((voluntario) => (
                 <li key={voluntario.id} className="min-w-0">
-                  <VoluntarioItem voluntario={voluntario} />
+                  <VoluntarioItem voluntario={voluntario} onAbrir={onAbrir} />
                 </li>
               ))}
             </ul>

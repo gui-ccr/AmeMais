@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { voluntarioService } from "../services/voluntario-service";
-import type { EditarVoluntarioInput, NovoVoluntarioInput, VoluntarioDetalhe } from "../types";
+import type { EditarVoluntarioInput, NovoVoluntarioInput, Voluntario, VoluntarioDetalhe } from "../types";
 
 /**
  * Chave de todas as consultas de voluntários. A lista usa exatamente esta chave e cada
@@ -24,6 +24,16 @@ export function useVoluntario(id: string | null | undefined) {
     queryFn: () => voluntarioService.get(id!),
     enabled: !!id,
   });
+}
+
+/**
+ * Grava na lista em cache o voluntário que a API devolveu (a API não devolve o lar: o
+ * `larTemporario` de cada item é mantido). Assim a lista e o modal mudam na hora, sem esperar a recarga.
+ */
+function atualizarNaLista(queryClient: ReturnType<typeof useQueryClient>, voluntario: Voluntario) {
+  queryClient.setQueryData<VoluntarioDetalhe[]>(VOLUNTARIOS_QUERY_KEY, (lista) =>
+    lista?.map((item) => (item.id === voluntario.id ? { ...item, ...voluntario } : item)),
+  );
 }
 
 /** Cadastra um voluntário. Depois de criar, a lista é recarregada sozinha. */
@@ -54,6 +64,7 @@ export function useUpdateVoluntario() {
       queryClient.setQueryData<VoluntarioDetalhe>([...VOLUNTARIOS_QUERY_KEY, id], (atual) =>
         atual ? { ...atual, ...voluntario } : undefined,
       );
+      atualizarNaLista(queryClient, voluntario);
       // `exact`: só a lista; o detalhe já está certo e invalidá-lo faria buscar de novo.
       queryClient.invalidateQueries({ queryKey: VOLUNTARIOS_QUERY_KEY, exact: true });
     },
