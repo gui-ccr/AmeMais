@@ -9,6 +9,7 @@ import { avisarSiteDepois } from "@/lib/public-site";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
   createAnimalSchema,
+  updateAnimalSchema,
   updateAnimalStatusSchema,
   animalIdParamSchema,
   type CreateAnimalDTO,
@@ -17,6 +18,7 @@ import { AnimalRepository } from "./animal.repository";
 import { ListAnimalsUseCase } from "./use-cases/list-animals.use-case";
 import { GetAnimalUseCase } from "./use-cases/get-animal.use-case";
 import { CreateAnimalUseCase, type FotosDoAnimal } from "./use-cases/create-animal.use-case";
+import { UpdateAnimalUseCase } from "./use-cases/update-animal.use-case";
 import { UpdateAnimalStatusUseCase } from "./use-cases/update-animal-status.use-case";
 import { DeleteAnimalUseCase } from "./use-cases/delete-animal.use-case";
 
@@ -129,6 +131,24 @@ export class AnimalController {
 
       avisarSiteDepois("animais");
       return created(animal);
+    } catch (error) {
+      return fail(error);
+    }
+  };
+
+  /** PUT: edita os dados do animal (nome, espécie, raça, porte, faixa etária, idade e descrição). */
+  update = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    try {
+      const user = await requireUser(request);
+      const db = createSupabaseForUser(user.accessToken);
+      const { id } = animalIdParamSchema.parse(await params);
+      const input = updateAnimalSchema.parse(await lerCorpoJson(request));
+
+      const useCase = new UpdateAnimalUseCase(new AnimalRepository(db));
+      const animal = await useCase.execute(id, input);
+
+      avisarSiteDepois("animais");
+      return ok(animal);
     } catch (error) {
       return fail(error);
     }

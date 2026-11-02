@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { formatISODateToBR } from "@/utils";
-import { ESPECIE_INFO, STATUS_INFO } from "../opcoes";
+import { ESPECIE_INFO, FAIXA_ETARIA_INFO, STATUS_INFO } from "../opcoes";
 import type { Animal } from "../types";
 
-/** O que cada animal da lista pode fazer: trocar o status ou ser excluído. */
+/** O que cada animal da lista pode fazer: ver detalhes, editar, trocar o status ou ser excluído. */
 export interface AcoesDoAnimal {
+  onVerDetalhes: (animal: Animal) => void;
+  onEditar: (animal: Animal) => void;
   onAlterarStatus: (animal: Animal) => void;
   onExcluir: (animal: Animal) => void;
   /** Exclusão deste animal em andamento (desabilita os botões dele). */
@@ -47,9 +49,33 @@ function SeloStatus({ status }: { status: Animal["status"] }) {
   );
 }
 
+/** "Porte M · Adulto": o que o site público mostra de cada animal. */
+function textoPorteEFaixa(animal: Animal): string {
+  return `Porte ${animal.porte} · ${FAIXA_ETARIA_INFO[animal.faixaEtaria].rotulo}`;
+}
+
 function BotoesDeAcao({ animal, acoes, className }: { animal: Animal; acoes: AcoesDoAnimal; className?: string }) {
   return (
-    <div className={cn("flex gap-2", className)}>
+    <div className={cn("flex flex-wrap gap-2", className)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        aria-label={`Ver detalhes de ${animal.nome}`}
+        onClick={() => acoes.onVerDetalhes(animal)}
+      >
+        Detalhes
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        aria-label={`Editar ${animal.nome}`}
+        disabled={acoes.excluindo}
+        onClick={() => acoes.onEditar(animal)}
+      >
+        Editar
+      </Button>
       <Button
         type="button"
         variant="outline"
@@ -87,6 +113,7 @@ export function AnimalCard({ animal, acoes }: { animal: Animal; acoes: AcoesDoAn
           <SeloStatus status={animal.status} />
           <span className="text-sm text-muted-dark">{animal.raca}</span>
         </div>
+        <p className="text-sm text-muted-dark">{textoPorteEFaixa(animal)}</p>
         {textoAdocao(animal) && <p className="text-xs text-muted-foreground">{textoAdocao(animal)}</p>}
         <BotoesDeAcao animal={animal} acoes={acoes} className="mt-auto pt-3" />
       </div>
@@ -106,7 +133,9 @@ export function AnimalLinha({ animal, acoes }: { animal: Animal; acoes: AcoesDoA
           </Badge>
           <SeloStatus status={animal.status} />
         </div>
-        <span className="truncate text-sm text-muted-dark">{animal.raca}</span>
+        <span className="truncate text-sm text-muted-dark">
+          {animal.raca} · {textoPorteEFaixa(animal)}
+        </span>
       </div>
       {animal.adotante && (
         <p className="hidden shrink-0 text-right text-xs text-muted-foreground lg:block">

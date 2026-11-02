@@ -5,8 +5,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlterarStatusForm } from "@/features/animais/components/alterar-status-form";
+import { AnimalDetalhes } from "@/features/animais/components/animal-detalhes";
 import { AnimalForm } from "@/features/animais/components/animal-form";
 import { AnimalList, type VisaoAnimais } from "@/features/animais/components/animal-list";
+import { EditarAnimalForm } from "@/features/animais/components/editar-animal-form";
 import { VisaoToggle } from "@/features/animais/components/visao-toggle";
 import { useAnimais } from "@/features/animais/hooks/use-animais";
 import type { Animal } from "@/features/animais/types";
@@ -14,6 +16,8 @@ import type { Animal } from "@/features/animais/types";
 export default function AnimaisPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [animalParaAlterar, setAnimalParaAlterar] = useState<Animal | null>(null);
+  const [animalParaEditar, setAnimalParaEditar] = useState<Animal | null>(null);
+  const [animalDetalhes, setAnimalDetalhes] = useState<Animal | null>(null);
   const [visao, setVisao] = useState<VisaoAnimais>("grade");
   const { data: animais } = useAnimais();
 
@@ -39,7 +43,13 @@ export default function AnimaisPage() {
         <VisaoToggle visao={visao} onChange={setVisao} />
       </div>
 
-      <AnimalList visao={visao} onNovo={() => setModalAberto(true)} onAlterarStatus={setAnimalParaAlterar} />
+      <AnimalList
+        visao={visao}
+        onNovo={() => setModalAberto(true)}
+        onVerDetalhes={setAnimalDetalhes}
+        onEditar={setAnimalParaEditar}
+        onAlterarStatus={setAnimalParaAlterar}
+      />
 
       <Dialog open={modalAberto} onOpenChange={setModalAberto}>
         <DialogContent className="max-w-xl">
@@ -50,6 +60,34 @@ export default function AnimaisPage() {
             </DialogDescription>
           </DialogHeader>
           <AnimalForm onFechar={() => setModalAberto(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={animalDetalhes !== null} onOpenChange={(aberto) => !aberto && setAnimalDetalhes(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{animalDetalhes?.nome}</DialogTitle>
+            <DialogDescription>Dados do animal, como aparecem no cadastro e no site.</DialogDescription>
+          </DialogHeader>
+          {animalDetalhes && <AnimalDetalhes animal={animalDetalhes} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={animalParaEditar !== null} onOpenChange={(aberto) => !aberto && setAnimalParaEditar(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Editar animal</DialogTitle>
+            <DialogDescription>
+              Ajuste os dados do animal. O status é alterado em &quot;Alterar status&quot;.
+            </DialogDescription>
+          </DialogHeader>
+          {animalParaEditar && (
+            <EditarAnimalForm
+              key={animalParaEditar.id}
+              animal={animalParaEditar}
+              onFechar={() => setAnimalParaEditar(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

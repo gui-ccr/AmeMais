@@ -48,10 +48,12 @@ const CLASSES_LISTA: Record<VisaoAnimais, string> = {
 interface AnimalListProps {
   visao: VisaoAnimais;
   onNovo: VoidFunction;
+  onVerDetalhes: (animal: Animal) => void;
+  onEditar: (animal: Animal) => void;
   onAlterarStatus: (animal: Animal) => void;
 }
 
-export function AnimalList({ visao, onNovo, onAlterarStatus }: AnimalListProps) {
+export function AnimalList({ visao, onNovo, onVerDetalhes, onEditar, onAlterarStatus }: AnimalListProps) {
   const { data: animais, isPending, isError, refetch, isRefetching } = useAnimais();
   const excluirAnimal = useDeleteAnimal();
   const { toast } = useToast();
@@ -114,6 +116,8 @@ export function AnimalList({ visao, onNovo, onAlterarStatus }: AnimalListProps) 
     <ul className={CLASSES_LISTA[visao]}>
       {animais.map((animal) => {
         const acoes = {
+          onVerDetalhes,
+          onEditar,
           onAlterarStatus,
           onExcluir: handleExcluir,
           excluindo: excluirAnimal.isPending && excluirAnimal.variables === animal.id,
