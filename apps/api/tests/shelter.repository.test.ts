@@ -85,6 +85,8 @@ function rowFixture(overrides: Partial<ShelterRow> = {}): ShelterRow {
     capacidade: 5,
     status: "disponivel",
     endereco_regiao: "Centro",
+    aceita_gatos: false,
+    aceita_cachorros: false,
     is_active: true,
     created_at: "2026-10-14T00:00:00.000Z",
     ...overrides,

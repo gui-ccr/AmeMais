@@ -1,15 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { escaparTermoIlike } from "@/core/postgrest";
-import { DatabaseError, NotFoundError } from "@/core/errors";
-import { mapRowToEntity, mapCreateDTOToRow } from "./mapper";
+import { BusinessRuleError, DatabaseError, ForbiddenError, NotFoundError, ValidationError } from "@/core/errors";
+import { mapRowToEntity, mapCreateDTOToRow, mapEntityDadosToRow } from "./mapper";
 import type { Shelter } from "./domain/shelter.entity";
 import type { ShelterStatus, ShelterStatusValue } from "./domain/shelter-status.vo";
 import type { CreateShelterDTO } from "./schema";
 
 const TABLE = "lares_temporarios";
 const COLUMNS =
-  "id, nome_responsavel, contato, capacidade, status, endereco_regiao, is_active, created_at";
+  "id, nome_responsavel, contato, capacidade, status, endereco_regiao, aceita_gatos, aceita_cachorros, is_active, created_at";
+const ANIMAIS_TABLE = "animais";
+
+/** Códigos do Postgres: CHECK/trigger de capacidade e bloqueio de RLS. */
+const CHECK_VIOLATION_CODE = "23514";
+const RLS_VIOLATION_CODE = "42501";
 
 /**
  * View com a ocupação calculada (migration 20261006170000) — só tem
@@ -42,6 +47,36 @@ export interface ShelterComOcupacao {
   vagas: number;
 }
 
+/** Animal morando no lar, como aparece nos detalhes (KAN-79). */
+export interface AnimalNoLar {
+  id: string;
+  nome: string;
+  especie: string | null;
+  urlFoto: string | null;
+}
+
+/** O mínimo do animal para decidir se ele pode entrar/sair de um lar (KAN-78). */
+export interface AnimalVinculo {
+  id: string;
+  status: string;
+  larTemporarioId: string | null;
+}
+
+/** Animal morando no lar, como aparece nos detalhes (KAN-79). */
+export interface AnimalNoLar {
+  id: string;
+  nome: string;
+  especie: string | null;
+  urlFoto: string | null;
+}
+
+/** O mínimo do animal para decidir se ele pode entrar/sair de um lar (KAN-78). */
+export interface AnimalVinculo {
+  id: string;
+  status: string;
+  larTemporarioId: string | null;
+}
+
 export interface ListSheltersResultado {
   items: ShelterComOcupacao[];
   total: number;
@@ -63,8 +98,14 @@ export interface IShelterRepository {
   list(filtros: ListSheltersFiltros): Promise<ListSheltersResultado>;
   findById(id: string): Promise<Shelter>;
   create(input: CreateShelterDTO): Promise<Shelter>;
+  update(shelter: Shelter): Promise<Shelter>;
   updateStatus(id: string, status: ShelterStatus | ShelterStatusValue): Promise<Shelter>;
-  remove(id: string): Promise<void>;
+  inativar(id: string): Promise<void>;
+  listAnimais(larId: string): Promise<AnimalNoLar[]>;
+  contarAnimais(larId: string): Promise<number>;
+  findAnimal(animalId: string): Promise<AnimalVinculo>;
+  vincularAnimal(larId: string, animalId: string): Promise<void>;
+  desvincularAnimal(animalId: string): Promise<void>;
 }
 
 /**
@@ -146,12 +187,28 @@ export class ShelterRepository implements IShelterRepository {
     return mapRowToEntity(data);
   }
 
+
+  async update(shelter: Shelter): Promise<Shelter> {
+    const { data, error } = await this.db
+      .from(TABLE)
+      .update(mapEntityDadosToRow(shelter))
+      .eq("id", shelter.id)
+      .select(COLUMNS)
+      .single();
+
+    if (error?.code === CHECK_VIOLATION_CODE) throw new ValidationError("capacidade deve ser um número maior que zero");
+    if (error?.code === RLS_VIOLATION_CODE) throw new ForbiddenError();
+    if (error || !data) throw new NotFoundError("Lar temporário");
+    return mapRowToEntity(data);
+  }
+
+  /** Grava o status e o `is_active` que acompanha ele (inativo -> false). */
   async updateStatus(id: string, status: ShelterStatus | ShelterStatusValue): Promise<Shelter> {
     const statusValue = typeof status === "string" ? status : status.valor;
 
     const { data, error } = await this.db
       .from(TABLE)
-      .update({ status: statusValue })
+      .update({ status: statusValue, is_active: statusValue !== "inativo" })
       .eq("id", id)
       .select(COLUMNS)
       .single();
@@ -163,11 +220,91 @@ export class ShelterRepository implements IShelterRepository {
     return mapRowToEntity(data);
   }
 
-  async remove(id: string): Promise<void> {
-    const { data, error } = await this.db.from(TABLE).delete().eq("id", id).select("id");
+  /**
+   * Inativa o lar em vez de apagar (KAN-80): o lar some do uso, mas o
+   * cadastro e o vínculo histórico dos animais ficam guardados.
+   */
+  async inativar(id: string): Promise<void> {
+    const { data, error } = await this.db
+      .from(TABLE)
+      .update({ status: "inativo", is_active: false })
+      .eq("id", id)
+      .select("id");
 
     throwOnWriteError(error);
     if (!data || data.length === 0) throw new NotFoundError("Lar temporário");
   }
-}
 
+  async listAnimais(larId: string): Promise<AnimalNoLar[]> {
+    const { data, error } = await this.db
+      .from(ANIMAIS_TABLE)
+      .select("id, nome, especie, url_foto")
+      .eq("lar_temporario_id", larId)
+      .order("nome", { ascending: true });
+
+    if (error) throw new DatabaseError(error);
+    return (data ?? []).map((linha) => ({
+      id: linha.id as string,
+      nome: linha.nome as string,
+      especie: (linha.especie as string | null) ?? null,
+      urlFoto: (linha.url_foto as string | null) ?? null,
+    }));
+  }
+
+  async contarAnimais(larId: string): Promise<number> {
+    const { count, error } = await this.db
+      .from(ANIMAIS_TABLE)
+      .select("id", { count: "exact", head: true })
+      .eq("lar_temporario_id", larId);
+
+    if (error) throw new DatabaseError(error);
+    return count ?? 0;
+  }
+
+  async findAnimal(animalId: string): Promise<AnimalVinculo> {
+    const { data, error } = await this.db
+      .from(ANIMAIS_TABLE)
+      .select("id, status_adocao, lar_temporario_id")
+      .eq("id", animalId)
+      .single();
+
+    if (error || !data) throw new NotFoundError("Animal");
+    return {
+      id: data.id as string,
+      status: data.status_adocao as string,
+      larTemporarioId: (data.lar_temporario_id as string | null) ?? null,
+    };
+  }
+
+  /**
+   * Coloca o animal no lar e muda o status dele numa única escrita (as duas
+   * colunas na mesma linha), então nunca fica meio feito. O trigger
+   * `tr_controla_capacidade_lar` confere a vaga de novo dentro da transação:
+   * se dois pedidos disputarem a última vaga, o segundo volta como 422.
+   */
+  async vincularAnimal(larId: string, animalId: string): Promise<void> {
+    const { data, error } = await this.db
+      .from(ANIMAIS_TABLE)
+      .update({ lar_temporario_id: larId, status_adocao: "em_lar_temporario" })
+      .eq("id", animalId)
+      .select("id");
+
+    if (error?.code === CHECK_VIOLATION_CODE) {
+      throw new BusinessRuleError("O lar está cheio: capacidade já atingida");
+    }
+    throwOnWriteError(error);
+    if (!data || data.length === 0) throw new NotFoundError("Animal");
+  }
+
+  /** Tira o animal do lar e devolve ele para `disponivel`. */
+  async desvincularAnimal(animalId: string): Promise<void> {
+    const { data, error } = await this.db
+      .from(ANIMAIS_TABLE)
+      .update({ lar_temporario_id: null, status_adocao: "disponivel" })
+      .eq("id", animalId)
+      .select("id");
+
+    throwOnWriteError(error);
+    if (!data || data.length === 0) throw new NotFoundError("Animal");
+  }
+}
