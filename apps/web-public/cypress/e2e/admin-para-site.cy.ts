@@ -9,6 +9,7 @@
 const ADMIN_URL = Cypress.env("ADMIN_URL") ?? "http://localhost:3003";
 const EMAIL = Cypress.env("E2E_EMAIL") ?? "e2e@amemais.local";
 const SENHA = Cypress.env("E2E_PASSWORD") ?? "e2e-senha-local";
+const DESCRICAO = "Dócil e brincalhão, ótimo com crianças.";
 /** O Cypress recarrega a spec ao trocar de origem: o nome passa de um teste para o outro por arquivo. */
 const ARQUIVO_NOME = "cypress/downloads/e2e-animal.json";
 
@@ -32,6 +33,11 @@ describe("Cadastro no admin aparece no site público", () => {
     cy.get("#animal-raca").type("SRD");
     cy.get("#animal-status").click();
     cy.get("[role=option]").contains("Disponível").click();
+    cy.get("#animal-porte").click();
+    cy.get("[role=option]").contains("Grande (G)").click();
+    cy.get("#animal-faixa-etaria").click();
+    cy.get("[role=option]").contains("Filhote").click();
+    cy.get("#animal-descricao").type(DESCRICAO);
     cy.get("input[type=file]").selectFile("cypress/fixtures/animal.png", { force: true });
 
     cy.contains("button", "Cadastrar animal").click();
@@ -42,6 +48,8 @@ describe("Cadastro no admin aparece no site público", () => {
     cy.readFile<{ nome: string }>(ARQUIVO_NOME).then(({ nome }) => {
       cy.visit("/adote");
       cy.contains(nome, { timeout: 20_000 }).should("be.visible");
+      // A descrição preenchida no painel chega ao cartão do site.
+      cy.contains(DESCRICAO).should("be.visible");
 
       // A foto carregou de verdade (não é a imagem de reserva nem um quadro quebrado).
       cy.get(`img[alt="${nome}"]`)
