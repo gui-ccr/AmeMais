@@ -13,7 +13,13 @@ const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() 
       findById: vi.fn(),
       create: vi.fn(),
       updateStatus: vi.fn(),
-      remove: vi.fn(),
+      update: vi.fn(),
+      inativar: vi.fn(),
+      listAnimais: vi.fn(),
+      contarAnimais: vi.fn(),
+      findAnimal: vi.fn(),
+      vincularAnimal: vi.fn(),
+      desvincularAnimal: vi.fn(),
     },
   };
 });
@@ -146,6 +152,8 @@ describe("ShelterController.list", () => {
       capacidade: 5,
       status: ShelterStatus.from("disponivel"),
       enderecoRegiao: "Centro",
+      aceitaGatos: false,
+      aceitaCachorros: false,
       isActive: true,
       createdAt: "2026-10-14T00:00:00.000Z",
     });

@@ -1,6 +1,6 @@
 import type { Shelter } from "./domain/shelter.entity";
 import type { ShelterStatusValue } from "./domain/shelter-status.vo";
-export type { CreateShelterDTO } from "./schema";
+export type { CreateShelterDTO, UpdateShelterDTO } from "./schema";
 
 /**
  * DTO de saída: o formato exato que a API devolve pro cliente. É o use
@@ -16,6 +16,8 @@ export interface ShelterDTO {
   capacidade: number;
   status: ShelterStatusValue;
   enderecoRegiao: string | null;
+  aceitaGatos: boolean;
+  aceitaCachorros: boolean;
   isActive: boolean;
   createdAt: string;
 }
@@ -28,6 +30,8 @@ export function toShelterDTO(shelter: Shelter): ShelterDTO {
     capacidade: shelter.capacidade,
     status: shelter.status.valor,
     enderecoRegiao: shelter.enderecoRegiao,
+    aceitaGatos: shelter.aceitaGatos,
+    aceitaCachorros: shelter.aceitaCachorros,
     isActive: shelter.isActive,
     createdAt: shelter.createdAt,
   };
@@ -40,4 +44,22 @@ export interface ShelterListItemDTO extends ShelterDTO {
 
 export function toShelterListItemDTO(shelter: Shelter, ocupacao: number, vagas: number): ShelterListItemDTO {
   return { ...toShelterDTO(shelter), ocupacao, vagas };
+}
+
+/** Animal que está morando no lar, como aparece nos detalhes (KAN-79). */
+export interface AnimalNoLarDTO {
+  id: string;
+  nome: string;
+  especie: string | null;
+  urlFoto: string | null;
+}
+
+/** Resposta do GET /api/lares/:id (KAN-79). `animais` nunca é null. */
+export interface ShelterDetailDTO extends ShelterListItemDTO {
+  animais: AnimalNoLarDTO[];
+}
+
+export function toShelterDetailDTO(shelter: Shelter, animais: AnimalNoLarDTO[]): ShelterDetailDTO {
+  const ocupacao = animais.length;
+  return { ...toShelterListItemDTO(shelter, ocupacao, shelter.capacidade - ocupacao), animais };
 }

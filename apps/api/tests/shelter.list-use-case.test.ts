@@ -29,7 +29,27 @@ class FakeShelterRepository implements IShelterRepository {
     throw new Error("não usado");
   }
 
-  async remove(): Promise<void> {}
+  async update(): Promise<never> {
+    throw new Error("não usado");
+  }
+
+  async inativar(): Promise<void> {}
+
+  async listAnimais(): Promise<never[]> {
+    return [];
+  }
+
+  async contarAnimais(): Promise<number> {
+    return 0;
+  }
+
+  async findAnimal(): Promise<never> {
+    throw new Error("não usado");
+  }
+
+  async vincularAnimal(): Promise<void> {}
+
+  async desvincularAnimal(): Promise<void> {}
 }
 
 function shelterFixture(id: string): Shelter {
@@ -40,6 +60,8 @@ function shelterFixture(id: string): Shelter {
     capacidade: 5,
     status: ShelterStatus.from("disponivel"),
     enderecoRegiao: "Centro",
+    aceitaGatos: true,
+    aceitaCachorros: false,
     isActive: true,
     createdAt: "2026-10-14T00:00:00.000Z",
   });
@@ -65,6 +87,8 @@ describe("ListSheltersUseCase", () => {
         capacidade: 5,
         status: "disponivel",
         enderecoRegiao: "Centro",
+        aceitaGatos: true,
+        aceitaCachorros: false,
         isActive: true,
         createdAt: "2026-10-14T00:00:00.000Z",
         ocupacao: 2,

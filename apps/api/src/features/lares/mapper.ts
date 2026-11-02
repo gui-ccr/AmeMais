@@ -14,6 +14,8 @@ export interface ShelterRow {
   capacidade: number;
   status: string | null;
   endereco_regiao: string;
+  aceita_gatos: boolean | null;
+  aceita_cachorros: boolean | null;
   is_active: boolean | null;
   created_at: string;
 }
@@ -36,6 +38,8 @@ export function mapRowToEntity(row: ShelterRow): Shelter {
     capacidade: row.capacidade,
     status: ShelterStatus.from(row.status ?? "disponivel"),
     enderecoRegiao: row.endereco_regiao,
+    aceitaGatos: row.aceita_gatos ?? false,
+    aceitaCachorros: row.aceita_cachorros ?? false,
     isActive: row.is_active ?? true,
     createdAt: row.created_at,
   });
@@ -48,6 +52,19 @@ export function mapCreateDTOToRow(input: CreateShelterDTO) {
     capacidade: input.capacidade,
     status: input.status,
     endereco_regiao: input.enderecoRegiao,
+    aceita_gatos: input.aceitaGatos,
+    aceita_cachorros: input.aceitaCachorros,
   };
 }
 
+/** Dados editáveis da entidade -> colunas do banco (KAN-77). */
+export function mapEntityDadosToRow(shelter: Shelter) {
+  return {
+    nome_responsavel: shelter.nomeResponsavel,
+    contato: shelter.contato,
+    capacidade: shelter.capacidade,
+    endereco_regiao: shelter.enderecoRegiao,
+    aceita_gatos: shelter.aceitaGatos,
+    aceita_cachorros: shelter.aceitaCachorros,
+  };
+}

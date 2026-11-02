@@ -7,7 +7,13 @@ import {
   updateShelterStatusSchema,
   shelterIdParamSchema,
   listSheltersQuerySchema,
+  updateShelterSchema,
+  addAnimalToShelterSchema,
+  shelterAnimalParamSchema,
 } from "./schema";
+import { UpdateShelterUseCase } from "./use-cases/update-shelter.use-case";
+import { AddAnimalToShelterUseCase } from "./use-cases/add-animal-to-shelter.use-case";
+import { RemoveAnimalFromShelterUseCase } from "./use-cases/remove-animal-from-shelter.use-case";
 import { ShelterRepository } from "./shelter.repository";
 import { ListSheltersUseCase } from "./use-cases/list-shelters.use-case";
 import { GetShelterUseCase } from "./use-cases/get-shelter.use-case";
@@ -108,6 +114,65 @@ export class ShelterController {
     }
   };
 
+  update = async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
+    try {
+      const user = await requireUser(request);
+      const db = createSupabaseForUser(user.accessToken);
+      const { id } = shelterIdParamSchema.parse(await params);
+      const body = await lerCorpoJson(request);
+      const dados = updateShelterSchema.parse(body);
+
+      const useCase = new UpdateShelterUseCase(new ShelterRepository(db));
+      const shelter = await useCase.execute(id, dados);
+
+      return ok(shelter);
+    } catch (error) {
+      return fail(error);
+    }
+  };
+
+  addAnimal = async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) => {
+    try {
+      const user = await requireUser(request);
+      const db = createSupabaseForUser(user.accessToken);
+      const { id } = shelterIdParamSchema.parse(await params);
+      const body = await lerCorpoJson(request);
+      const { animalId } = addAnimalToShelterSchema.parse(body);
+
+      const useCase = new AddAnimalToShelterUseCase(new ShelterRepository(db));
+      const shelter = await useCase.execute(id, animalId);
+
+      return ok(shelter);
+    } catch (error) {
+      return fail(error);
+    }
+  };
+
+  removeAnimal = async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string; animalId: string }> },
+  ) => {
+    try {
+      const user = await requireUser(request);
+      const db = createSupabaseForUser(user.accessToken);
+      const { id, animalId } = shelterAnimalParamSchema.parse(await params);
+
+      const useCase = new RemoveAnimalFromShelterUseCase(new ShelterRepository(db));
+      const shelter = await useCase.execute(id, animalId);
+
+      return ok(shelter);
+    } catch (error) {
+      return fail(error);
+    }
+  };
+
+  /** Inativa o lar (KAN-80) — não apaga a linha. */
   delete = async (
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> },
@@ -120,7 +185,7 @@ export class ShelterController {
       const useCase = new DeleteShelterUseCase(new ShelterRepository(db));
       await useCase.execute(id);
 
-      return ok({ deleted: true });
+      return ok({ inativado: true });
     } catch (error) {
       return fail(error);
     }

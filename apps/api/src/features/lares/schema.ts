@@ -12,8 +12,40 @@ export const createShelterSchema = z.object({
   capacidade: z.number().int().positive("capacidade deve ser um número maior que zero"),
   enderecoRegiao: z.string().min(1, "endereço/região é obrigatório"),
   status: z.enum(ShelterStatusValue).default("disponivel"),
+  aceitaGatos: z.boolean().default(false),
+  aceitaCachorros: z.boolean().default(false),
 });
 export type CreateShelterDTO = z.infer<typeof createShelterSchema>;
+
+/**
+ * Edição dos dados do lar (KAN-77). Todos os campos são opcionais (só vai o
+ * que mudou), mas o corpo não pode vir vazio. O status não entra aqui:
+ * ele muda pelo PATCH, que confere a matriz de transição.
+ */
+export const updateShelterSchema = z
+  .object({
+    nomeResponsavel: z.string().trim().min(2, "nome do responsável deve ter pelo menos 2 caracteres"),
+    contato: z.string().trim().min(1, "contato é obrigatório"),
+    capacidade: z.number().int().positive("capacidade deve ser um número maior que zero"),
+    enderecoRegiao: z.string().trim().min(1, "endereço/região é obrigatório"),
+    aceitaGatos: z.boolean(),
+    aceitaCachorros: z.boolean(),
+  })
+  .strict()
+  .partial()
+  .refine((dados) => Object.keys(dados).length > 0, { message: "informe ao menos um campo para editar" });
+export type UpdateShelterDTO = z.infer<typeof updateShelterSchema>;
+
+/** Corpo do POST /api/lares/:id/animais (KAN-78). */
+export const addAnimalToShelterSchema = z.object({
+  animalId: z.string().uuid("animalId inválido"),
+});
+
+/** Parâmetros do DELETE /api/lares/:id/animais/:animalId (KAN-78). */
+export const shelterAnimalParamSchema = z.object({
+  id: z.string().uuid("id inválido"),
+  animalId: z.string().uuid("animalId inválido"),
+});
 
 export const updateShelterStatusSchema = z.object({
   status: z.enum(ShelterStatusValue),

@@ -57,6 +57,14 @@ export class ConflictError extends AppError {
 }
 
 /**
+ * O pedido é válido, mas fere uma regra de negócio no estado atual
+ * (ex.: diminuir a capacidade de um lar para menos que a ocupação).
+ */
+export class BusinessRuleError extends AppError {
+  readonly statusCode = 422;
+}
+
+/**
  * Falha inesperada ao acessar o banco. A mensagem pro cliente é sempre a
  * mesma, fixa — o erro real do Supabase (nome de tabela/coluna, SQL etc.)
  * vai só pro `cause`, nunca pra resposta HTTP. Use em vez de propagar o
