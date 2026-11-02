@@ -10,6 +10,7 @@ import { useLar } from "../hooks/use-lares";
 import { STATUS_LAR_INFO } from "../opcoes";
 import type { LarDetalhe as LarDetalheModelo } from "../types";
 import { LarForm } from "./lar-form";
+import { LarStatusSelect } from "./lar-status-select";
 
 /** "2 / 5" — quantos animais moram no lar e quantos ele comporta. */
 export function rotuloDeOcupacao(lar: Pick<LarDetalheModelo, "ocupacao" | "capacidade">): string {
@@ -37,6 +38,8 @@ function DadosDoLar({ lar, onEditar }: { lar: LarDetalheModelo; onEditar: VoidFu
           Editar
         </Button>
       </div>
+
+      <LarStatusSelect larId={lar.id} statusAtual={lar.status} />
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Dado rotulo="Responsável">{lar.nomeResponsavel}</Dado>
