@@ -14,8 +14,29 @@ export interface ShelterDTO {
   capacidade: number;
   status: StatusLar;
   enderecoRegiao: string | null;
+  aceitaGatos: boolean;
+  aceitaCachorros: boolean;
+  observacoes: string | null;
+  voluntarioId: string | null;
   isActive: boolean;
   createdAt: string;
+  /** Quantos animais moram no lar e quantas vagas sobram (vêm na lista e no detalhe). */
+  ocupacao: number;
+  vagas: number;
+}
+
+/** Animal que mora no lar, como o `GET /api/lares/:id` devolve. */
+export interface AnimalNoLarDTO {
+  id: string;
+  nome: string;
+  especie: string | null;
+  urlFoto: string | null;
+}
+
+/** `GET /api/lares/:id` (e as rotas de vincular/desvincular animal): o lar com os animais e o voluntário responsável. */
+export interface ShelterDetailDTO extends ShelterDTO {
+  animais: AnimalNoLarDTO[];
+  voluntario: { id: string; nome: string } | null;
 }
 
 /** Lar temporário: a casa de um voluntário que abriga animais até a adoção. Modelo usado pelas telas. */
@@ -26,16 +47,45 @@ export interface Lar {
   contato: string;
   /** Quantos animais o lar comporta. */
   capacidade: number;
+  /** Quantos animais moram no lar agora. */
+  ocupacao: number;
+  /** Vagas livres (capacidade - ocupação). */
+  vagas: number;
   /** A situação do lar. É a fonte da verdade: use este campo, e não `ativo`, para saber se o lar está em uso. */
   status: StatusLar;
   /** Endereço ou região do lar. Vazio se a API não trouxe. */
   enderecoRegiao: string;
-  /**
-   * `isActive` da API. Não confie nele: a API marca `false` ao inativar, mas o
-   * repositório hoje só grava o `status`, então este campo quase sempre vem `true`.
-   */
+  aceitaGatos: boolean;
+  aceitaCachorros: boolean;
+  /** Vazio se não foi informado. */
+  observacoes: string;
+  /** Voluntário responsável, quando o lar foi ligado a um cadastro de voluntário. */
+  voluntarioId: string | null;
+  /** `isActive` da API; use `status` para saber se o lar está em uso. */
   ativo: boolean;
   createdAt: string;
+}
+
+export interface AnimalNoLar {
+  id: string;
+  nome: string;
+  /** Vazio se não informada. */
+  especie: string;
+  urlFoto: string | null;
+}
+
+/** O lar com os animais que moram nele e o nome do voluntário responsável (só o detalhe traz isso). */
+export interface LarDetalhe extends Lar {
+  animais: AnimalNoLar[];
+  voluntario: { id: string; nome: string } | null;
+}
+
+/** Animal que pode ser vinculado a um lar (sem lar e não adotado). */
+export interface AnimalElegivel {
+  id: string;
+  nome: string;
+  especie: string;
+  urlFoto: string | null;
 }
 
 /**
@@ -47,10 +97,17 @@ export interface NovoLarInput {
   contato: string;
   capacidade: number;
   enderecoRegiao: string;
+  aceitaGatos: boolean;
+  aceitaCachorros: boolean;
+  /** `null` quando em branco. */
+  observacoes: string | null;
+  /** `null` = sem voluntário ligado (na edição, desliga o que estava ligado). */
+  voluntarioId: string | null;
 }
 
 /**
- * O que a edição envia: os mesmos quatro campos do cadastro. O status não entra
- * aqui — ele só muda por `updateStatus`, que respeita a ordem de transições.
+ * O que a edição envia: os mesmos campos do cadastro (`PUT /api/lares/:id` aceita edição
+ * parcial, mas o formulário sempre manda tudo). O status não entra aqui — ele só muda por
+ * `updateStatus`, que respeita a matriz de transições.
  */
 export type EditarLarInput = NovoLarInput;
