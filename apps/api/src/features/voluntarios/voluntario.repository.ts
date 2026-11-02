@@ -62,6 +62,9 @@ export interface IVoluntarioRepository {
   existsByEmail(email: string, excludingId?: string): Promise<boolean>;
   create(input: VoluntarioCreationData): Promise<Voluntario>;
   update(id: string, voluntario: Voluntario): Promise<Voluntario>;
+  /** Grava só a coluna `status`. */
+  updateStatus(id: string, status: StatusVoluntarioValue): Promise<Voluntario>;
+  remove(id: string): Promise<void>;
 }
 
 
@@ -186,5 +189,22 @@ export class VoluntarioRepository implements IVoluntarioRepository {
     // O use case já leu o registro, então ele existe: 0 linhas afetadas = UPDATE filtrado pela RLS (sem permissão de escrita).
     if (!data) throw new ForbiddenError();
     return mapRowToEntity(data);
+  }
+
+  async updateStatus(id: string, status: StatusVoluntarioValue): Promise<Voluntario> {
+    const { data, error } = await this.db.from(TABLE).update({ status }).eq("id", id).select(COLUMNS).maybeSingle();
+
+    throwOnWriteError(error);
+    // O use case já leu o registro: 0 linhas afetadas = UPDATE filtrado pela RLS (sem permissão de escrita).
+    if (!data) throw new ForbiddenError();
+    return mapRowToEntity(data);
+  }
+
+  async remove(id: string): Promise<void> {
+    const { data, error } = await this.db.from(TABLE).delete().eq("id", id).select("id");
+
+    throwOnWriteError(error);
+    // O use case já leu o registro: 0 linhas apagadas = DELETE filtrado pela RLS (sem permissão).
+    if (!data || data.length === 0) throw new ForbiddenError();
   }
 }

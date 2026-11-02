@@ -16,6 +16,8 @@ const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() 
       findLarVinculado: vi.fn(),
       findLaresVinculados: vi.fn(async () => new Map()),
       update: vi.fn(),
+      updateStatus: vi.fn(),
+      remove: vi.fn(),
     },
   };
 });
@@ -50,6 +52,10 @@ function fakePostRequest(body: unknown): NextRequest {
 
 function fakeItemRequest(id: string) {
   return { request: {} as unknown as NextRequest, context: { params: Promise.resolve({ id }) } };
+}
+
+function fakePatchRequest(id: string, body: unknown) {
+  return fakePutRequest(id, body);
 }
 
 function fakePutRequest(id: string, body: unknown) {
@@ -678,5 +684,121 @@ describe("VoluntarioController.update", () => {
     await voluntarioController.update(request, context);
 
     expect(mockCreateSupabaseForUser).toHaveBeenCalledWith(AUTH_USER.accessToken);
+  });
+});
+
+describe("VoluntarioController.updateStatus", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("inativa -> 200 com o voluntário no novo status", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+    repoMocks.findById.mockResolvedValueOnce(voluntarioRestaurado(ID_VALIDO));
+    repoMocks.updateStatus.mockImplementationOnce(async (id: string, status: string) => {
+      const v = voluntarioRestaurado(id);
+      v.alterarStatus(status);
+      return v;
+    });
+
+    const { request, context } = fakePatchRequest(ID_VALIDO, { status: "inativo" });
+    const response = await voluntarioController.updateStatus(request, context);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.status).toBe("inativo");
+    expect(repoMocks.updateStatus).toHaveBeenCalledWith(ID_VALIDO, "inativo");
+  });
+
+  it("status fora de ativo/inativo -> 400, sem gravar", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+
+    const { request, context } = fakePatchRequest(ID_VALIDO, { status: "pendente" });
+    const response = await voluntarioController.updateStatus(request, context);
+
+    expect(response.status).toBe(400);
+    expect(repoMocks.updateStatus).not.toHaveBeenCalled();
+  });
+
+  it("id inválido -> 400", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+
+    const { request, context } = fakePatchRequest("não-é-um-uuid", { status: "ativo" });
+    const response = await voluntarioController.updateStatus(request, context);
+
+    expect(response.status).toBe(400);
+  });
+
+  it("voluntário inexistente -> 404", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+    repoMocks.findById.mockRejectedValueOnce(new NotFoundError("Voluntário"));
+
+    const { request, context } = fakePatchRequest(ID_VALIDO, { status: "ativo" });
+    const response = await voluntarioController.updateStatus(request, context);
+
+    expect(response.status).toBe(404);
+  });
+
+  it("sem token válido -> 401", async () => {
+    mockRequireUser.mockRejectedValueOnce(new UnauthorizedError("Token de autenticação ausente"));
+
+    const { request, context } = fakePatchRequest(ID_VALIDO, { status: "ativo" });
+    const response = await voluntarioController.updateStatus(request, context);
+
+    expect(response.status).toBe(401);
+  });
+});
+
+describe("VoluntarioController.delete", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("sem lar vinculado -> 200 e remove", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+    repoMocks.findById.mockResolvedValueOnce(voluntarioRestaurado(ID_VALIDO));
+    repoMocks.findLarVinculado.mockResolvedValueOnce(null);
+
+    const { request, context } = fakeItemRequest(ID_VALIDO);
+    const response = await voluntarioController.delete(request, context);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual({ deleted: true });
+    expect(repoMocks.remove).toHaveBeenCalledWith(ID_VALIDO);
+  });
+
+  it("com lar vinculado -> 409 sugerindo inativar, sem remover", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+    repoMocks.findById.mockResolvedValueOnce(voluntarioRestaurado(ID_VALIDO));
+    repoMocks.findLarVinculado.mockResolvedValueOnce({ id: "lar-1", enderecoRegiao: "Zona Norte" });
+
+    const { request, context } = fakeItemRequest(ID_VALIDO);
+    const response = await voluntarioController.delete(request, context);
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(JSON.stringify(body)).toMatch(/[Ii]native/);
+    expect(repoMocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("voluntário inexistente -> 404", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+    repoMocks.findById.mockRejectedValueOnce(new NotFoundError("Voluntário"));
+
+    const { request, context } = fakeItemRequest(ID_VALIDO);
+    const response = await voluntarioController.delete(request, context);
+
+    expect(response.status).toBe(404);
+    expect(repoMocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("id inválido -> 400", async () => {
+    mockRequireUser.mockResolvedValueOnce(AUTH_USER);
+
+    const { request, context } = fakeItemRequest("não-é-um-uuid");
+    const response = await voluntarioController.delete(request, context);
+
+    expect(response.status).toBe(400);
   });
 });

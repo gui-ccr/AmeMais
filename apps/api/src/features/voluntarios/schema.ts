@@ -59,3 +59,9 @@ export const updateVoluntarioSchema = createVoluntarioSchema.extend({
     .refine((areas) => new Set(areas).size === areas.length, "areasDeAjuda não pode conter valores repetidos"),
 });
 export type UpdateVoluntarioDTO = z.infer<typeof updateVoluntarioSchema>;
+
+/** PATCH /:id/status — só ativa/inativa; os demais dados são editados via PUT. */
+export const updateVoluntarioStatusSchema = z.object({
+  status: z.enum(STATUS_VOLUNTARIO),
+});
+export type UpdateVoluntarioStatusDTO = z.infer<typeof updateVoluntarioStatusSchema>;

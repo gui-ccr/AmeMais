@@ -18,6 +18,14 @@ import { ForbiddenError } from "../src/core/errors";
  * findLarVinculado/update); este fake só precisa deles para compilar — a
  * listagem não os usa. */
 class FakeVoluntarioRepository implements IVoluntarioRepository {
+  async updateStatus(): Promise<never> {
+    throw new Error("não usado");
+  }
+
+  async remove(): Promise<void> {
+    throw new Error("não usado");
+  }
+
   public acesso = true;
   public listChamado = false;
   public ultimosFiltros: ListVoluntariosFiltros | null = null;

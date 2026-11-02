@@ -3,6 +3,7 @@ import { formatPhone } from "@/utils";
 import type {
   EditarVoluntarioInput,
   NovoVoluntarioInput,
+  StatusVoluntario,
   Voluntario,
   VoluntarioDetalhe,
   VoluntarioDetalheDTO,
@@ -84,5 +85,16 @@ export const voluntarioService = {
   async update(id: string, input: EditarVoluntarioInput): Promise<Voluntario> {
     const { data } = await api.put<{ data: VoluntarioDTO }>(`/api/voluntarios/${id}`, input);
     return paraVoluntario(data.data);
+  },
+
+  /** Ativa ou inativa. Não mexe no lar vinculado. */
+  async updateStatus(id: string, status: StatusVoluntario): Promise<Voluntario> {
+    const { data } = await api.patch<{ data: VoluntarioDTO }>(`/api/voluntarios/${id}/status`, { status });
+    return paraVoluntario(data.data);
+  },
+
+  /** Remove o voluntário. A API responde 409 se ele tem lar vinculado (nesse caso, inative). */
+  async remove(id: string): Promise<void> {
+    await api.delete(`/api/voluntarios/${id}`);
   },
 };
