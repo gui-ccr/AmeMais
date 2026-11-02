@@ -21,10 +21,12 @@ import {
   exigirAdocaoSeAdotado,
   paraAdocao,
 } from "../adocao";
+import { CAMPOS_PUBLICOS_VAZIOS, NOMES_CAMPOS_PUBLICOS, camposPublicosSchema } from "../campos-publicos";
 import { useCreateAnimal } from "../hooks/use-animais";
 import { ESPECIE_INFO, STATUS_DESCRICAO, STATUS_INFO } from "../opcoes";
 import { ESPECIES, STATUS_NO_CADASTRO } from "../types";
 import { CamposAdocao } from "./campos-adocao";
+import { CamposPublicos } from "./campos-publicos";
 import { MensagemErro } from "@/components/ui/mensagem-erro";
 
 const MENSAGEM_ESPECIE = "Selecione a espécie";
@@ -45,6 +47,7 @@ export const animalSchema = z
       if (problema) ctx.addIssue({ code: "custom", message: problema });
     }),
     status: z.enum(STATUS_NO_CADASTRO, { required_error: MENSAGEM_STATUS, invalid_type_error: MENSAGEM_STATUS }),
+    ...camposPublicosSchema,
     ...camposDaAdocaoSoltos,
   })
   // Só um animal que já nasce adotado precisa dos dados da adoção.
@@ -53,7 +56,7 @@ export const animalSchema = z
 type FormEntrada = z.input<typeof animalSchema>;
 type FormSaida = z.output<typeof animalSchema>;
 
-const CAMPOS_ANIMAL: FieldPath<FormEntrada>[] = ["nome", "especie", "raca", "foto", "status"];
+const CAMPOS_ANIMAL: FieldPath<FormEntrada>[] = ["nome", "especie", "raca", "foto", "status", ...NOMES_CAMPOS_PUBLICOS];
 
 const PASSOS = ["Animal", "Adoção"] as const;
 
@@ -76,6 +79,7 @@ export function AnimalForm({ onFechar }: AnimalFormProps) {
       nome: "",
       raca: "",
       foto: null,
+      ...CAMPOS_PUBLICOS_VAZIOS,
       ...ADOCAO_VAZIA,
     },
   });
@@ -133,6 +137,10 @@ export function AnimalForm({ onFechar }: AnimalFormProps) {
         nome: values.nome,
         especie: values.especie,
         raca: values.raca,
+        porte: values.porte,
+        faixaEtaria: values.faixaEtaria,
+        idadeTexto: values.idadeTexto,
+        descricao: values.descricao,
         foto: values.foto,
         status: values.status,
         // Os campos da adoção só foram validados (e só valem) se o animal já nasce adotado.
@@ -243,6 +251,8 @@ export function AnimalForm({ onFechar }: AnimalFormProps) {
                 <MensagemErro id="animal-status-erro" mensagem={errors.status?.message} />
                 {status && !errors.status && <p className="text-xs text-muted-foreground">{STATUS_DESCRICAO[status]}</p>}
               </div>
+
+              <CamposPublicos prefixo="animal" />
 
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <Label htmlFor="animal-foto" required>

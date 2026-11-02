@@ -2,6 +2,14 @@
 export const ESPECIES = ["Cachorro", "Gato", "Outro"] as const;
 export type Especie = (typeof ESPECIES)[number];
 
+/** Mesmas listas e limites de apps/api/.../animals/domain/animal-options.ts (e dos CHECKs do banco). */
+export const PORTES = ["P", "M", "G"] as const;
+export type Porte = (typeof PORTES)[number];
+export const FAIXAS_ETARIAS = ["filhote", "adulto", "idoso"] as const;
+export type FaixaEtaria = (typeof FAIXAS_ETARIAS)[number];
+export const IDADE_TEXTO_MAX = 40;
+export const DESCRICAO_MAX = 500;
+
 /** Mesma lista de apps/api/src/features/animals/domain/animal-status.vo.ts. */
 export const STATUS_ANIMAL = ["disponivel", "em_tratamento", "em_lar_temporario", "adotado"] as const;
 export type StatusAnimal = (typeof STATUS_ANIMAL)[number];
@@ -26,6 +34,10 @@ export interface AnimalDTO {
   especie: string | null;
   raca: string | null;
   status: StatusAnimal;
+  porte: Porte;
+  faixaEtaria: FaixaEtaria;
+  idadeTexto: string | null;
+  descricao: string | null;
   urlFoto: string | null;
   larTemporarioId: string | null;
   adotanteId: string | null;
@@ -41,6 +53,13 @@ export interface Animal {
   especie: Especie;
   raca: string;
   status: StatusAnimal;
+  /** Porte e faixa etária aparecem no site público (/adote). */
+  porte: Porte;
+  faixaEtaria: FaixaEtaria;
+  /** Idade em texto livre (ex.: "2 anos"); vazio quando não informada. */
+  idadeTexto: string;
+  /** Texto do cartão no site público; vazio quando não informado. */
+  descricao: string;
   /** URL pública da foto; null se o animal não tiver foto. */
   urlFoto: string | null;
   /** Quem adotou. Só existe para animais `adotado` (dado pessoal: nunca vai para o site público). */
@@ -71,6 +90,10 @@ export interface NovoAnimalInput {
   nome: string;
   especie: Especie;
   raca: string;
+  porte: Porte;
+  faixaEtaria: FaixaEtaria;
+  idadeTexto: string;
+  descricao: string;
   foto: File;
   status: StatusNoCadastro;
   /** Obrigatório quando `status` é `adotado`; nos demais status não pode ser enviado. */
@@ -81,4 +104,15 @@ export interface NovoAnimalInput {
 export interface AlterarStatusInput {
   status: StatusAnimal;
   adocao?: Adocao;
+}
+
+/** O que a edição envia (`PUT /api/animals/:id`): os dados do animal, sem foto, status nem adoção. */
+export interface EditarAnimalInput {
+  nome: string;
+  especie: Especie;
+  raca: string;
+  porte: Porte;
+  faixaEtaria: FaixaEtaria;
+  idadeTexto: string;
+  descricao: string;
 }

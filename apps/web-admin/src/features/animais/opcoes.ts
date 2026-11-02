@@ -1,9 +1,21 @@
-import type { Especie, StatusAnimal } from "./types";
+import type { Especie, FaixaEtaria, Porte, StatusAnimal } from "./types";
 
 export const ESPECIE_INFO: Record<Especie, { rotulo: string }> = {
   Cachorro: { rotulo: "Cachorro" },
   Gato: { rotulo: "Gato" },
   Outro: { rotulo: "Outro" },
+};
+
+export const PORTE_INFO: Record<Porte, { rotulo: string }> = {
+  P: { rotulo: "Pequeno (P)" },
+  M: { rotulo: "Médio (M)" },
+  G: { rotulo: "Grande (G)" },
+};
+
+export const FAIXA_ETARIA_INFO: Record<FaixaEtaria, { rotulo: string }> = {
+  filhote: { rotulo: "Filhote" },
+  adulto: { rotulo: "Adulto" },
+  idoso: { rotulo: "Idoso" },
 };
 
 export const STATUS_INFO: Record<StatusAnimal, { rotulo: string; variante: "adocao" | "tratamento" | "neutral" }> = {
