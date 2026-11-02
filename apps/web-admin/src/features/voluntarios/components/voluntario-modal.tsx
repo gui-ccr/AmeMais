@@ -1,12 +1,15 @@
 "use client";
 
+import { isAxiosError } from "axios";
 import { Home, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useVoluntarios } from "../hooks/use-voluntarios";
+import { useToast } from "@/components/ui/toast";
+import { mensagemDeErroDaApi } from "@/lib/api-error";
+import { useRemoveVoluntario, useUpdateVoluntarioStatus, useVoluntarios } from "../hooks/use-voluntarios";
 import { AREA_DE_AJUDA_INFO, STATUS_VOLUNTARIO_INFO, TIPO_VOLUNTARIO_INFO } from "../opcoes";
 import type { VoluntarioDetalhe } from "../types";
 import { VoluntarioForm } from "./voluntario-form";
@@ -117,13 +120,150 @@ export function VoluntarioDetalhes({ voluntario, onEditar, onFechar }: Voluntari
         )}
       </section>
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" onClick={onFechar}>
-          Fechar
-        </Button>
-        <Button type="button" onClick={onEditar}>
-          Editar
-        </Button>
+      <AcoesDoVoluntario voluntario={voluntario} onEditar={onEditar} onFechar={onFechar} />
+    </div>
+  );
+}
+
+const MENSAGEM_LAR_VINCULADO =
+  "Este voluntário tem um lar temporário vinculado e não pode ser removido. Inative-o em vez de remover.";
+
+/** Mensagem do erro ao remover. O 409 é sempre "tem lar vinculado": sugere inativar. */
+export function erroAoRemover(erro: unknown): string {
+  if (isAxiosError(erro) && erro.response?.status === 409) {
+    return mensagemDeErroDaApi(erro, MENSAGEM_LAR_VINCULADO);
+  }
+  return mensagemDeErroDaApi(erro, "Não foi possível remover o voluntário. Tente novamente.");
+}
+
+type Confirmacao = "status" | "remover";
+
+/**
+ * Botões do rodapé dos detalhes: Fechar, Editar, Inativar/Ativar e Remover. Inativar/Ativar e
+ * Remover pedem confirmação no próprio modal. Remover fica desabilitado enquanto houver lar
+ * vinculado (a API também recusa com 409): nesse caso o caminho é inativar.
+ */
+function AcoesDoVoluntario({ voluntario, onEditar, onFechar }: VoluntarioDetalhesProps) {
+  const alterarStatus = useUpdateVoluntarioStatus();
+  const removerVoluntario = useRemoveVoluntario();
+  const { toast } = useToast();
+  const [confirmando, setConfirmando] = useState<Confirmacao | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const ativo = voluntario.status === "ativo";
+  const temLar = !!voluntario.larTemporario;
+  const processando = alterarStatus.isPending || removerVoluntario.isPending;
+
+  function cancelar() {
+    setConfirmando(null);
+    setErro(null);
+  }
+
+  async function confirmarStatus() {
+    setErro(null);
+    try {
+      await alterarStatus.mutateAsync({ id: voluntario.id, status: ativo ? "inativo" : "ativo" });
+      toast({
+        tipo: "sucesso",
+        titulo: ativo ? "Voluntário inativado!" : "Voluntário ativado!",
+        descricao: voluntario.nome,
+      });
+      setConfirmando(null);
+    } catch (e) {
+      setErro(mensagemDeErroDaApi(e, "Não foi possível alterar o status do voluntário. Tente novamente."));
+    }
+  }
+
+  async function confirmarRemocao() {
+    setErro(null);
+    try {
+      await removerVoluntario.mutateAsync(voluntario.id);
+      toast({ tipo: "sucesso", titulo: "Voluntário removido!", descricao: voluntario.nome });
+      onFechar();
+    } catch (e) {
+      setErro(erroAoRemover(e));
+    }
+  }
+
+  if (confirmando) {
+    const removendo = confirmando === "remover";
+    return (
+      <div
+        role="alertdialog"
+        aria-labelledby="voluntario-confirmacao-titulo"
+        aria-describedby="voluntario-confirmacao-texto"
+        className="flex flex-col gap-3 rounded-xl border-2 border-destructive/40 bg-destructive/5 p-4"
+      >
+        <h3 id="voluntario-confirmacao-titulo" className="font-semibold text-foreground">
+          {removendo ? "Remover este voluntário?" : ativo ? "Inativar este voluntário?" : "Ativar este voluntário?"}
+        </h3>
+        <p id="voluntario-confirmacao-texto" className="text-sm text-muted-dark">
+          {removendo
+            ? `${voluntario.nome} será apagado da rede de voluntários. Essa ação não pode ser desfeita. Se a pessoa só saiu da ONG, prefira inativar: o cadastro fica no histórico.`
+            : ativo
+              ? `${voluntario.nome} continua cadastrado, mas passa a constar como inativo. O lar temporário vinculado não muda.`
+              : `${voluntario.nome} volta a constar como voluntário ativo.`}
+        </p>
+        {erro && (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {erro}
+          </p>
+        )}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={cancelar} disabled={processando}>
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant={removendo ? "destructive" : "default"}
+            onClick={removendo ? confirmarRemocao : confirmarStatus}
+            disabled={processando}
+          >
+            {processando
+              ? "Aguarde..."
+              : removendo
+                ? "Sim, remover"
+                : ativo
+                  ? "Sim, inativar"
+                  : "Sim, ativar"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {temLar && (
+        <p id="voluntario-remover-ajuda" className="text-sm text-muted-foreground">
+          Não é possível remover enquanto houver lar temporário vinculado. Para quem saiu da ONG, use
+          &quot;Inativar&quot;: o cadastro fica no histórico.
+        </p>
+      )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button type="button" variant="outline" onClick={() => setConfirmando("status")}>
+            {ativo ? "Inativar" : "Ativar"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="border-destructive text-destructive"
+            disabled={temLar}
+            aria-describedby={temLar ? "voluntario-remover-ajuda" : undefined}
+            onClick={() => setConfirmando("remover")}
+          >
+            Remover
+          </Button>
+        </div>
+        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+          <Button type="button" variant="outline" onClick={onFechar}>
+            Fechar
+          </Button>
+          <Button type="button" onClick={onEditar}>
+            Editar
+          </Button>
+        </div>
       </div>
     </div>
   );
