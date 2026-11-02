@@ -14,6 +14,8 @@ export const createShelterSchema = z.object({
   status: z.enum(ShelterStatusValue).default("disponivel"),
   aceitaGatos: z.boolean().default(false),
   aceitaCachorros: z.boolean().default(false),
+  observacoes: z.string().trim().max(1000, "observações deve ter no máximo 1000 caracteres").nullable().optional(),
+  voluntarioId: z.string().uuid("voluntarioId inválido").nullable().optional(),
 });
 export type CreateShelterDTO = z.infer<typeof createShelterSchema>;
 
@@ -30,6 +32,8 @@ export const updateShelterSchema = z
     enderecoRegiao: z.string().trim().min(1, "endereço/região é obrigatório"),
     aceitaGatos: z.boolean(),
     aceitaCachorros: z.boolean(),
+    observacoes: z.string().trim().max(1000, "observações deve ter no máximo 1000 caracteres").nullable(),
+    voluntarioId: z.string().uuid("voluntarioId inválido").nullable(),
   })
   .strict()
   .partial()

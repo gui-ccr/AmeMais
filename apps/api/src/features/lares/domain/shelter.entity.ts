@@ -13,6 +13,9 @@ export interface ShelterProps {
   enderecoRegiao: string;
   aceitaGatos: boolean;
   aceitaCachorros: boolean;
+  observacoes: string | null;
+  /** Voluntário responsável, quando o lar está ligado a um cadastro de voluntário. */
+  voluntarioId: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -36,6 +39,8 @@ export interface ShelterDadosEditaveis {
   enderecoRegiao?: string;
   aceitaGatos?: boolean;
   aceitaCachorros?: boolean;
+  observacoes?: string | null;
+  voluntarioId?: string | null;
 }
 
 /**
@@ -119,6 +124,12 @@ export class Shelter {
   }
   get aceitaCachorros(): boolean {
     return this.props.aceitaCachorros;
+  }
+  get observacoes(): string | null {
+    return this.props.observacoes;
+  }
+  get voluntarioId(): string | null {
+    return this.props.voluntarioId;
   }
   get isActive(): boolean {
     return this.props.isActive;

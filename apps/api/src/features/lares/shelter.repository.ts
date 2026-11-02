@@ -6,10 +6,11 @@ import { mapRowToEntity, mapCreateDTOToRow, mapEntityDadosToRow } from "./mapper
 import type { Shelter } from "./domain/shelter.entity";
 import type { ShelterStatus, ShelterStatusValue } from "./domain/shelter-status.vo";
 import type { CreateShelterDTO } from "./schema";
+import type { VoluntarioDoLarDTO } from "./shelter.dto";
 
 const TABLE = "lares_temporarios";
 const COLUMNS =
-  "id, nome_responsavel, contato, capacidade, status, endereco_regiao, aceita_gatos, aceita_cachorros, is_active, created_at";
+  "id, nome_responsavel, contato, capacidade, status, endereco_regiao, aceita_gatos, aceita_cachorros, observacoes, voluntario_id, is_active, created_at";
 const ANIMAIS_TABLE = "animais";
 
 /** Códigos do Postgres: CHECK/trigger de capacidade e bloqueio de RLS. */
@@ -102,6 +103,7 @@ export interface IShelterRepository {
   updateStatus(id: string, status: ShelterStatus | ShelterStatusValue): Promise<Shelter>;
   inativar(id: string): Promise<void>;
   listAnimais(larId: string): Promise<AnimalNoLar[]>;
+  findVoluntarioResumo(voluntarioId: string): Promise<VoluntarioDoLarDTO | null>;
   contarAnimais(larId: string): Promise<number>;
   findAnimal(animalId: string): Promise<AnimalVinculo>;
   vincularAnimal(larId: string, animalId: string): Promise<void>;
@@ -249,6 +251,14 @@ export class ShelterRepository implements IShelterRepository {
       especie: (linha.especie as string | null) ?? null,
       urlFoto: (linha.url_foto as string | null) ?? null,
     }));
+  }
+
+  /** Nome do voluntário responsável (KAN-100). Null se não existir mais ou a RLS não deixar ler. */
+  async findVoluntarioResumo(voluntarioId: string): Promise<VoluntarioDoLarDTO | null> {
+    const { data, error } = await this.db.from("voluntarios").select("id, nome").eq("id", voluntarioId).maybeSingle();
+
+    if (error) throw new DatabaseError(error);
+    return data ? { id: data.id as string, nome: data.nome as string } : null;
   }
 
   async contarAnimais(larId: string): Promise<number> {

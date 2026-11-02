@@ -67,6 +67,12 @@ class InMemoryShelterRepository implements IShelterRepository {
       .map(({ id, nome, especie, urlFoto }) => ({ id, nome, especie, urlFoto }));
   }
 
+  voluntarios = new Map<string, { id: string; nome: string }>();
+
+  async findVoluntarioResumo(id: string) {
+    return this.voluntarios.get(id) ?? null;
+  }
+
   async contarAnimais(larId: string): Promise<number> {
     return (await this.listAnimais(larId)).length;
   }
@@ -98,6 +104,8 @@ function larFixture(overrides: Partial<Parameters<typeof Shelter.restore>[0]> = 
     enderecoRegiao: "Centro",
     aceitaGatos: true,
     aceitaCachorros: true,
+    observacoes: null,
+    voluntarioId: null,
     isActive: true,
     createdAt: "2026-10-14T00:00:00.000Z",
     ...overrides,
@@ -330,11 +338,14 @@ describe("GetShelterUseCase (KAN-79)", () => {
       enderecoRegiao: "Centro",
       aceitaGatos: true,
       aceitaCachorros: true,
+      observacoes: null,
+      voluntarioId: null,
       isActive: true,
       createdAt: "2026-10-14T00:00:00.000Z",
       ocupacao: 1,
       vagas: 1,
       animais: [{ id: "a1", nome: "Thor", especie: "Cachorro", urlFoto: "https://x/thor.jpg" }],
+      voluntario: null,
     });
   });
 

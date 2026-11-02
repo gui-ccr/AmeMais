@@ -16,6 +16,8 @@ export interface ShelterRow {
   endereco_regiao: string;
   aceita_gatos: boolean | null;
   aceita_cachorros: boolean | null;
+  observacoes: string | null;
+  voluntario_id: string | null;
   is_active: boolean | null;
   created_at: string;
 }
@@ -40,6 +42,8 @@ export function mapRowToEntity(row: ShelterRow): Shelter {
     enderecoRegiao: row.endereco_regiao,
     aceitaGatos: row.aceita_gatos ?? false,
     aceitaCachorros: row.aceita_cachorros ?? false,
+    observacoes: row.observacoes ?? null,
+    voluntarioId: row.voluntario_id ?? null,
     isActive: row.is_active ?? true,
     createdAt: row.created_at,
   });
@@ -54,6 +58,8 @@ export function mapCreateDTOToRow(input: CreateShelterDTO) {
     endereco_regiao: input.enderecoRegiao,
     aceita_gatos: input.aceitaGatos,
     aceita_cachorros: input.aceitaCachorros,
+    observacoes: input.observacoes || null,
+    voluntario_id: input.voluntarioId ?? null,
   };
 }
 
@@ -66,5 +72,7 @@ export function mapEntityDadosToRow(shelter: Shelter) {
     endereco_regiao: shelter.enderecoRegiao,
     aceita_gatos: shelter.aceitaGatos,
     aceita_cachorros: shelter.aceitaCachorros,
+    observacoes: shelter.observacoes,
+    voluntario_id: shelter.voluntarioId,
   };
 }
