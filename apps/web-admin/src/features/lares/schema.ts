@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { STATUS_LAR, type Lar, type NovoLarInput } from "./types";
+import type { LarDetalhe, NovoLarInput } from "./types";
 
 const MENSAGEM_CAPACIDADE = "Informe a capacidade (quantos animais o lar comporta)";
-const MENSAGEM_STATUS = "Selecione o novo status";
 
 /**
  * Formulário de lar (cadastro e edição). As regras espelham as do back
@@ -19,6 +18,11 @@ export const larSchema = z.object({
       .positive("A capacidade deve ser maior que zero"),
   ),
   enderecoRegiao: z.string().trim().min(1, "Informe o endereço ou a região"),
+  aceitaGatos: z.boolean(),
+  aceitaCachorros: z.boolean(),
+  observacoes: z.string().trim().max(1000, "As observações podem ter no máximo 1000 caracteres"),
+  /** Preenchido pela busca de voluntário (não é digitado); `null` = sem voluntário ligado. */
+  voluntarioId: z.string().uuid().nullable(),
 });
 
 /** Valores do formulário (o que a pessoa digitou) e valores já validados. */
@@ -30,32 +34,36 @@ export const LAR_FORM_VAZIO = {
   contato: "",
   capacidade: "",
   enderecoRegiao: "",
+  aceitaGatos: false,
+  aceitaCachorros: false,
+  observacoes: "",
+  voluntarioId: null,
 } satisfies LarFormEntrada;
 
 /** Valores iniciais do formulário de edição, a partir do lar gravado. */
-export function paraValoresDoFormulario(lar: Lar): LarFormEntrada {
+export function paraValoresDoFormulario(lar: LarDetalhe): LarFormEntrada {
   return {
     nomeResponsavel: lar.nomeResponsavel,
     contato: lar.contato,
     capacidade: lar.capacidade,
     enderecoRegiao: lar.enderecoRegiao,
+    aceitaGatos: lar.aceitaGatos,
+    aceitaCachorros: lar.aceitaCachorros,
+    observacoes: lar.observacoes,
+    voluntarioId: lar.voluntarioId,
   };
 }
 
-/** Dos valores validados do formulário para o que o service recebe (cadastro e edição enviam os mesmos 4 campos). */
+/** Dos valores validados do formulário para o que o service recebe (cadastro e edição enviam os mesmos campos). */
 export function paraDadosDoLar(valores: LarFormSaida): NovoLarInput {
   return {
     nomeResponsavel: valores.nomeResponsavel,
     contato: valores.contato,
     capacidade: valores.capacidade,
     enderecoRegiao: valores.enderecoRegiao,
+    aceitaGatos: valores.aceitaGatos,
+    aceitaCachorros: valores.aceitaCachorros,
+    observacoes: valores.observacoes || null,
+    voluntarioId: valores.voluntarioId,
   };
 }
-
-/** Formulário de troca de status. Quais destinos valem para cada status atual está em `TRANSICOES_STATUS_LAR`. */
-export const alterarStatusLarSchema = z.object({
-  status: z.enum(STATUS_LAR, { required_error: MENSAGEM_STATUS, invalid_type_error: MENSAGEM_STATUS }),
-});
-
-export type AlterarStatusLarFormEntrada = z.input<typeof alterarStatusLarSchema>;
-export type AlterarStatusLarFormSaida = z.output<typeof alterarStatusLarSchema>;

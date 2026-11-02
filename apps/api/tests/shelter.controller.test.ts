@@ -16,6 +16,7 @@ const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() 
       update: vi.fn(),
       inativar: vi.fn(),
       listAnimais: vi.fn(),
+      findVoluntarioResumo: vi.fn(),
       contarAnimais: vi.fn(),
       findAnimal: vi.fn(),
       vincularAnimal: vi.fn(),
@@ -154,6 +155,8 @@ describe("ShelterController.list", () => {
       enderecoRegiao: "Centro",
       aceitaGatos: false,
       aceitaCachorros: false,
+      observacoes: null,
+      voluntarioId: null,
       isActive: true,
       createdAt: "2026-10-14T00:00:00.000Z",
     });

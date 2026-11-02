@@ -11,14 +11,19 @@ export const STATUS_LAR_INFO: Record<
 };
 
 /**
- * Para cada status atual, o único status para onde ele pode ir — espelha a matriz
- * `MATRIZ_TRANSICAO` de apps/api/.../domain/shelter-status.vo.ts (fluxo em ciclo:
- * disponível → ocupado → em avaliação → inativo → disponível). Se o back mudar a regra,
- * a API continua recusando e a tela mostra a mensagem dela.
+ * Para cada status atual, os status para onde ele pode ir — espelha a `MATRIZ_TRANSICAO` de
+ * apps/api/src/features/lares/domain/shelter-status.vo.ts. É o ÚNICO lugar do front com essa
+ * regra: o seletor de status lê daqui. Se o back mudar a regra, a API continua recusando e a
+ * tela mostra a mensagem dela. Inativar um lar com animais é recusado pela API (422).
  */
 export const TRANSICOES_STATUS_LAR: Record<StatusLar, readonly StatusLar[]> = {
-  disponivel: ["ocupado"],
-  ocupado: ["em_avaliacao"],
-  em_avaliacao: ["inativo"],
-  inativo: ["disponivel"],
+  disponivel: ["ocupado", "em_avaliacao", "inativo"],
+  ocupado: ["disponivel", "em_avaliacao", "inativo"],
+  em_avaliacao: ["disponivel", "ocupado", "inativo"],
+  inativo: ["em_avaliacao"],
 };
+
+/** Destinos possíveis a partir do status atual. */
+export function transicoesPermitidas(status: StatusLar): readonly StatusLar[] {
+  return TRANSICOES_STATUS_LAR[status];
+}

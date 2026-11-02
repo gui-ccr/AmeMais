@@ -39,6 +39,10 @@ class FakeShelterRepository implements IShelterRepository {
     return [];
   }
 
+  async findVoluntarioResumo(): Promise<null> {
+    return null;
+  }
+
   async contarAnimais(): Promise<number> {
     return 0;
   }
@@ -62,6 +66,8 @@ function shelterFixture(id: string): Shelter {
     enderecoRegiao: "Centro",
     aceitaGatos: true,
     aceitaCachorros: false,
+    observacoes: null,
+    voluntarioId: null,
     isActive: true,
     createdAt: "2026-10-14T00:00:00.000Z",
   });
@@ -89,6 +95,8 @@ describe("ListSheltersUseCase", () => {
         enderecoRegiao: "Centro",
         aceitaGatos: true,
         aceitaCachorros: false,
+        observacoes: null,
+        voluntarioId: null,
         isActive: true,
         createdAt: "2026-10-14T00:00:00.000Z",
         ocupacao: 2,

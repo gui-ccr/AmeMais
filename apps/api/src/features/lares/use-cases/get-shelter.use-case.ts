@@ -8,6 +8,7 @@ export class GetShelterUseCase {
   async execute(id: string): Promise<ShelterDetailDTO> {
     const shelter = await this.repository.findById(id);
     const animais = await this.repository.listAnimais(id);
-    return toShelterDetailDTO(shelter, animais);
+    const voluntario = shelter.voluntarioId ? await this.repository.findVoluntarioResumo(shelter.voluntarioId) : null;
+    return toShelterDetailDTO(shelter, animais, voluntario);
   }
 }

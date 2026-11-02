@@ -18,6 +18,8 @@ export interface ShelterDTO {
   enderecoRegiao: string | null;
   aceitaGatos: boolean;
   aceitaCachorros: boolean;
+  observacoes: string | null;
+  voluntarioId: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -32,6 +34,8 @@ export function toShelterDTO(shelter: Shelter): ShelterDTO {
     enderecoRegiao: shelter.enderecoRegiao,
     aceitaGatos: shelter.aceitaGatos,
     aceitaCachorros: shelter.aceitaCachorros,
+    observacoes: shelter.observacoes,
+    voluntarioId: shelter.voluntarioId,
     isActive: shelter.isActive,
     createdAt: shelter.createdAt,
   };
@@ -54,12 +58,23 @@ export interface AnimalNoLarDTO {
   urlFoto: string | null;
 }
 
-/** Resposta do GET /api/lares/:id (KAN-79). `animais` nunca é null. */
-export interface ShelterDetailDTO extends ShelterListItemDTO {
-  animais: AnimalNoLarDTO[];
+/** Voluntário responsável pelo lar, resumido para os detalhes (KAN-100). */
+export interface VoluntarioDoLarDTO {
+  id: string;
+  nome: string;
 }
 
-export function toShelterDetailDTO(shelter: Shelter, animais: AnimalNoLarDTO[]): ShelterDetailDTO {
+/** Resposta do GET /api/lares/:id (KAN-79). `animais` nunca é null; `voluntario` é null sem responsável ligado. */
+export interface ShelterDetailDTO extends ShelterListItemDTO {
+  animais: AnimalNoLarDTO[];
+  voluntario: VoluntarioDoLarDTO | null;
+}
+
+export function toShelterDetailDTO(
+  shelter: Shelter,
+  animais: AnimalNoLarDTO[],
+  voluntario: VoluntarioDoLarDTO | null = null,
+): ShelterDetailDTO {
   const ocupacao = animais.length;
-  return { ...toShelterListItemDTO(shelter, ocupacao, shelter.capacidade - ocupacao), animais };
+  return { ...toShelterListItemDTO(shelter, ocupacao, shelter.capacidade - ocupacao), animais, voluntario };
 }

@@ -17,6 +17,15 @@ export function useVoluntarios() {
   });
 }
 
+/** Voluntários ativos de lar temporário que batem com a busca (para escolher o responsável de um lar). */
+export function useVoluntariosParaLar(busca: string) {
+  return useQuery({
+    queryKey: [...VOLUNTARIOS_QUERY_KEY, "para-lar", busca.trim()],
+    queryFn: () => voluntarioService.buscarParaLarTemporario(busca),
+    staleTime: 30_000,
+  });
+}
+
 /** Busca um voluntário, com o lar temporário dele. Sem `id`, não busca nada. */
 export function useVoluntario(id: string | null | undefined) {
   return useQuery({
