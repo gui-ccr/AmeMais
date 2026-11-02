@@ -69,6 +69,18 @@ export const voluntarioService = {
     return todos.map(paraVoluntarioDetalhe);
   },
 
+  /**
+   * Voluntários que podem ser responsáveis por um lar: ativos e com "Lar temporário" nas áreas
+   * de ajuda (filtros `status` e `area` da API). `busca` procura por nome, e-mail ou telefone.
+   * Devolve só os primeiros `limit` — a tela refina digitando.
+   */
+  async buscarParaLarTemporario(busca: string, limit = 10): Promise<Voluntario[]> {
+    const { data } = await api.get<{ data: VoluntarioDTO[] }>("/api/voluntarios", {
+      params: { status: "ativo", area: "lar_temporario", busca: busca.trim() || undefined, limit },
+    });
+    return data.data.map(paraVoluntario);
+  },
+
   /** Um voluntário com o lar temporário dele. */
   async get(id: string): Promise<VoluntarioDetalhe> {
     const { data } = await api.get<{ data: VoluntarioDetalheDTO }>(`/api/voluntarios/${id}`);

@@ -22,7 +22,9 @@ import {
   type LarFormEntrada,
   type LarFormSaida,
 } from "../schema";
+import type { Voluntario } from "@/features/voluntarios/types";
 import type { LarDetalhe } from "../types";
+import { LarVoluntarioBusca } from "./lar-voluntario-busca";
 
 /**
  * Onde mostrar o erro ao salvar. Na edição, o 422 da API é a capacidade menor que a ocupação
@@ -68,11 +70,30 @@ export function LarForm({ lar, onFechar }: LarFormProps) {
     handleSubmit,
     setError,
     setFocus,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<LarFormEntrada, unknown, LarFormSaida>({
     resolver: zodResolver(larSchema),
     defaultValues: lar ? paraValoresDoFormulario(lar) : LAR_FORM_VAZIO,
   });
+
+  // Nome do voluntário escolhido (só para mostrar); o que vai para a API é o `voluntarioId` do formulário.
+  const [voluntarioNome, setVoluntarioNome] = useState<string | null>(lar?.voluntario?.nome ?? null);
+  const voluntarioId = watch("voluntarioId");
+
+  /** Ao escolher um voluntário, responsável e contato vêm dele — e continuam editáveis. */
+  function escolherVoluntario(voluntario: Voluntario) {
+    setVoluntarioNome(voluntario.nome);
+    setValue("voluntarioId", voluntario.id);
+    setValue("nomeResponsavel", voluntario.nome, { shouldValidate: true });
+    if (voluntario.telefone) setValue("contato", voluntario.telefone, { shouldValidate: true });
+  }
+
+  function limparVoluntario() {
+    setVoluntarioNome(null);
+    setValue("voluntarioId", null);
+  }
 
   const salvando = criarLar.isPending || editarLar.isPending;
 
@@ -105,6 +126,12 @@ export function LarForm({ lar, onFechar }: LarFormProps) {
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <LarVoluntarioBusca
+        selecionado={voluntarioId ? { id: voluntarioId, nome: voluntarioNome ?? "Voluntário vinculado" } : null}
+        onEscolher={escolherVoluntario}
+        onLimpar={limparVoluntario}
+      />
+
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="lar-responsavel" required>
           Responsável
