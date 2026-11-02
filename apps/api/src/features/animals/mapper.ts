@@ -1,6 +1,7 @@
 import { ValidationError } from "@/core/errors";
 import { Adotante } from "./domain/adotante.vo";
 import { Animal, type AnimalCreationData } from "./domain/animal.entity";
+import type { FaixaEtaria, Porte } from "./domain/animal-options";
 import { AnimalStatus } from "./domain/animal-status.vo";
 
 /** Formato exato da tabela "animais" no Postgres (snake_case). */
@@ -10,6 +11,10 @@ export interface AnimalRow {
   especie: string | null;
   raca: string | null;
   status_adocao: string | null;
+  porte: string;
+  faixa_etaria: string;
+  idade_texto: string | null;
+  descricao: string | null;
   lar_temporario_id: string | null;
   adotante_id: string | null;
   url_foto: string | null;
@@ -29,6 +34,10 @@ export function mapRowToEntity(row: AnimalRow): Animal {
     especie: row.especie,
     raca: row.raca,
     status: AnimalStatus.from(row.status_adocao ?? "disponivel"),
+    porte: row.porte as Porte,
+    faixaEtaria: row.faixa_etaria as FaixaEtaria,
+    idadeTexto: row.idade_texto,
+    descricao: row.descricao,
     urlFoto: row.url_foto,
     larTemporarioId: row.lar_temporario_id,
     adotanteId: row.adotante_id,
@@ -75,11 +84,28 @@ export function mapCreateDTOToRow(input: AnimalCreationData) {
     especie: input.especie,
     raca: input.raca,
     status_adocao: input.status.valor,
+    porte: input.porte,
+    faixa_etaria: input.faixaEtaria,
+    idade_texto: input.idadeTexto,
+    descricao: input.descricao,
     url_foto: input.urlFoto,
     adotante_nome: input.adotante?.nome ?? null,
     adotante_idade: input.adotante?.idade ?? null,
     adotante_cep: input.adotante?.cep ?? null,
     adotante_localidade: input.adotante?.localidade ?? null,
     data_adocao: input.dataAdocao,
+  };
+}
+
+/** Colunas dos dados editáveis (PUT), tiradas do estado da entidade. */
+export function mapDadosToRow(animal: Animal) {
+  return {
+    nome: animal.nome,
+    especie: animal.especie,
+    raca: animal.raca,
+    porte: animal.porte,
+    faixa_etaria: animal.faixaEtaria,
+    idade_texto: animal.idadeTexto,
+    descricao: animal.descricao,
   };
 }

@@ -1,12 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
-import { mapAdocaoToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
+import { mapAdocaoToRow, mapDadosToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
 import type { Animal, AnimalCreationData } from "./domain/animal.entity";
 
 const TABLE = "animais";
 const COLUMNS =
-  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
+  "id, nome, especie, raca, porte, faixa_etaria, idade_texto, descricao, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
 
 /** Contrato de persistência que os use cases usam. */
 export interface IAnimalRepository {
@@ -14,6 +14,7 @@ export interface IAnimalRepository {
   findById(id: string): Promise<Animal>;
   create(input: AnimalCreationData): Promise<Animal>;
   updateStatus(animal: Animal): Promise<Animal>;
+  updateDados(animal: Animal): Promise<Animal>;
   remove(id: string): Promise<void>;
 }
 
@@ -62,6 +63,19 @@ export class AnimalRepository implements IAnimalRepository {
     // Sem erro explícito e sem linha: ou o animal não existe, ou a RLS
     // barrou por USING (nível insuficiente) — não distinguimos os dois por
     // segurança, os dois viram 404.
+    if (error || !data) throw new NotFoundError("Animal");
+    return mapRowToEntity(data);
+  }
+
+  /** Grava os dados editáveis (nome, espécie, raça, porte, faixa, idade, descrição) a partir da entidade. */
+  async updateDados(animal: Animal): Promise<Animal> {
+    const { data, error } = await this.db
+      .from(TABLE)
+      .update(mapDadosToRow(animal))
+      .eq("id", animal.id)
+      .select(COLUMNS)
+      .single();
+
     if (error || !data) throw new NotFoundError("Animal");
     return mapRowToEntity(data);
   }
