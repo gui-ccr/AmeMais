@@ -62,6 +62,11 @@ export class Voluntario {
     this.props.areasDeAjuda = dados.areasDeAjuda;
   }
 
+  /** Ativa/inativa o voluntário — o lar vinculado não é tocado. */
+  alterarStatus(status: string): void {
+    this.props.status = StatusVoluntario.from(status);
+  }
+
   /** Regras de validação/normalização compartilhadas por `create()` e `update()`. */
   private static validarDados(input: NewVoluntarioProps): Omit<VoluntarioCreationData, "status"> {
     const nome = input.nome?.trim();

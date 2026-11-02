@@ -7,6 +7,14 @@ import type { UpdateVoluntarioDTO } from "../src/features/voluntarios/schema";
 import { ConflictError, NotFoundError, ValidationError } from "../src/core/errors";
 
 class FakeVoluntarioRepository implements IVoluntarioRepository {
+  async updateStatus(): Promise<never> {
+    throw new Error("não usado");
+  }
+
+  async remove(): Promise<void> {
+    throw new Error("não usado");
+  }
+
   public voluntarios = new Map<string, Voluntario>();
   public emailsDeOutros = new Set<string>();
   public existsByEmailChamadoCom: { email: string; excludingId?: string }[] = [];

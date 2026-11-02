@@ -6,6 +6,14 @@ import type { LarVinculadoDTO } from "../src/features/voluntarios/voluntario.dto
 import { NotFoundError } from "../src/core/errors";
 
 class FakeVoluntarioRepository implements IVoluntarioRepository {
+  async updateStatus(): Promise<never> {
+    throw new Error("não usado");
+  }
+
+  async remove(): Promise<void> {
+    throw new Error("não usado");
+  }
+
   public voluntario: Voluntario | null = null;
   public lar: LarVinculadoDTO | null = null;
   public findLarVinculadoChamadoCom: string[] = [];

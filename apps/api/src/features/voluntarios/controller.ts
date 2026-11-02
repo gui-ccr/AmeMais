@@ -6,6 +6,7 @@ import {
   createVoluntarioSchema,
   listVoluntariosQuerySchema,
   updateVoluntarioSchema,
+  updateVoluntarioStatusSchema,
   voluntarioIdParamSchema,
 } from "./schema";
 import { VoluntarioRepository } from "./voluntario.repository";
@@ -13,6 +14,8 @@ import { ListVoluntariosUseCase } from "./use-cases/list-voluntarios.use-case";
 import { CreateVoluntarioUseCase } from "./use-cases/create-voluntario.use-case";
 import { GetVoluntarioUseCase } from "./use-cases/get-voluntario.use-case";
 import { UpdateVoluntarioUseCase } from "./use-cases/update-voluntario.use-case";
+import { UpdateVoluntarioStatusUseCase } from "./use-cases/update-voluntario-status.use-case";
+import { DeleteVoluntarioUseCase } from "./use-cases/delete-voluntario.use-case";
 
 /** Extrai os query params como objeto para o Zod — ausente vira `undefined` (não `null`), pra `.optional()`/`.default()` funcionarem. */
 function lerQueryParams(searchParams: URLSearchParams) {
@@ -86,6 +89,37 @@ export class VoluntarioController {
       const voluntario = await useCase.execute(id, input);
 
       return ok(voluntario);
+    } catch (error) {
+      return fail(error);
+    }
+  };
+
+  updateStatus = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    try {
+      const user = await requireUser(request);
+      const db = createSupabaseForUser(user.accessToken);
+      const { id } = voluntarioIdParamSchema.parse(await params);
+      const input = updateVoluntarioStatusSchema.parse(await lerCorpoJson(request));
+
+      const useCase = new UpdateVoluntarioStatusUseCase(new VoluntarioRepository(db));
+      const voluntario = await useCase.execute(id, input);
+
+      return ok(voluntario);
+    } catch (error) {
+      return fail(error);
+    }
+  };
+
+  delete = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    try {
+      const user = await requireUser(request);
+      const db = createSupabaseForUser(user.accessToken);
+      const { id } = voluntarioIdParamSchema.parse(await params);
+
+      const useCase = new DeleteVoluntarioUseCase(new VoluntarioRepository(db));
+      await useCase.execute(id);
+
+      return ok({ deleted: true });
     } catch (error) {
       return fail(error);
     }

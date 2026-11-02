@@ -60,6 +60,10 @@ function stubSupabase(finalResult: { data: unknown; error: unknown; count?: numb
       calls.push({ method: "update", args });
       return chain;
     },
+    delete: (...args: unknown[]) => {
+      calls.push({ method: "delete", args });
+      return chain;
+    },
     range: async (...args: unknown[]) => {
       calls.push({ method: "range", args });
       return finalResult;
@@ -629,5 +633,58 @@ describe("VoluntarioRepository.findLaresVinculados()", () => {
     const repository = new VoluntarioRepository(client);
 
     await expect(repository.findLaresVinculados(["vol-1"])).rejects.toThrowError(DatabaseError);
+  });
+});
+
+describe("VoluntarioRepository.updateStatus()", () => {
+  it("grava só a coluna status e devolve a entidade", async () => {
+    const { client, calls } = stubSupabase({ data: rowFixture({ status: "inativo" }), error: null });
+    const repository = new VoluntarioRepository(client);
+
+    const atualizado = await repository.updateStatus("vol-1", "inativo");
+
+    expect(atualizado.status.valor).toBe("inativo");
+    expect(calls.find((c) => c.method === "update")?.args[0]).toEqual({ status: "inativo" });
+    expect(calls.find((c) => c.method === "eq")?.args).toEqual(["id", "vol-1"]);
+  });
+
+  it("0 linhas afetadas (RLS) -> ForbiddenError", async () => {
+    const { client } = stubSupabase({ data: null, error: null });
+    const repository = new VoluntarioRepository(client);
+
+    await expect(repository.updateStatus("vol-1", "ativo")).rejects.toThrowError(ForbiddenError);
+  });
+
+  it("violação de RLS (42501) -> ForbiddenError", async () => {
+    const { client } = stubSupabase({ data: null, error: { code: "42501", message: "rls" } });
+    const repository = new VoluntarioRepository(client);
+
+    await expect(repository.updateStatus("vol-1", "ativo")).rejects.toThrowError(ForbiddenError);
+  });
+});
+
+describe("VoluntarioRepository.remove()", () => {
+  it("apaga pelo id", async () => {
+    const { client, calls } = stubSupabase({ data: [{ id: "vol-1" }], error: null });
+    const repository = new VoluntarioRepository(client);
+
+    await repository.remove("vol-1");
+
+    expect(calls.some((c) => c.method === "delete")).toBe(true);
+    expect(calls.find((c) => c.method === "eq")?.args).toEqual(["id", "vol-1"]);
+  });
+
+  it("0 linhas apagadas (RLS) -> ForbiddenError", async () => {
+    const { client } = stubSupabase({ data: [], error: null });
+    const repository = new VoluntarioRepository(client);
+
+    await expect(repository.remove("vol-1")).rejects.toThrowError(ForbiddenError);
+  });
+
+  it("erro inesperado do banco -> DatabaseError", async () => {
+    const { client } = stubSupabase({ data: null, error: { code: "XX000", message: "boom" } });
+    const repository = new VoluntarioRepository(client);
+
+    await expect(repository.remove("vol-1")).rejects.toThrowError(DatabaseError);
   });
 });
