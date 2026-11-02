@@ -1,14 +1,33 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LarDetalhe } from "@/features/lares/components/lar-detalhe";
 import { LarForm } from "@/features/lares/components/lar-form";
 import { LarList } from "@/features/lares/components/lar-list";
 
-export default function LaresPage() {
+function LaresConteudo() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // `?lar=<id>`: link vindo de outra tela (ex.: voluntários) que já abre os detalhes desse lar.
+  const larDaUrl = searchParams.get("lar");
+
   const [cadastrando, setCadastrando] = useState(false);
+  const [larAberto, setLarAberto] = useState<string | null>(larDaUrl);
+
+  // Navegar para outro `?lar=` com a página já aberta também abre o modal.
+  useEffect(() => {
+    if (larDaUrl) setLarAberto(larDaUrl);
+  }, [larDaUrl]);
+
+  function fecharDetalhe() {
+    setLarAberto(null);
+    // Tira o `?lar=` da URL: senão recarregar a página reabriria o modal.
+    if (larDaUrl) router.replace("/admin/lares");
+  }
 
   return (
     <section className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-12 max-w-6xl mx-auto flex flex-col gap-8">
@@ -26,7 +45,7 @@ export default function LaresPage() {
         </Button>
       </div>
 
-      <LarList onNovo={() => setCadastrando(true)} onAbrir={() => {}} />
+      <LarList onNovo={() => setCadastrando(true)} onAbrir={setLarAberto} />
 
       <Dialog open={cadastrando} onOpenChange={setCadastrando}>
         <DialogContent className="max-w-xl">
@@ -37,6 +56,21 @@ export default function LaresPage() {
           <LarForm onFechar={() => setCadastrando(false)} />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={larAberto !== null} onOpenChange={(aberto) => !aberto && fecharDetalhe()}>
+        <DialogContent className="max-w-2xl">
+          {larAberto && <LarDetalhe key={larAberto} larId={larAberto} onFechar={fecharDetalhe} />}
+        </DialogContent>
+      </Dialog>
     </section>
+  );
+}
+
+export default function LaresPage() {
+  // `useSearchParams` exige Suspense no build do Next.
+  return (
+    <Suspense>
+      <LaresConteudo />
+    </Suspense>
   );
 }
