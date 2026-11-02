@@ -82,7 +82,7 @@ jobs:
       - name: 🗄️ Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.105.0 # fixa a versão: a "latest" passou a recusar [inbucket] do config.toml
 
       - name: 🗄️ Subir o Supabase local (migrations + seed)
         run: |
