@@ -9,6 +9,8 @@ import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { useLar } from "../hooks/use-lares";
 import { STATUS_LAR_INFO } from "../opcoes";
 import type { LarDetalhe as LarDetalheModelo } from "../types";
+import { cn } from "@/lib/cn";
+import { LarAnimais } from "./lar-animais";
 import { LarForm } from "./lar-form";
 import { LarStatusSelect } from "./lar-status-select";
 
@@ -93,6 +95,27 @@ function DadosDoLar({ lar, onEditar }: { lar: LarDetalheModelo; onEditar: VoidFu
   );
 }
 
+type Aba = "dados" | "animais";
+
+function AbaBotao({ ativa, id, onSelecionar, children }: { ativa: boolean; id: Aba; onSelecionar: (aba: Aba) => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      id={`lar-aba-botao-${id}`}
+      aria-selected={ativa}
+      aria-controls={`lar-aba-${id}`}
+      onClick={() => onSelecionar(id)}
+      className={cn(
+        "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        ativa ? "border-secondary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 interface LarDetalheProps {
   larId: string;
   onFechar: VoidFunction;
@@ -105,6 +128,7 @@ interface LarDetalheProps {
 export function LarDetalhe({ larId, onFechar }: LarDetalheProps) {
   const { data: lar, isPending, isError, error, refetch, isRefetching } = useLar(larId);
   const [editando, setEditando] = useState(false);
+  const [aba, setAba] = useState<Aba>("dados");
 
   if (isPending || isError) {
     return (
@@ -152,7 +176,19 @@ export function LarDetalhe({ larId, onFechar }: LarDetalheProps) {
         // `key`: ao reabrir a edição depois de salvar, o formulário parte dos dados novos.
         <LarForm key={lar.id} lar={lar} onFechar={() => setEditando(false)} />
       ) : (
-        <DadosDoLar lar={lar} onEditar={() => setEditando(true)} />
+        <>
+          <div role="tablist" aria-label="Seções do lar" className="flex gap-2 border-b border-border-subtle">
+            <AbaBotao ativa={aba === "dados"} id="dados" onSelecionar={setAba}>
+              Dados
+            </AbaBotao>
+            <AbaBotao ativa={aba === "animais"} id="animais" onSelecionar={setAba}>
+              {`Animais (${lar.ocupacao})`}
+            </AbaBotao>
+          </div>
+          <div role="tabpanel" id={`lar-aba-${aba}`} aria-labelledby={`lar-aba-botao-${aba}`}>
+            {aba === "dados" ? <DadosDoLar lar={lar} onEditar={() => setEditando(true)} /> : <LarAnimais lar={lar} />}
+          </div>
+        </>
       )}
     </>
   );
