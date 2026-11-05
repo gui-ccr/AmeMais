@@ -42,21 +42,24 @@ export const authService = {
 
     const { data, error } = await supabase
       .from("usuarios")
-      .select("id, nome, email, usuario_departamentos(departamentos(nome))")
+      .select("id, nome, email, telefone, foto_url, usuario_departamentos(departamentos(nome))")
       .eq("id", userData.user.id)
       .single();
 
     if (error || !data) return null;
 
-    const { usuario_departamentos, ...profile } = data as unknown as {
+    const { usuario_departamentos, foto_url, ...profile } = data as unknown as {
       id: string;
       nome: string;
       email: string;
+      telefone: string | null;
+      foto_url: string | null;
       usuario_departamentos: { departamentos: { nome: string } | null }[];
     };
 
     return {
       ...profile,
+      fotoUrl: foto_url,
       departamentos: usuario_departamentos
         .map((ud) => ud.departamentos?.nome)
         .filter((nome): nome is string => !!nome),
