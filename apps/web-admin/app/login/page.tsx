@@ -1,16 +1,19 @@
 import Link from "next/link";
+import { TelaDeAcesso } from "@/components/layout/tela-de-acesso";
 import { LoginForm } from "@/features/auth/components/login-form";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <h1 className="text-xl font-semibold">Painel AmeMais — login</h1>
-      <LoginForm />
-      <p className="text-sm text-muted-foreground">
-        <Link href="/recuperar-senha" className="font-medium text-foreground underline">
-          Esqueci minha senha
+    <TelaDeAcesso
+      titulo="Bem-vindo de volta"
+      descricao="Entre com sua conta para acessar o painel da AmeMais."
+      rodape={
+        <Link href="/recuperar-senha" className="font-semibold text-primary hover:text-primary-hover hover:underline">
+          Esqueceu a senha?
         </Link>
-      </p>
-    </main>
+      }
+    >
+      <LoginForm />
+    </TelaDeAcesso>
   );
 }
