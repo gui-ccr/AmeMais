@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { cn } from "@/lib/cn";
+import { formatPhone } from "@/utils";
 import { useCreateLar, useUpdateLar } from "../hooks/use-lares";
 import {
   LAR_FORM_VAZIO,
@@ -87,7 +88,7 @@ export function LarForm({ lar, onFechar }: LarFormProps) {
     setVoluntarioNome(voluntario.nome);
     setValue("voluntarioId", voluntario.id);
     setValue("nomeResponsavel", voluntario.nome, { shouldValidate: true });
-    if (voluntario.telefone) setValue("contato", voluntario.telefone, { shouldValidate: true });
+    if (voluntario.telefone) setValue("contato", formatPhone(voluntario.telefone), { shouldValidate: true });
   }
 
   function limparVoluntario() {
@@ -149,15 +150,27 @@ export function LarForm({ lar, onFechar }: LarFormProps) {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="lar-contato" required>
-          Contato
+          Telefone ou WhatsApp
         </Label>
-        <Input
-          id="lar-contato"
-          autoComplete="off"
-          placeholder="Telefone, WhatsApp ou e-mail"
-          hasError={!!errors.contato}
-          {...ariaDoCampo("lar-contato", !!errors.contato)}
-          {...register("contato")}
+        <Controller
+          control={control}
+          name="contato"
+          render={({ field }) => (
+            <Input
+              id="lar-contato"
+              type="tel"
+              inputMode="tel"
+              autoComplete="off"
+              maxLength={15}
+              placeholder="(00) 00000-0000"
+              hasError={!!errors.contato}
+              {...ariaDoCampo("lar-contato", !!errors.contato)}
+              value={field.value ?? ""}
+              onBlur={field.onBlur}
+              ref={field.ref}
+              onChange={(evento) => field.onChange(formatPhone(evento.target.value))}
+            />
+          )}
         />
         <MensagemErro id="lar-contato-erro" mensagem={errors.contato?.message} />
       </div>

@@ -3,19 +3,18 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlterarStatusForm } from "@/features/animais/components/alterar-status-form";
 import { AnimalForm } from "@/features/animais/components/animal-form";
 import { AnimalList, type VisaoAnimais } from "@/features/animais/components/animal-list";
 import { VisaoToggle } from "@/features/animais/components/visao-toggle";
-import { useAnimais } from "@/features/animais/hooks/use-animais";
 import type { Animal } from "@/features/animais/types";
 
 export default function AnimaisPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [animalParaAlterar, setAnimalParaAlterar] = useState<Animal | null>(null);
   const [visao, setVisao] = useState<VisaoAnimais>("grade");
-  const { data: animais } = useAnimais();
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6 md:p-12 max-w-5xl mx-auto flex flex-col gap-8">
@@ -26,16 +25,15 @@ export default function AnimaisPage() {
             Os animais resgatados pela ONG, o status de cada um e as informações da adoção.
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setModalAberto(true)}>
-          <Plus className="h-4 w-4" />
-          Cadastrar Novo Animal
-        </Button>
+        <SomenteEscrita modulo="animais">
+          <Button className="gap-2" onClick={() => setModalAberto(true)}>
+            <Plus className="h-4 w-4" />
+            Cadastrar Novo Animal
+          </Button>
+        </SomenteEscrita>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          {animais ? `${animais.length} ${animais.length === 1 ? "animal cadastrado" : "animais cadastrados"}` : ""}
-        </p>
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <VisaoToggle visao={visao} onChange={setVisao} />
       </div>
 

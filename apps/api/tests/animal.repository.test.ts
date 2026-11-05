@@ -140,6 +140,7 @@ describe("AnimalRepository", () => {
       const updateCall = calls.find((c) => c.method === "update");
       expect(updateCall?.args[0]).toEqual({
         status_adocao: "disponivel",
+        lar_temporario_id: null,
         adotante_id: null,
         adotante_nome: null,
         adotante_idade: null,
@@ -189,6 +190,7 @@ describe("AnimalRepository", () => {
       const updateCall = calls.find((c) => c.method === "update");
       expect(updateCall?.args[0]).toEqual({
         status_adocao: "adotado",
+        lar_temporario_id: null,
         adotante_id: null,
         adotante_nome: "Maria Souza",
         adotante_idade: 40,

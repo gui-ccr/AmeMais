@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listSheltersQuerySchema } from "../src/features/lares/schema";
+import { createShelterSchema, listSheltersQuerySchema, updateShelterSchema } from "../src/features/lares/schema";
 
 describe("listSheltersQuerySchema", () => {
   it("aceita todos os parâmetros válidos", () => {
@@ -91,5 +91,25 @@ describe("listSheltersQuerySchema", () => {
   it("rejeita limit/offset vazios em vez de usar o padrão silenciosamente", () => {
     expect(listSheltersQuerySchema.safeParse({ limit: "" }).success).toBe(false);
     expect(listSheltersQuerySchema.safeParse({ offset: "" }).success).toBe(false);
+  });
+});
+
+describe("lares: contato é telefone com DDD", () => {
+  const base = { nomeResponsavel: "Maria Silva", capacidade: 2, enderecoRegiao: "Centro" };
+
+  it("aceita formatado e guarda só os dígitos", () => {
+    expect(createShelterSchema.parse({ ...base, contato: "(33) 99876-5432" }).contato).toBe("33998765432");
+    expect(createShelterSchema.parse({ ...base, contato: "(33) 3522-1234" }).contato).toBe("3335221234");
+  });
+
+  it("recusa texto, 9 dígitos e mais de 11", () => {
+    for (const contato of ["abc", "339003155", "339876543210", ""]) {
+      expect(createShelterSchema.safeParse({ ...base, contato }).success).toBe(false);
+    }
+  });
+
+  it("edição valida o contato quando ele vem", () => {
+    expect(updateShelterSchema.parse({ contato: "(33) 99876-5432" })).toEqual({ contato: "33998765432" });
+    expect(updateShelterSchema.safeParse({ contato: "123" }).success).toBe(false);
   });
 });

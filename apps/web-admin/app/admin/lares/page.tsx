@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
+import { usePermissoes } from "@/features/auth/hooks/use-permissoes";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LarDetalhe } from "@/features/lares/components/lar-detalhe";
 import { LarForm } from "@/features/lares/components/lar-form";
@@ -11,6 +13,7 @@ import { LarList } from "@/features/lares/components/lar-list";
 
 function LaresConteudo() {
   const router = useRouter();
+  const { podeEditar } = usePermissoes();
   const searchParams = useSearchParams();
   // `?lar=<id>`: link vindo de outra tela (ex.: voluntários) que já abre os detalhes desse lar.
   const larDaUrl = searchParams.get("lar");
@@ -39,13 +42,15 @@ function LaresConteudo() {
             lar.
           </p>
         </div>
-        <Button className="gap-2 shrink-0" onClick={() => setCadastrando(true)}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Novo lar
-        </Button>
+        <SomenteEscrita modulo="lares">
+          <Button className="gap-2 shrink-0" onClick={() => setCadastrando(true)}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Novo lar
+          </Button>
+        </SomenteEscrita>
       </div>
 
-      <LarList onNovo={() => setCadastrando(true)} onAbrir={setLarAberto} />
+      <LarList onNovo={podeEditar("lares") ? () => setCadastrando(true) : undefined} onAbrir={setLarAberto} />
 
       <Dialog open={cadastrando} onOpenChange={setCadastrando}>
         <DialogContent className="max-w-xl">

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { isValidTelefone } from "@/lib/validations/telefone";
+import { formatPhone } from "@/utils";
 import type { LarDetalhe, NovoLarInput } from "./types";
 
 const MENSAGEM_CAPACIDADE = "Informe a capacidade (quantos animais o lar comporta)";
@@ -9,7 +11,14 @@ const MENSAGEM_CAPACIDADE = "Informe a capacidade (quantos animais o lar comport
  */
 export const larSchema = z.object({
   nomeResponsavel: z.string().trim().min(2, "Informe o nome do responsável (mínimo 2 letras)"),
-  contato: z.string().trim().min(1, "Informe o contato do responsável"),
+  // Mesma regra de voluntários e do back: telefone com DDD (10 ou 11 números). Uma mensagem por vez.
+  contato: z
+    .string()
+    .trim()
+    .superRefine((valor, ctx) => {
+      if (!valor) ctx.addIssue({ code: "custom", message: "Informe o telefone do responsável" });
+      else if (!isValidTelefone(valor)) ctx.addIssue({ code: "custom", message: "O telefone informado é inválido" });
+    }),
   capacidade: z.preprocess(
     (valor) => (valor === "" || valor === null || valor === undefined ? undefined : Number(valor)),
     z
@@ -24,6 +33,14 @@ export const larSchema = z.object({
   /** Preenchido pela busca de voluntário (não é digitado); `null` = sem voluntário ligado. */
   voluntarioId: z.string().uuid().nullable(),
 });
+
+/**
+ * Contato para mostrar/editar: telefone válido vira "(33) 99999-0000". Contato antigo (texto livre,
+ * e-mail, número incompleto) aparece como foi gravado, para não ser mutilado.
+ */
+export function formatarContato(contato: string): string {
+  return /^[ds()+.-]+$/.test(contato) && isValidTelefone(contato) ? formatPhone(contato) : contato;
+}
 
 /** Valores do formulário (o que a pessoa digitou) e valores já validados. */
 export type LarFormEntrada = z.input<typeof larSchema>;
@@ -44,7 +61,7 @@ export const LAR_FORM_VAZIO = {
 export function paraValoresDoFormulario(lar: LarDetalhe): LarFormEntrada {
   return {
     nomeResponsavel: lar.nomeResponsavel,
-    contato: lar.contato,
+    contato: formatarContato(lar.contato),
     capacidade: lar.capacidade,
     enderecoRegiao: lar.enderecoRegiao,
     aceitaGatos: lar.aceitaGatos,
@@ -58,7 +75,8 @@ export function paraValoresDoFormulario(lar: LarDetalhe): LarFormEntrada {
 export function paraDadosDoLar(valores: LarFormSaida): NovoLarInput {
   return {
     nomeResponsavel: valores.nomeResponsavel,
-    contato: valores.contato,
+    // A API guarda o telefone só com os dígitos.
+    contato: valores.contato.replace(/D/g, ""),
     capacidade: valores.capacidade,
     enderecoRegiao: valores.enderecoRegiao,
     aceitaGatos: valores.aceitaGatos,

@@ -1,13 +1,17 @@
 "use client";
 
-import { AlertTriangle, PawPrint } from "lucide-react";
+import { AlertTriangle, PawPrint, SearchX } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { useAnimais, useDeleteAnimal } from "../hooks/use-animais";
+import { FILTROS_VAZIOS, filtrarAnimais, type FiltrosAnimais } from "../filtros";
 import type { Animal } from "../types";
 import { AnimalCard, AnimalLinha } from "./animal-card";
+import { AnimalFiltros } from "./animal-filtros";
 
 export type VisaoAnimais = "grade" | "lista";
 
@@ -55,6 +59,7 @@ export function AnimalList({ visao, onNovo, onAlterarStatus }: AnimalListProps) 
   const { data: animais, isPending, isError, refetch, isRefetching } = useAnimais();
   const excluirAnimal = useDeleteAnimal();
   const { toast } = useToast();
+  const [filtros, setFiltros] = useState<FiltrosAnimais>(FILTROS_VAZIOS);
 
   function handleExcluir(animal: Animal) {
     if (!window.confirm(`Excluir o animal "${animal.nome}"? Essa ação não pode ser desfeita.`)) return;
@@ -103,28 +108,56 @@ export function AnimalList({ visao, onNovo, onAlterarStatus }: AnimalListProps) 
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
         <PawPrint className="h-8 w-8 text-muted-dark" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Nenhum animal cadastrado ainda.</p>
-        <Button size="sm" onClick={onNovo}>
-          Cadastrar novo animal
-        </Button>
+        <SomenteEscrita modulo="animais">
+          <Button size="sm" onClick={onNovo}>
+            Cadastrar novo animal
+          </Button>
+        </SomenteEscrita>
       </div>
     );
   }
 
-  return (
-    <ul className={CLASSES_LISTA[visao]}>
-      {animais.map((animal) => {
-        const acoes = {
-          onAlterarStatus,
-          onExcluir: handleExcluir,
-          excluindo: excluirAnimal.isPending && excluirAnimal.variables === animal.id,
-        };
+  const filtrados = filtrarAnimais(animais, filtros);
 
-        return (
-          <li key={animal.id}>
-            {visao === "grade" ? <AnimalCard animal={animal} acoes={acoes} /> : <AnimalLinha animal={animal} acoes={acoes} />}
-          </li>
-        );
-      })}
-    </ul>
+  return (
+    <div className="flex flex-col gap-4">
+      <AnimalFiltros filtros={filtros} onChange={setFiltros} />
+
+      <p className="text-sm text-muted-foreground" aria-live="polite">
+        {filtrados.length === animais.length
+          ? `${animais.length} ${animais.length === 1 ? "animal" : "animais"}`
+          : `Mostrando ${filtrados.length} de ${animais.length}`}
+      </p>
+
+      {filtrados.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
+          <SearchX className="h-8 w-8 text-muted-dark" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">Nenhum animal encontrado com esses filtros.</p>
+          <Button variant="outline" size="sm" onClick={() => setFiltros(FILTROS_VAZIOS)}>
+            Limpar filtros
+          </Button>
+        </div>
+      ) : (
+        <ul className={CLASSES_LISTA[visao]}>
+          {filtrados.map((animal) => {
+            const acoes = {
+              onAlterarStatus,
+              onExcluir: handleExcluir,
+              excluindo: excluirAnimal.isPending && excluirAnimal.variables === animal.id,
+            };
+
+            return (
+              <li key={animal.id}>
+                {visao === "grade" ? (
+                  <AnimalCard animal={animal} acoes={acoes} />
+                ) : (
+                  <AnimalLinha animal={animal} acoes={acoes} />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

@@ -1,5 +1,12 @@
 import { z } from "zod";
 import { ShelterStatusValue } from "./domain/shelter-status.vo";
+import { normalizarTelefone } from "../voluntarios/domain/voluntario.entity";
+
+/** Contato do lar: telefone com DDD (10 ou 11 números). Guardado só com dígitos, como em voluntários. */
+const contatoSchema = z
+  .string()
+  .transform(normalizarTelefone)
+  .refine((valor) => /^\d{10,11}$/.test(valor), "contato deve ser um telefone com 10 ou 11 números (DDD + número)");
 
 /**
  * Schemas Zod: validam o que chega pela requisição. Os tipos inferidos
@@ -8,7 +15,7 @@ import { ShelterStatusValue } from "./domain/shelter-status.vo";
  */
 export const createShelterSchema = z.object({
   nomeResponsavel: z.string().min(2, "nome do responsável deve ter pelo menos 2 caracteres"),
-  contato: z.string().min(1, "contato é obrigatório"),
+  contato: contatoSchema,
   capacidade: z.number().int().positive("capacidade deve ser um número maior que zero"),
   enderecoRegiao: z.string().min(1, "endereço/região é obrigatório"),
   status: z.enum(ShelterStatusValue).default("disponivel"),
@@ -27,7 +34,7 @@ export type CreateShelterDTO = z.infer<typeof createShelterSchema>;
 export const updateShelterSchema = z
   .object({
     nomeResponsavel: z.string().trim().min(2, "nome do responsável deve ter pelo menos 2 caracteres"),
-    contato: z.string().trim().min(1, "contato é obrigatório"),
+    contato: contatoSchema,
     capacidade: z.number().int().positive("capacidade deve ser um número maior que zero"),
     enderecoRegiao: z.string().trim().min(1, "endereço/região é obrigatório"),
     aceitaGatos: z.boolean(),

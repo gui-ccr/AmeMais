@@ -6,6 +6,10 @@ export class ListAnimalsUseCase {
 
   async execute(): Promise<AnimalDTO[]> {
     const animals = await this.repository.list();
-    return animals.map(toAnimalDTO);
+    const ids = animals.flatMap((animal) => (animal.larTemporarioId ? [animal.larTemporarioId] : []));
+    const lares = await this.repository.findLaresResumo(ids);
+    return animals.map((animal) =>
+      toAnimalDTO(animal, animal.larTemporarioId ? (lares.get(animal.larTemporarioId) ?? null) : null),
+    );
   }
 }

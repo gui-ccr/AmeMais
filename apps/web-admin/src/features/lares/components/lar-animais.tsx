@@ -3,6 +3,7 @@
 import { AlertTriangle, PawPrint, Plus, X } from "lucide-react";
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
@@ -176,16 +177,18 @@ export function LarAnimais({ lar }: { lar: LarDetalhe }) {
             {textoDeVagasRestantes(lar.vagas)}
           </span>
         </p>
-        <Button
-          size="sm"
-          className="gap-1.5"
-          disabled={cheio || inativo || vinculando}
-          title={cheio ? "O lar está cheio" : inativo ? "Lar inativo não recebe animais" : undefined}
-          onClick={() => setVinculando(true)}
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Vincular animal
-        </Button>
+        <SomenteEscrita modulo="lares">
+          <Button
+            size="sm"
+            className="gap-1.5"
+            disabled={cheio || inativo || vinculando}
+            title={cheio ? "O lar está cheio" : inativo ? "Lar inativo não recebe animais" : undefined}
+            onClick={() => setVinculando(true)}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Vincular animal
+          </Button>
+        </SomenteEscrita>
       </div>
 
       {vinculando && <PainelVincular lar={lar} onFechar={() => setVinculando(false)} />}
@@ -215,16 +218,18 @@ export function LarAnimais({ lar }: { lar: LarDetalhe }) {
                   {animal.especie && <span className="block text-xs text-muted-foreground">{animal.especie}</span>}
                 </span>
               </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={desvincular.isPending}
-                aria-label={`Remover ${animal.nome} do lar`}
-                onClick={() => aoRemover(animal.id, animal.nome)}
-              >
-                {removendo === animal.id ? "Removendo..." : "Remover"}
-              </Button>
+              <SomenteEscrita modulo="lares">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={desvincular.isPending}
+                  aria-label={`Remover ${animal.nome} do lar`}
+                  onClick={() => aoRemover(animal.id, animal.nome)}
+                >
+                  {removendo === animal.id ? "Removendo..." : "Remover"}
+                </Button>
+              </SomenteEscrita>
             </li>
           ))}
         </ul>

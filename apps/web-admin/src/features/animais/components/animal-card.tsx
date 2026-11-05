@@ -1,6 +1,8 @@
-import { PawPrint } from "lucide-react";
+import { Home, PawPrint } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { formatISODateToBR } from "@/utils";
@@ -39,6 +41,24 @@ function textoAdocao(animal: Animal): string | null {
   return data ? `Adotado por ${animal.adotante.nome} · ${data}` : `Adotado por ${animal.adotante.nome}`;
 }
 
+/** Em qual lar o animal está, com link para abrir os detalhes do lar. */
+function LarDoAnimal({ animal, className }: { animal: Animal; className?: string }) {
+  if (!animal.lar) return null;
+
+  return (
+    <p className={cn("flex items-center gap-1.5 text-xs text-muted-foreground", className)}>
+      <Home className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span>Lar:</span>
+      <Link
+        href={`/admin/lares?lar=${animal.lar.id}`}
+        className="font-medium text-secondary underline-offset-2 hover:underline"
+      >
+        {animal.lar.nomeResponsavel}
+      </Link>
+    </p>
+  );
+}
+
 function SeloStatus({ status }: { status: Animal["status"] }) {
   return (
     <Badge variant={STATUS_INFO[status].variante} size="sm" dot>
@@ -49,28 +69,30 @@ function SeloStatus({ status }: { status: Animal["status"] }) {
 
 function BotoesDeAcao({ animal, acoes, className }: { animal: Animal; acoes: AcoesDoAnimal; className?: string }) {
   return (
-    <div className={cn("flex gap-2", className)}>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        aria-label={`Alterar status de ${animal.nome}`}
-        disabled={acoes.excluindo}
-        onClick={() => acoes.onAlterarStatus(animal)}
-      >
-        Alterar status
-      </Button>
-      <Button
-        type="button"
-        variant="destructive"
-        size="sm"
-        aria-label={`Excluir ${animal.nome}`}
-        disabled={acoes.excluindo}
-        onClick={() => acoes.onExcluir(animal)}
-      >
-        {acoes.excluindo ? "Excluindo..." : "Excluir"}
-      </Button>
-    </div>
+    <SomenteEscrita modulo="animais">
+      <div className={cn("flex gap-2", className)}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={`Alterar status de ${animal.nome}`}
+          disabled={acoes.excluindo}
+          onClick={() => acoes.onAlterarStatus(animal)}
+        >
+          Alterar status
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          aria-label={`Excluir ${animal.nome}`}
+          disabled={acoes.excluindo}
+          onClick={() => acoes.onExcluir(animal)}
+        >
+          {acoes.excluindo ? "Excluindo..." : "Excluir"}
+        </Button>
+      </div>
+    </SomenteEscrita>
   );
 }
 
@@ -88,6 +110,7 @@ export function AnimalCard({ animal, acoes }: { animal: Animal; acoes: AcoesDoAn
           <span className="text-sm text-muted-dark">{animal.raca}</span>
         </div>
         {textoAdocao(animal) && <p className="text-xs text-muted-foreground">{textoAdocao(animal)}</p>}
+        <LarDoAnimal animal={animal} />
         <BotoesDeAcao animal={animal} acoes={acoes} className="mt-auto pt-3" />
       </div>
     </Card>
@@ -107,6 +130,7 @@ export function AnimalLinha({ animal, acoes }: { animal: Animal; acoes: AcoesDoA
           <SeloStatus status={animal.status} />
         </div>
         <span className="truncate text-sm text-muted-dark">{animal.raca}</span>
+        <LarDoAnimal animal={animal} />
       </div>
       {animal.adotante && (
         <p className="hidden shrink-0 text-right text-xs text-muted-foreground lg:block">

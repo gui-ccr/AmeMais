@@ -4,6 +4,7 @@ import { ValidationError } from "@/core/errors";
 import { deleteFile, uploadFile } from "@/core/storage";
 import { TAMANHO_MAXIMO_IMAGEM_BYTES } from "@/features/uploads/image-rules";
 import { UploadImageUseCase } from "@/features/uploads/upload-image.use-case";
+import { exigirNivelTotal, MODULOS_RBAC } from "@/core/acesso";
 import { requireUser } from "@/middleware/auth";
 import { avisarSiteDepois } from "@/lib/public-site";
 import { createSupabaseForUser } from "@/lib/supabase";
@@ -110,6 +111,7 @@ export class AnimalController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.animais);
       const { input, foto } = await lerCorpoDoCadastro(request);
 
       // Envio como o usuário (a RLS do Storage decide quem pode subir foto);
@@ -138,6 +140,7 @@ export class AnimalController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.animais);
       const { id } = animalIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const { status, adotante, dataAdocao } = updateAnimalStatusSchema.parse(body);
@@ -156,6 +159,7 @@ export class AnimalController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.animais);
       const { id } = animalIdParamSchema.parse(await params);
 
       const useCase = new DeleteAnimalUseCase(new AnimalRepository(db));

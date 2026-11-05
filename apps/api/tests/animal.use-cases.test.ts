@@ -3,6 +3,7 @@ import { Adotante } from "../src/features/animals/domain/adotante.vo";
 import { Animal, type AnimalCreationData } from "../src/features/animals/domain/animal.entity";
 import { AnimalStatus } from "../src/features/animals/domain/animal-status.vo";
 import type { IAnimalRepository } from "../src/features/animals/animal.repository";
+import type { LarDoAnimalDTO } from "../src/features/animals/animal.dto";
 import type { CreateAnimalDTO } from "../src/features/animals/schema";
 import { CreateAnimalUseCase } from "../src/features/animals/use-cases/create-animal.use-case";
 import { UpdateAnimalStatusUseCase } from "../src/features/animals/use-cases/update-animal-status.use-case";
@@ -44,6 +45,10 @@ class FakeAnimalRepository implements IAnimalRepository {
   }
 
   async remove(): Promise<void> {}
+
+  async findLaresResumo(): Promise<Map<string, LarDoAnimalDTO>> {
+    return new Map();
+  }
 }
 
 describe("Use Cases: Animal", () => {
