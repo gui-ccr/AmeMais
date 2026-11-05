@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { equipeService } from "@/features/equipe/services/equipe-service";
 import { MIN_PASSWORD_SCORE } from "@/lib/password-strength";
 import { authService } from "../services/auth-service";
 import { PasswordStrengthMeter, usePasswordStrength } from "./password-strength-meter";
@@ -34,7 +35,14 @@ export function TrocarSenhaForm() {
 
     setLoading(true);
     try {
-      await authService.updatePassword(password);
+      const session = await authService.getSession();
+      if (session?.user.app_metadata?.trocar_senha === true) {
+        // Senha provisória: só a API limpa a marca `trocar_senha` junto com a troca.
+        await equipeService.trocarMinhaSenha(password);
+        await authService.refreshSession();
+      } else {
+        await authService.updatePassword(password);
+      }
       router.push("/admin");
     } catch {
       setError("Não foi possível trocar a senha. Tente novamente.");
