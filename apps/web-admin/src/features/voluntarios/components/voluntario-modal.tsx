@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
@@ -241,28 +242,32 @@ function AcoesDoVoluntario({ voluntario, onEditar, onFechar }: VoluntarioDetalhe
         </p>
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button type="button" variant="outline" onClick={() => setConfirmando("status")}>
-            {ativo ? "Inativar" : "Ativar"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="border-destructive text-destructive"
-            disabled={temLar}
-            aria-describedby={temLar ? "voluntario-remover-ajuda" : undefined}
-            onClick={() => setConfirmando("remover")}
-          >
-            Remover
-          </Button>
-        </div>
+        <SomenteEscrita modulo="voluntarios">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button type="button" variant="outline" onClick={() => setConfirmando("status")}>
+              {ativo ? "Inativar" : "Ativar"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-destructive text-destructive"
+              disabled={temLar}
+              aria-describedby={temLar ? "voluntario-remover-ajuda" : undefined}
+              onClick={() => setConfirmando("remover")}
+            >
+              Remover
+            </Button>
+          </div>
+        </SomenteEscrita>
         <div className="flex flex-col-reverse gap-3 sm:flex-row">
           <Button type="button" variant="outline" onClick={onFechar}>
             Fechar
           </Button>
-          <Button type="button" onClick={onEditar}>
-            Editar
-          </Button>
+          <SomenteEscrita modulo="voluntarios">
+            <Button type="button" onClick={onEditar}>
+              Editar
+            </Button>
+          </SomenteEscrita>
         </div>
       </div>
     </div>

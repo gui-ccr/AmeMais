@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UrgenciaForm } from "@/features/urgencias/components/urgencia-form";
 import { UrgenciaList } from "@/features/urgencias/components/urgencia-list";
@@ -33,10 +34,12 @@ export default function UrgenciasPage() {
             O que a ONG mais precisa arrecadar nesta semana.
           </p>
         </div>
-        <Button className="gap-2" onClick={abrirCriacao}>
-          <Plus className="h-4 w-4" />
-          Nova urgência
-        </Button>
+        <SomenteEscrita modulo="urgencias">
+          <Button className="gap-2" onClick={abrirCriacao}>
+            <Plus className="h-4 w-4" />
+            Nova urgência
+          </Button>
+        </SomenteEscrita>
       </div>
 
       <UrgenciaList onEditar={abrirEdicao} onNovo={abrirCriacao} />

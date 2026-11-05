@@ -22,5 +22,6 @@ export function useProfile(session: Session | null | undefined) {
     queryKey: ["profile", session?.user.id],
     queryFn: authService.getOwnProfile,
     enabled: !!session,
+    staleTime: 5 * 60_000,
   });
 }

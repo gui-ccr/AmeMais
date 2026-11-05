@@ -3,6 +3,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventoForm } from "@/features/eventos/components/evento-form";
 import { EventoList } from "@/features/eventos/components/evento-list";
@@ -33,10 +34,12 @@ export default function EventosPage() {
             Feiras de adoção, mutirões e bazares beneficentes organizados pela ONG.
           </p>
         </div>
-        <Button className="gap-2" onClick={abrirCriacao}>
-          <Plus className="h-4 w-4" />
-          Novo evento
-        </Button>
+        <SomenteEscrita modulo="eventos">
+          <Button className="gap-2" onClick={abrirCriacao}>
+            <Plus className="h-4 w-4" />
+            Novo evento
+          </Button>
+        </SomenteEscrita>
       </div>
 
       <EventoList onEditar={abrirEdicao} onNovo={abrirCriacao} />

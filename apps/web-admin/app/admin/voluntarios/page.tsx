@@ -3,12 +3,15 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
+import { usePermissoes } from "@/features/auth/hooks/use-permissoes";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VoluntarioForm } from "@/features/voluntarios/components/voluntario-form";
 import { VoluntarioModal } from "@/features/voluntarios/components/voluntario-modal";
 import { VoluntarioList } from "@/features/voluntarios/components/voluntario-list";
 
 export default function VoluntariosPage() {
+  const { podeEditar } = usePermissoes();
   const [cadastrando, setCadastrando] = useState(false);
   const [voluntarioAbertoId, setVoluntarioAbertoId] = useState<string | null>(null);
 
@@ -21,13 +24,15 @@ export default function VoluntariosPage() {
             As pessoas que ajudam a ONG: como entrar em contato, como cada uma ajuda e quem abriga animais em casa.
           </p>
         </div>
-        <Button className="gap-2 shrink-0" onClick={() => setCadastrando(true)}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Novo voluntário
-        </Button>
+        <SomenteEscrita modulo="voluntarios">
+          <Button className="gap-2 shrink-0" onClick={() => setCadastrando(true)}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Novo voluntário
+          </Button>
+        </SomenteEscrita>
       </div>
 
-      <VoluntarioList onNovo={() => setCadastrando(true)} onAbrir={(voluntario) => setVoluntarioAbertoId(voluntario.id)} />
+      <VoluntarioList onNovo={podeEditar("voluntarios") ? () => setCadastrando(true) : undefined} onAbrir={(voluntario) => setVoluntarioAbertoId(voluntario.id)} />
 
       <Dialog open={cadastrando} onOpenChange={setCadastrando}>
         <DialogContent className="max-w-xl">

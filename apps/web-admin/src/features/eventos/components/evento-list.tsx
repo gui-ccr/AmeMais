@@ -3,6 +3,7 @@
 import { AlertTriangle, CalendarPlus, Eye, EyeOff } from "lucide-react";
 import type { Dispatch } from "react";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Card } from "@/components/ui/card";
 import { useDeleteEvent, useEvents } from "../hooks/use-events";
 import type { EventDTO } from "../types";
@@ -90,9 +91,11 @@ export function EventoList({ onEditar, onNovo }: EventoListProps) {
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
         <CalendarPlus className="h-8 w-8 text-muted-dark" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Nenhum evento cadastrado ainda.</p>
-        <Button size="sm" onClick={onNovo}>
-          Criar evento
-        </Button>
+        <SomenteEscrita modulo="eventos">
+          <Button size="sm" onClick={onNovo}>
+            Criar evento
+          </Button>
+        </SomenteEscrita>
       </div>
     );
   }
@@ -120,14 +123,16 @@ export function EventoList({ onEditar, onNovo }: EventoListProps) {
                 <p className="truncate text-sm text-muted-foreground">{evento.descricao}</p>
               )}
             </div>
-            <div className="flex gap-2 shrink-0">
-              <Button variant="outline" size="sm" onClick={() => onEditar(evento)}>
-                Editar
-              </Button>
-              <Button variant="destructive" size="sm" onClick={() => handleExcluir(evento)}>
-                Excluir
-              </Button>
-            </div>
+            <SomenteEscrita modulo="eventos">
+              <div className="flex gap-2 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => onEditar(evento)}>
+                  Editar
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => handleExcluir(evento)}>
+                  Excluir
+                </Button>
+              </div>
+            </SomenteEscrita>
           </Card>
         </li>
       ))}

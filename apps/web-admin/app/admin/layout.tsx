@@ -1,15 +1,10 @@
 import { AdminGuard } from "@/features/auth/components/admin-guard";
-import { Sidebar } from "@/components/layout/sidebar";
+import { AdminShell } from "@/components/layout/admin-shell";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminGuard>
-      <div className="flex min-h-screen bg-background">
-        <Sidebar />
-        <main className="flex-1 min-w-0">
-          {children}
-        </main>
-      </div>
+      <AdminShell>{children}</AdminShell>
     </AdminGuard>
   );
 }
