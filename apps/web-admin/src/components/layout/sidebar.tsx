@@ -12,7 +12,9 @@ import {
   Heart,
   HeartHandshake,
   ShieldCheck,
+  Settings,
 } from "lucide-react";
+import { AvatarUsuario } from "@/features/auth/components/avatar-usuario";
 import { useProfile } from "@/features/auth/hooks/use-profile";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { cn } from "@/lib/cn";
@@ -34,7 +36,6 @@ export function Sidebar() {
   const { data: profile } = useProfile(session);
 
   const nomeExibido = profile?.nome || profile?.email || "Usuário";
-  const inicial = nomeExibido.charAt(0).toUpperCase();
   const papel = profile?.departamentos?.join(", ");
 
   return (
@@ -84,15 +85,21 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
-      <div className="flex items-center gap-3 border-t border-sidebar-border p-4">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-active-bg text-sm font-semibold text-sidebar-active-fg">
-          {inicial}
-        </span>
-        <div className="flex min-w-0 flex-col">
+      <Link
+        href="/admin/configuracoes"
+        aria-label="Configurações da conta"
+        className={cn(
+          "flex items-center gap-3 border-t border-sidebar-border p-4 transition-colors hover:bg-secondary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+          pathname.startsWith("/admin/configuracoes") && "bg-sidebar-active-bg",
+        )}
+      >
+        <AvatarUsuario nome={nomeExibido} fotoUrl={profile?.fotoUrl} className="h-9 w-9 text-sm" />
+        <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm font-semibold text-sidebar-fg">{nomeExibido}</span>
           {papel && <span className="truncate text-xs text-sidebar-muted">{papel}</span>}
         </div>
-      </div>
+        <Settings className="h-4 w-4 shrink-0 text-sidebar-muted" aria-hidden="true" />
+      </Link>
     </aside>
   );
 }
