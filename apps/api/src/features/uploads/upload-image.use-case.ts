@@ -9,11 +9,12 @@ import {
 } from "./image-rules";
 
 /** Para que serve a imagem: define a pasta dentro do bucket. */
-export const TIPOS_DE_UPLOAD = ["animal"] as const;
+export const TIPOS_DE_UPLOAD = ["animal", "doacao"] as const;
 export type TipoDeUpload = (typeof TIPOS_DE_UPLOAD)[number];
 
 const PASTA_POR_TIPO: Record<TipoDeUpload, string> = {
   animal: "animais",
+  doacao: "doacoes",
 };
 
 export interface UploadedImage {

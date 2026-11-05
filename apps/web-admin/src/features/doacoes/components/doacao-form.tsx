@@ -21,7 +21,6 @@ import { MensagemErro } from "@/components/ui/mensagem-erro";
 import { Opcional } from "@/components/ui/opcional";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { useNomeDoUsuario } from "@/features/auth/hooks/use-nome-do-usuario";
 import { useUrgencias } from "@/features/urgencias/hooks/use-urgencias";
 import { UNIDADE_INFO } from "@/features/urgencias/opcoes";
 import { compararUrgencias, getSituacaoUrgencia } from "@/features/urgencias/situacao";
@@ -154,7 +153,6 @@ export function DoacaoForm({ doacao, onFechar }: DoacaoFormProps) {
   const criarDoacao = useCreateDoacao();
   const atualizarDoacao = useUpdateDoacao();
   const { toast } = useToast();
-  const registradoPor = useNomeDoUsuario();
   const { data: urgencias, isPending: carregandoUrgencias, isError: erroNasUrgencias, refetch, isRefetching } = useUrgencias();
 
   const [passo, setPasso] = useState(0);
@@ -224,12 +222,8 @@ export function DoacaoForm({ doacao, onFechar }: DoacaoFormProps) {
         });
         toast({ tipo: "sucesso", titulo: "Doação atualizada!", descricao: dados.descricao });
       } else {
-        if (!registradoPor) {
-          setErroServidor("Não foi possível identificar o usuário logado. Recarregue a página e tente de novo.");
-          return;
-        }
-
-        await criarDoacao.mutateAsync({ ...dados, foto: values.foto, registradoPor });
+        // "Registrado por" é gravado pelo servidor a partir do usuário autenticado.
+        await criarDoacao.mutateAsync({ ...dados, foto: values.foto });
         toast({ tipo: "sucesso", titulo: "Doação registrada com sucesso!", descricao: dados.descricao });
       }
       onFechar();

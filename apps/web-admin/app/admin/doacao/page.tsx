@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { DoacaoForm } from "@/features/doacoes/components/doacao-form";
 import { DoacaoList } from "@/features/doacoes/components/doacao-list";
 import { DoacaoModal } from "@/features/doacoes/components/doacao-modal";
@@ -23,10 +24,12 @@ export default function DoacoesPage() {
             As doações físicas e em dinheiro recebidas pela ONG, avulsas ou ligadas a uma urgência.
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setRegistrando(true)}>
-          <Plus className="h-4 w-4" />
-          Registrar Doação
-        </Button>
+        <SomenteEscrita modulo="doacoes">
+          <Button className="gap-2" onClick={() => setRegistrando(true)}>
+            <Plus className="h-4 w-4" />
+            Registrar Doação
+          </Button>
+        </SomenteEscrita>
       </div>
 
       <DoacaoList

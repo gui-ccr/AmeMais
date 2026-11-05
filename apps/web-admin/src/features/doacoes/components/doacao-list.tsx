@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarDays, Link2, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { useUrgencias } from "@/features/urgencias/hooks/use-urgencias";
 import { formatarQuantidade } from "@/features/urgencias/opcoes";
 import { formatISODateToBR } from "@/utils";
@@ -35,7 +36,7 @@ function MiniaturaDaDoacao({ doacao }: { doacao: Doacao }) {
   }
 
   return (
-    // Foto vinda de uma URL qualquer (ou data URL, no mock): sem domínio fixo para o next/image.
+    // Foto vinda de uma URL qualquer: sem domínio fixo para o next/image.
     // eslint-disable-next-line @next/next/no-img-element
     <img src={doacao.urlFoto} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" loading="lazy" />
   );
@@ -146,9 +147,11 @@ export function DoacaoList({ onAbrir, onVerUrgencia, onNova }: DoacaoListProps) 
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
         <Package className="h-8 w-8 text-muted-dark" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Nenhuma doação registrada ainda.</p>
-        <Button size="sm" onClick={onNova}>
+        <SomenteEscrita modulo="doacoes">
+          <Button size="sm" onClick={onNova}>
           Registrar doação
         </Button>
+        </SomenteEscrita>
       </div>
     );
   }
