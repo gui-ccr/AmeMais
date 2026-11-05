@@ -35,6 +35,13 @@ export const authService = {
     if (error) throw error;
   },
 
+  /** Renova o token para refletir mudanças feitas no servidor (ex.: marca `trocar_senha` limpa). */
+  async refreshSession() {
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.refreshSession();
+    if (error) throw error;
+  },
+
   async getOwnProfile(): Promise<Profile | null> {
     const supabase = createSupabaseBrowserClient();
     const { data: userData } = await supabase.auth.getUser();

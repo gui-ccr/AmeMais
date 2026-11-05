@@ -19,14 +19,19 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   const loading = sessionLoading || (!!session && profileLoading);
 
+  // Conta criada (ou com senha refeita) por um administrador: troca a senha provisória antes de usar o painel.
+  const precisaTrocarSenha = session?.user.app_metadata?.trocar_senha === true;
+
   useEffect(() => {
     if (loading) return;
     if (!session || !profile) {
       router.replace("/login");
+    } else if (precisaTrocarSenha) {
+      router.replace("/trocar-senha");
     }
-  }, [loading, session, profile, router]);
+  }, [loading, session, profile, precisaTrocarSenha, router]);
 
-  if (loading || !session || !profile) {
+  if (loading || !session || !profile || precisaTrocarSenha) {
     return (
       <main className="flex min-h-screen items-center justify-center">
         <p className="text-sm text-neutral-500">Carregando...</p>
