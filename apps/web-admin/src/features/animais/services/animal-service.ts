@@ -6,6 +6,7 @@ import {
   type AlterarStatusInput,
   type Animal,
   type AnimalDTO,
+  type EditarAnimalInput,
   type Especie,
   type NovoAnimalInput,
 } from "../types";
@@ -31,6 +32,10 @@ export function paraAnimal(dto: AnimalDTO): Animal {
     especie: paraEspecie(dto.especie),
     raca: dto.raca ?? "",
     status: dto.status,
+    porte: dto.porte,
+    faixaEtaria: dto.faixaEtaria,
+    idadeTexto: dto.idadeTexto ?? "",
+    descricao: dto.descricao ?? "",
     urlFoto: dto.urlFoto,
     lar: dto.lar ?? null,
     adotante: dto.adotante ? { ...dto.adotante, cep: formatCEP(dto.adotante.cep) } : null,
@@ -62,6 +67,11 @@ export const animalService = {
         nome: input.nome,
         especie: input.especie,
         raca: input.raca,
+        porte: input.porte,
+        faixaEtaria: input.faixaEtaria,
+        // Vazio vai como null: a API guarda "sem valor", não texto em branco.
+        idadeTexto: input.idadeTexto.trim() || null,
+        descricao: input.descricao.trim() || null,
         status: input.status,
         ...(input.adocao ? paraCorpoDaAdocao(input.adocao) : {}),
       }),
@@ -73,8 +83,21 @@ export const animalService = {
   },
 
   /**
-   * Troca o status do animal. É um `PATCH` (a API não tem `PUT`: o status é a única
-   * coisa que se altera depois do cadastro). Ao passar para `adotado` os dados da
+   * Edita os dados do animal (`PUT`): nome, espécie, raça, porte, faixa etária, idade e
+   * descrição. Status, foto e adoção não mudam por aqui.
+   */
+  async update(id: string, input: EditarAnimalInput): Promise<Animal> {
+    const { data } = await api.put<{ data: AnimalDTO }>(`/api/animals/${id}`, {
+      ...input,
+      idadeTexto: input.idadeTexto.trim() || null,
+      descricao: input.descricao.trim() || null,
+    });
+    return paraAnimal(data.data);
+  },
+
+  /**
+   * Troca o status do animal. É um `PATCH` (separado do `PUT` dos dados, porque o status
+   * tem regras próprias de transição). Ao passar para `adotado` os dados da
    * adoção são obrigatórios; ao sair de `adotado` a API apaga os dados do adotante.
    * Para `em_lar_temporario` é obrigatório informar o lar (`larId`).
    */

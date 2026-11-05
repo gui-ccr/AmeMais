@@ -22,6 +22,7 @@ export const animalCollectionRoutes = {
 
 export const animalItemRoutes = {
   GET: animalController.getById,
+  PUT: animalController.update,
   PATCH: animalController.updateStatus,
   DELETE: animalController.delete,
 };

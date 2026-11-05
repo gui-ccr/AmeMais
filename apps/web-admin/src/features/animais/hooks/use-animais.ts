@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { animalService } from "../services/animal-service";
-import type { AlterarStatusInput, NovoAnimalInput } from "../types";
+import type { AlterarStatusInput, EditarAnimalInput, NovoAnimalInput } from "../types";
 
 const ANIMAIS_QUERY_KEY = ["animais"];
 
@@ -25,7 +25,19 @@ export function useCreateAnimal() {
   });
 }
 
-/** Troca o status de um animal (`PATCH /api/animals/:id` — a API não tem `PUT`). */
+/** Edita os dados de um animal (`PUT /api/animals/:id`). */
+export function useUpdateAnimal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: EditarAnimalInput }) => animalService.update(id, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ANIMAIS_QUERY_KEY });
+    },
+  });
+}
+
+/** Troca o status de um animal (`PATCH /api/animals/:id`). */
 export function useUpdateAnimalStatus() {
   const queryClient = useQueryClient();
 

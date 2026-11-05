@@ -1,6 +1,16 @@
 import { ValidationError } from "@/core/errors";
 import { Adotante, type AdotanteInput } from "./adotante.vo";
-import { ESPECIES } from "./animal-options";
+import {
+  DESCRICAO_MAX,
+  ESPECIES,
+  FAIXA_ETARIA_PADRAO,
+  FAIXAS_ETARIAS,
+  IDADE_TEXTO_MAX,
+  PORTE_PADRAO,
+  PORTES,
+  type FaixaEtaria,
+  type Porte,
+} from "./animal-options";
 import { AnimalStatus, type AnimalStatusValue } from "./animal-status.vo";
 
 /** Fuso em que a ONG opera: define o que é "hoje" para a data de adoção. */
@@ -24,6 +34,30 @@ function validarDataAdocao(valor: string): string {
   return valor;
 }
 
+/** Texto livre opcional: tira os espaços das pontas, vazio vira null e respeita o limite do banco. */
+function normalizarTextoOpcional(valor: string | null | undefined, campo: string, maximo: number): string | null {
+  const texto = valor?.trim();
+  if (!texto) return null;
+  if (texto.length > maximo) {
+    throw new ValidationError(`${campo} deve ter no máximo ${maximo} caracteres`);
+  }
+  return texto;
+}
+
+function validarPorte(valor: string): Porte {
+  if (!(PORTES as readonly string[]).includes(valor)) {
+    throw new ValidationError(`porte deve ser um de: ${PORTES.join(", ")}`);
+  }
+  return valor as Porte;
+}
+
+function validarFaixaEtaria(valor: string): FaixaEtaria {
+  if (!(FAIXAS_ETARIAS as readonly string[]).includes(valor)) {
+    throw new ValidationError(`faixaEtaria deve ser uma de: ${FAIXAS_ETARIAS.join(", ")}`);
+  }
+  return valor as FaixaEtaria;
+}
+
 /** Estado de um animal já salvo no banco. */
 export interface AnimalProps {
   id: string;
@@ -31,6 +65,11 @@ export interface AnimalProps {
   especie: string | null;
   raca: string | null;
   status: AnimalStatus;
+  /** Porte e faixa etária aparecem no site público. */
+  porte: Porte;
+  faixaEtaria: FaixaEtaria;
+  idadeTexto: string | null;
+  descricao: string | null;
   urlFoto: string | null;
   larTemporarioId: string | null;
   /** Usuário do sistema que adotou (fluxo antigo). O cadastro pelo admin usa `adotante`. */
@@ -47,9 +86,25 @@ export interface NewAnimalProps {
   especie?: string | null;
   raca?: string | null;
   status?: AnimalStatusValue;
+  /** Sem porte/faixa, assume M/adulto (o mesmo padrão do banco). */
+  porte?: string;
+  faixaEtaria?: string;
+  idadeTexto?: string | null;
+  descricao?: string | null;
   urlFoto?: string | null;
   adotante?: AdotanteInput | null;
   dataAdocao?: string | null;
+}
+
+/** Dados editáveis de um animal já cadastrado (não inclui status, foto nem adoção). */
+export interface AnimalDadosInput {
+  nome: string;
+  especie: string;
+  raca: string;
+  porte: string;
+  faixaEtaria: string;
+  idadeTexto?: string | null;
+  descricao?: string | null;
 }
 
 /** Dados da adoção, exigidos para mudar o status de um animal para `adotado`. */
@@ -123,6 +178,10 @@ export class Animal {
       especie: input.especie ?? null,
       raca: input.raca?.trim() || null,
       status: AnimalStatus.from(statusValue),
+      porte: validarPorte(input.porte ?? PORTE_PADRAO),
+      faixaEtaria: validarFaixaEtaria(input.faixaEtaria ?? FAIXA_ETARIA_PADRAO),
+      idadeTexto: normalizarTextoOpcional(input.idadeTexto, "idadeTexto", IDADE_TEXTO_MAX),
+      descricao: normalizarTextoOpcional(input.descricao, "descricao", DESCRICAO_MAX),
       urlFoto: input.urlFoto ?? null,
       larTemporarioId: null,
       adotanteId: null,
@@ -142,6 +201,18 @@ export class Animal {
   }
   get raca(): string | null {
     return this.props.raca;
+  }
+  get porte(): Porte {
+    return this.props.porte;
+  }
+  get faixaEtaria(): FaixaEtaria {
+    return this.props.faixaEtaria;
+  }
+  get idadeTexto(): string | null {
+    return this.props.idadeTexto;
+  }
+  get descricao(): string | null {
+    return this.props.descricao;
   }
   get status(): AnimalStatus {
     return this.props.status;
@@ -163,6 +234,29 @@ export class Animal {
   }
   get createdAt(): string {
     return this.props.createdAt;
+  }
+
+  /** Edita os dados do animal (mesmas regras do cadastro). O status e a adoção não mudam aqui. */
+  update(input: AnimalDadosInput): void {
+    const nome = input.nome?.trim();
+    if (!nome || nome.length < 2) {
+      throw new ValidationError("nome deve ter pelo menos 2 caracteres");
+    }
+    if (!(ESPECIES as readonly string[]).includes(input.especie)) {
+      throw new ValidationError(`especie deve ser uma de: ${ESPECIES.join(", ")}`);
+    }
+    const raca = input.raca?.trim();
+    if (!raca) {
+      throw new ValidationError("raca é obrigatória");
+    }
+
+    this.props.nome = nome;
+    this.props.especie = input.especie;
+    this.props.raca = raca;
+    this.props.porte = validarPorte(input.porte);
+    this.props.faixaEtaria = validarFaixaEtaria(input.faixaEtaria);
+    this.props.idadeTexto = normalizarTextoOpcional(input.idadeTexto, "idadeTexto", IDADE_TEXTO_MAX);
+    this.props.descricao = normalizarTextoOpcional(input.descricao, "descricao", DESCRICAO_MAX);
   }
 
   /** Único jeito de mudar o status de um animal. */

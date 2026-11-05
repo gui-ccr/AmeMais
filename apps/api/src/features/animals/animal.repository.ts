@@ -1,13 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
-import { mapAdocaoToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
+import { mapAdocaoToRow, mapDadosToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
 import type { Animal, AnimalCreationData } from "./domain/animal.entity";
 import type { LarDoAnimalDTO } from "./animal.dto";
 
 const TABLE = "animais";
 const COLUMNS =
-  "id, nome, especie, raca, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
+  "id, nome, especie, raca, porte, faixa_etaria, idade_texto, descricao, status_adocao, lar_temporario_id, adotante_id, url_foto, data_adocao, adotante_nome, adotante_idade, adotante_cep, adotante_localidade, created_at";
 
 /** Contrato de persistência que os use cases usam. */
 export interface IAnimalRepository {
@@ -15,6 +15,7 @@ export interface IAnimalRepository {
   findById(id: string): Promise<Animal>;
   create(input: AnimalCreationData): Promise<Animal>;
   updateStatus(animal: Animal): Promise<Animal>;
+  updateDados(animal: Animal): Promise<Animal>;
   remove(id: string): Promise<void>;
   /** Nome dos lares pelos ids, para mostrar onde cada animal está. */
   findLaresResumo(ids: string[]): Promise<Map<string, LarDoAnimalDTO>>;
@@ -86,6 +87,19 @@ export class AnimalRepository implements IAnimalRepository {
         { id: linha.id as string, nomeResponsavel: linha.nome_responsavel as string },
       ]),
     );
+  }
+
+  /** Grava os dados editáveis (nome, espécie, raça, porte, faixa, idade, descrição) a partir da entidade. */
+  async updateDados(animal: Animal): Promise<Animal> {
+    const { data, error } = await this.db
+      .from(TABLE)
+      .update(mapDadosToRow(animal))
+      .eq("id", animal.id)
+      .select(COLUMNS)
+      .single();
+
+    if (error || !data) throw new NotFoundError("Animal");
+    return mapRowToEntity(data);
   }
 
   async remove(id: string): Promise<void> {

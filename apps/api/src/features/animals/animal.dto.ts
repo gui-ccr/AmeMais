@@ -1,4 +1,5 @@
 import type { Animal } from "./domain/animal.entity";
+import type { FaixaEtaria, Porte } from "./domain/animal-options";
 import type { AnimalStatusValue } from "./domain/animal-status.vo";
 
 /** DTO de saída: o formato exato que a API devolve pro cliente. */
@@ -22,6 +23,12 @@ export interface AnimalDTO {
   especie: string | null;
   raca: string | null;
   status: AnimalStatusValue;
+  porte: Porte;
+  faixaEtaria: FaixaEtaria;
+  /** Idade em texto livre (ex.: "2 anos"), até 40 caracteres. */
+  idadeTexto: string | null;
+  /** Descrição para o site público, até 500 caracteres. */
+  descricao: string | null;
   urlFoto: string | null;
   larTemporarioId: string | null;
   /** Resumo do lar. Preenchido na listagem e no detalhe; nas demais respostas vem null. */
@@ -40,6 +47,10 @@ export function toAnimalDTO(animal: Animal, lar: LarDoAnimalDTO | null = null): 
     especie: animal.especie,
     raca: animal.raca,
     status: animal.status.valor,
+    porte: animal.porte,
+    faixaEtaria: animal.faixaEtaria,
+    idadeTexto: animal.idadeTexto,
+    descricao: animal.descricao,
     urlFoto: animal.urlFoto,
     larTemporarioId: animal.larTemporarioId,
     lar,

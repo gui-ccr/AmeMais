@@ -44,6 +44,12 @@ class FakeAnimalRepository implements IAnimalRepository {
     return animal;
   }
 
+  async updateDados(animal: Animal): Promise<Animal> {
+    const index = this.items.findIndex((a) => a.id === animal.id);
+    this.items[index] = animal;
+    return animal;
+  }
+
   async remove(): Promise<void> {}
 
   async findLaresResumo(): Promise<Map<string, LarDoAnimalDTO>> {
@@ -110,7 +116,7 @@ describe("Use Cases: Animal", () => {
           especie: "Cachorro",
           raca: "SRD",
           status: AnimalStatus.from("disponivel"),
-          urlFoto: null,
+          urlFoto: null, porte: "M", faixaEtaria: "adulto", idadeTexto: null, descricao: null,
           larTemporarioId: null,
           adotanteId: null,
           adotante: null,
@@ -141,7 +147,7 @@ describe("Use Cases: Animal", () => {
           especie: "Cachorro",
           raca: "Labrador",
           status: AnimalStatus.from("adotado"),
-          urlFoto: "https://exemplo.com/rex.png",
+          urlFoto: "https://exemplo.com/rex.png", porte: "M", faixaEtaria: "adulto", idadeTexto: null, descricao: null,
           larTemporarioId: null,
           adotanteId: null,
           adotante: Adotante.from({ nome: "João Silva", idade: 30, cep: "39800000", localidade: "Teófilo Otoni" }),
