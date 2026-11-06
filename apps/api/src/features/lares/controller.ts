@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { ok, created, paginated, fail, lerCorpoJson } from "@/core/http";
+import { exigirNivelTotal, MODULOS_RBAC } from "@/core/acesso";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
@@ -82,6 +83,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.lares);
       const body = await lerCorpoJson(request);
       const input = createShelterSchema.parse(body);
 
@@ -101,6 +103,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.lares);
       const { id } = shelterIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const { status } = updateShelterStatusSchema.parse(body);
@@ -121,6 +124,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.lares);
       const { id } = shelterIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const dados = updateShelterSchema.parse(body);
@@ -141,6 +145,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.lares);
       const { id } = shelterIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const { animalId } = addAnimalToShelterSchema.parse(body);
@@ -161,6 +166,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.lares);
       const { id, animalId } = shelterAnimalParamSchema.parse(await params);
 
       const useCase = new RemoveAnimalFromShelterUseCase(new ShelterRepository(db));
@@ -180,6 +186,7 @@ export class ShelterController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.lares);
       const { id } = shelterIdParamSchema.parse(await params);
 
       const useCase = new DeleteShelterUseCase(new ShelterRepository(db));

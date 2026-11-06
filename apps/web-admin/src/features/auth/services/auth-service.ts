@@ -44,13 +44,15 @@ export const authService = {
 
   async getOwnProfile(): Promise<Profile | null> {
     const supabase = createSupabaseBrowserClient();
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return null;
+    // getSession lê do storage local; getUser faria uma ida à rede a cada chamada (o RLS já valida o token).
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+    if (!userId) return null;
 
     const { data, error } = await supabase
       .from("usuarios")
       .select("id, nome, email, telefone, foto_url, usuario_departamentos(departamentos(nome))")
-      .eq("id", userData.user.id)
+      .eq("id", userId)
       .single();
 
     if (error || !data) return null;

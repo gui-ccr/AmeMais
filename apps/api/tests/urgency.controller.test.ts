@@ -6,7 +6,7 @@ import { UnauthorizedError, ForbiddenError, NotFoundError } from "../src/core/er
 const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() => {
   return {
     mockRequireUser: vi.fn(),
-    mockCreateSupabaseForUser: vi.fn(() => ({})),
+    mockCreateSupabaseForUser: vi.fn(() => ({ rpc: async () => ({ data: true, error: null }) })), // nível total (core/acesso)
     repoMocks: {
       list: vi.fn(),
       findById: vi.fn(),

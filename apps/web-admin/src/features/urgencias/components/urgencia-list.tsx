@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarClock, EyeOff, HeartHandshake, Tag } from "lucid
 import type { Dispatch } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { useDeleteUrgencia, useUrgencias } from "../hooks/use-urgencias";
@@ -100,9 +101,11 @@ export function UrgenciaList({ onEditar, onNovo }: UrgenciaListProps) {
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border-subtle bg-card-muted p-8 text-center">
         <HeartHandshake className="h-8 w-8 text-muted-dark" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">Nenhuma urgência cadastrada ainda.</p>
-        <Button size="sm" onClick={onNovo}>
-          Adicionar urgência
-        </Button>
+        <SomenteEscrita modulo="urgencias">
+          <Button size="sm" onClick={onNovo}>
+            Adicionar urgência
+          </Button>
+        </SomenteEscrita>
       </div>
     );
   }
@@ -157,14 +160,16 @@ export function UrgenciaList({ onEditar, onNovo }: UrgenciaListProps) {
                   <p className="truncate text-sm text-muted-foreground">{urgencia.descricao}</p>
                 )}
               </div>
-              <div className="flex gap-2 shrink-0">
-                <Button variant="outline" size="sm" onClick={() => onEditar(urgencia)}>
-                  Editar
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleExcluir(urgencia)}>
-                  Excluir
-                </Button>
-              </div>
+              <SomenteEscrita modulo="urgencias">
+                <div className="flex gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => onEditar(urgencia)}>
+                    Editar
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleExcluir(urgencia)}>
+                    Excluir
+                  </Button>
+                </div>
+              </SomenteEscrita>
             </Card>
           </li>
         );

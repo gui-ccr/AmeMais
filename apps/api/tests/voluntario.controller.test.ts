@@ -6,7 +6,7 @@ import { Voluntario } from "../src/features/voluntarios/domain/voluntario.entity
 const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() => {
   return {
     mockRequireUser: vi.fn(),
-    mockCreateSupabaseForUser: vi.fn(() => ({})),
+    mockCreateSupabaseForUser: vi.fn(() => ({ rpc: async () => ({ data: true, error: null }) })), // nível total (core/acesso)
     repoMocks: {
       temAcessoDeLeitura: vi.fn(),
       list: vi.fn(),

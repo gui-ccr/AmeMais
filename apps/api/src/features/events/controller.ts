@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { ok, created, fail, lerCorpoJson } from "@/core/http";
+import { exigirNivelTotal, MODULOS_RBAC } from "@/core/acesso";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import { createEventSchema, updateEventSchema, eventIdParamSchema } from "./schema";
@@ -44,6 +45,7 @@ export class EventController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.eventos);
       const body = await lerCorpoJson(request);
       const input = createEventSchema.parse(body);
 
@@ -60,6 +62,7 @@ export class EventController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.eventos);
       const { id } = eventIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const input = updateEventSchema.parse(body);
@@ -77,6 +80,7 @@ export class EventController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.eventos);
       const { id } = eventIdParamSchema.parse(await params);
 
       const useCase = new DeleteEventUseCase(new EventRepository(db));

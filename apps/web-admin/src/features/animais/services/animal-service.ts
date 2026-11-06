@@ -37,6 +37,7 @@ export function paraAnimal(dto: AnimalDTO): Animal {
     idadeTexto: dto.idadeTexto ?? "",
     descricao: dto.descricao ?? "",
     urlFoto: dto.urlFoto,
+    lar: dto.lar ?? null,
     adotante: dto.adotante ? { ...dto.adotante, cep: formatCEP(dto.adotante.cep) } : null,
     dataAdocao: dto.dataAdocao,
     createdAt: dto.createdAt,
@@ -98,8 +99,18 @@ export const animalService = {
    * Troca o status do animal. É um `PATCH` (separado do `PUT` dos dados, porque o status
    * tem regras próprias de transição). Ao passar para `adotado` os dados da
    * adoção são obrigatórios; ao sair de `adotado` a API apaga os dados do adotante.
+   * Para `em_lar_temporario` é obrigatório informar o lar (`larId`).
    */
   async updateStatus(id: string, input: AlterarStatusInput): Promise<Animal> {
+    // Lar temporário: o vínculo ao lar grava o lar e o status na mesma escrita (a API recusa o PATCH
+    // para `em_lar_temporario` sem lar). Depois busca o animal já atualizado.
+    if (input.status === "em_lar_temporario") {
+      if (!input.larId) throw new Error("Escolha o lar onde o animal ficará.");
+      await api.post(`/api/lares/${input.larId}/animais`, { animalId: id });
+      const { data } = await api.get<{ data: AnimalDTO }>(`/api/animals/${id}`);
+      return paraAnimal(data.data);
+    }
+
     const { data } = await api.patch<{ data: AnimalDTO }>(`/api/animals/${id}`, {
       status: input.status,
       ...(input.adocao ? paraCorpoDaAdocao(input.adocao) : {}),

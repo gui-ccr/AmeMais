@@ -177,3 +177,66 @@ describe("RLS: animais vistos pelo site público (anon)", () => {
     expect(error?.code).toBe("42501");
   });
 });
+
+/**
+ * Conta 'leitura' não escreve (problema 6 do relatório da conta Leitura): em cada
+ * tabela com RBAC, quem tem só 'leitura' lê, mas INSERT/UPDATE/DELETE não afetam nada.
+ */
+const TABELAS_COM_ESCRITA_TOTAL: ReadonlyArray<{ tabela: string; modulo: string; novo: Record<string, unknown> }> = [
+  { tabela: "animais", modulo: "operacional", novo: { nome: "Animal da integração" } },
+  { tabela: "lares_temporarios", modulo: "lares", novo: novoLar("Lar da integração (leitura)") },
+  { tabela: "voluntarios", modulo: "voluntarios", novo: { nome: "Voluntário da integração (leitura)", tipo: "apoio_geral" } },
+  { tabela: "events", modulo: "campanhas", novo: { titulo: "Evento da integração" } },
+  { tabela: "urgency_items", modulo: "urgencias", novo: { titulo: "Urgência da integração" } },
+];
+
+describe.each(TABELAS_COM_ESCRITA_TOTAL)("RLS: conta leitura não escreve em $tabela", ({ tabela, modulo, novo }) => {
+  let c: Awaited<ReturnType<typeof prepararCenario>>;
+  let id: string;
+
+  beforeAll(async () => {
+    c = await prepararCenario(modulo);
+    const { data, error } = await admin.from(tabela).insert(novo).select("id").single();
+    if (error) throw error;
+    id = data.id;
+  });
+
+  afterAll(async () => {
+    await admin.from(tabela).delete().eq("id", id);
+    await c?.limpar();
+  });
+
+  it("leitura lê a linha", async () => {
+    const { data } = await c.leitura.client.from(tabela).select("id").eq("id", id);
+    expect(data).toHaveLength(1);
+  });
+
+  it("leitura não insere", async () => {
+    const { error } = await c.leitura.client.from(tabela).insert(novo);
+    expect(error?.code).toBe("42501");
+  });
+
+  it("leitura não edita", async () => {
+    const campo = tabela === "animais" ? { nome: "Hackeado" } : tabela === "lares_temporarios" ? { contato: "00" } : tabela === "voluntarios" ? { bairro: "X" } : { titulo: "Hackeado" };
+    const { data } = await c.leitura.client.from(tabela).update(campo).eq("id", id).select("id");
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("leitura não apaga", async () => {
+    const { data } = await c.leitura.client.from(tabela).delete().eq("id", id).select("id");
+    expect(data ?? []).toHaveLength(0);
+    const { data: restou } = await admin.from(tabela).select("id").eq("id", id);
+    expect(restou).toHaveLength(1);
+  });
+
+  it("quem não tem o módulo não lê nada", async () => {
+    const { data } = await c.semPermissao.client.from(tabela).select("id").eq("id", id);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  it("total escreve (controle)", async () => {
+    const { data } = await c.total.client.from(tabela).insert(novo).select("id").single();
+    expect(data?.id).toBeTruthy();
+    if (data) await admin.from(tabela).delete().eq("id", data.id);
+  });
+});

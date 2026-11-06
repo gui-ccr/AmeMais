@@ -11,6 +11,12 @@ export interface AdotanteDTO {
   localidade: string;
 }
 
+/** Lar temporário onde o animal está (só id e nome do responsável). */
+export interface LarDoAnimalDTO {
+  id: string;
+  nomeResponsavel: string;
+}
+
 export interface AnimalDTO {
   id: string;
   nome: string;
@@ -25,6 +31,8 @@ export interface AnimalDTO {
   descricao: string | null;
   urlFoto: string | null;
   larTemporarioId: string | null;
+  /** Resumo do lar. Preenchido na listagem e no detalhe; nas demais respostas vem null. */
+  lar: LarDoAnimalDTO | null;
   adotanteId: string | null;
   /** Dados de quem adotou (pessoais): só existem para animais `adotado`. */
   adotante: AdotanteDTO | null;
@@ -32,7 +40,7 @@ export interface AnimalDTO {
   createdAt: string;
 }
 
-export function toAnimalDTO(animal: Animal): AnimalDTO {
+export function toAnimalDTO(animal: Animal, lar: LarDoAnimalDTO | null = null): AnimalDTO {
   return {
     id: animal.id,
     nome: animal.nome,
@@ -45,6 +53,7 @@ export function toAnimalDTO(animal: Animal): AnimalDTO {
     descricao: animal.descricao,
     urlFoto: animal.urlFoto,
     larTemporarioId: animal.larTemporarioId,
+    lar,
     adotanteId: animal.adotanteId,
     adotante: animal.adotante
       ? {

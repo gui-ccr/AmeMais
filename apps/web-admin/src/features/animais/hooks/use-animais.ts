@@ -45,6 +45,8 @@ export function useUpdateAnimalStatus() {
     mutationFn: ({ id, input }: { id: string; input: AlterarStatusInput }) => animalService.updateStatus(id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ANIMAIS_QUERY_KEY });
+      // Entrar/sair de um lar muda a ocupação dele (lista e detalhe dos lares).
+      queryClient.invalidateQueries({ queryKey: ["lares"] });
     },
   });
 }

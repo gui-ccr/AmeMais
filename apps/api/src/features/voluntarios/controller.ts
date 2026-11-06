@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { paginated, created, ok, fail, lerCorpoJson } from "@/core/http";
+import { exigirNivelTotal, MODULOS_RBAC } from "@/core/acesso";
 import { requireUser } from "@/middleware/auth";
 import { createSupabaseForUser } from "@/lib/supabase";
 import {
@@ -50,6 +51,7 @@ export class VoluntarioController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.voluntarios);
       const body = await lerCorpoJson(request);
       const input = createVoluntarioSchema.parse(body);
 
@@ -81,6 +83,7 @@ export class VoluntarioController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.voluntarios);
       const { id } = voluntarioIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const input = updateVoluntarioSchema.parse(body);
@@ -98,6 +101,7 @@ export class VoluntarioController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.voluntarios);
       const { id } = voluntarioIdParamSchema.parse(await params);
       const input = updateVoluntarioStatusSchema.parse(await lerCorpoJson(request));
 
@@ -114,6 +118,7 @@ export class VoluntarioController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.voluntarios);
       const { id } = voluntarioIdParamSchema.parse(await params);
 
       const useCase = new DeleteVoluntarioUseCase(new VoluntarioRepository(db));

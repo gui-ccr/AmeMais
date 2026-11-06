@@ -7,7 +7,7 @@ import { ShelterStatus } from "../src/features/lares/domain/shelter-status.vo";
 const { mockRequireUser, mockCreateSupabaseForUser, repoMocks } = vi.hoisted(() => {
   return {
     mockRequireUser: vi.fn(),
-    mockCreateSupabaseForUser: vi.fn(() => ({})),
+    mockCreateSupabaseForUser: vi.fn(() => ({ rpc: async () => ({ data: true, error: null }) })), // nível total (core/acesso)
     repoMocks: {
       list: vi.fn(),
       findById: vi.fn(),

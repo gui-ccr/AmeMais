@@ -4,10 +4,12 @@ import { AlertTriangle, Cat, Dog, Home, MapPin, Pencil, Phone } from "lucide-rea
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { useLar } from "../hooks/use-lares";
 import { STATUS_LAR_INFO } from "../opcoes";
+import { formatarContato } from "../schema";
 import type { LarDetalhe as LarDetalheModelo } from "../types";
 import { cn } from "@/lib/cn";
 import { LarAnimais } from "./lar-animais";
@@ -35,20 +37,24 @@ function DadosDoLar({ lar, onEditar }: { lar: LarDetalheModelo; onEditar: VoidFu
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Badge variant={status.variante}>{status.rotulo}</Badge>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={onEditar}>
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-          Editar
-        </Button>
+        <SomenteEscrita modulo="lares">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={onEditar}>
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+            Editar
+          </Button>
+        </SomenteEscrita>
       </div>
 
-      <LarStatusSelect larId={lar.id} statusAtual={lar.status} />
+      <SomenteEscrita modulo="lares">
+        <LarStatusSelect larId={lar.id} statusAtual={lar.status} />
+      </SomenteEscrita>
 
       <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Dado rotulo="Responsável">{lar.nomeResponsavel}</Dado>
         <Dado rotulo="Contato">
           <span className="inline-flex items-center gap-1.5">
             <Phone className="h-4 w-4 shrink-0 text-muted-dark" aria-hidden="true" />
-            {lar.contato}
+            {formatarContato(lar.contato)}
           </span>
         </Dado>
         <Dado rotulo="Região">

@@ -31,6 +31,9 @@ class FakeAnimalRepository implements IAnimalRepository {
     return animal;
   }
   async remove() {}
+  async findLaresResumo() {
+    return new Map();
+  }
 }
 
 const DADOS_VALIDOS = {

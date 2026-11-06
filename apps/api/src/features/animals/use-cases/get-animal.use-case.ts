@@ -6,6 +6,7 @@ export class GetAnimalUseCase {
 
   async execute(id: string): Promise<AnimalDTO> {
     const animal = await this.repository.findById(id);
-    return toAnimalDTO(animal);
+    const lares = await this.repository.findLaresResumo(animal.larTemporarioId ? [animal.larTemporarioId] : []);
+    return toAnimalDTO(animal, animal.larTemporarioId ? (lares.get(animal.larTemporarioId) ?? null) : null);
   }
 }

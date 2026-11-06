@@ -267,6 +267,14 @@ export class Animal {
       );
     }
 
+    // Lar temporário sem lar é um estado inconsistente: quem coloca o animal num lar
+    // é o vínculo (POST /api/lares/:id/animais), que grava o lar e o status juntos.
+    if (novoStatus.valor === "em_lar_temporario" && !this.props.larTemporarioId) {
+      throw new ValidationError(
+        'Para marcar o animal como "Lar temporário", escolha o lar onde ele ficará (vincule o animal a um lar)',
+      );
+    }
+
     if (novoStatus.valor === "adotado") {
       if (!adocao?.adotante) {
         throw new ValidationError("adotante é obrigatório para marcar o animal como adotado");
@@ -278,6 +286,7 @@ export class Animal {
       const dataAdocao = validarDataAdocao(adocao.dataAdocao);
 
       this.props.status = novoStatus;
+      this.props.larTemporarioId = null;
       this.props.adotante = adotante;
       this.props.adotanteId = null;
       this.props.dataAdocao = dataAdocao;
@@ -289,6 +298,8 @@ export class Animal {
     }
 
     this.props.status = novoStatus;
+    // Só `em_lar_temporario` mantém o lar; qualquer outro status libera a vaga.
+    if (novoStatus.valor !== "em_lar_temporario") this.props.larTemporarioId = null;
     this.props.adotante = null;
     this.props.adotanteId = null;
     this.props.dataAdocao = null;

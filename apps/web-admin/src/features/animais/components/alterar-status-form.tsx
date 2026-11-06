@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/toast";
 import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { ADOCAO_VAZIA, adocaoSchema, camposDaAdocaoSoltos, exigirAdocaoSeAdotado, paraAdocao } from "../adocao";
+import { useLares } from "@/features/lares/hooks/use-lares";
 import { useUpdateAnimalStatus } from "../hooks/use-animais";
 import { STATUS_DESCRICAO, STATUS_INFO, TRANSICOES_STATUS } from "../opcoes";
 import { STATUS_ANIMAL, type Animal } from "../types";
@@ -19,14 +20,22 @@ import { CamposAdocao } from "./campos-adocao";
 import { MensagemErro } from "@/components/ui/mensagem-erro";
 
 const MENSAGEM_STATUS = "Selecione o novo status";
+const MENSAGEM_LAR = "Escolha o lar onde o animal ficará";
 
 export const statusSchema = z
   .object({
     status: z.enum(STATUS_ANIMAL, { required_error: MENSAGEM_STATUS, invalid_type_error: MENSAGEM_STATUS }),
+    larId: z.string().optional(),
     ...camposDaAdocaoSoltos,
   })
   // Passar para "adotado" exige os dados da adoção.
-  .superRefine(exigirAdocaoSeAdotado);
+  .superRefine(exigirAdocaoSeAdotado)
+  // Lar temporário sem lar é inconsistente (a API também recusa): exige escolher o lar.
+  .superRefine((valores, ctx) => {
+    if (valores.status === "em_lar_temporario" && !valores.larId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["larId"], message: MENSAGEM_LAR });
+    }
+  });
 
 type FormEntrada = z.input<typeof statusSchema>;
 type FormSaida = z.output<typeof statusSchema>;
@@ -53,6 +62,10 @@ export function AlterarStatusForm({ animal, onFechar }: AlterarStatusFormProps) 
 
   const novoStatus = useWatch({ control, name: "status" });
   const vaiAdotar = novoStatus === "adotado";
+  const vaiParaLar = novoStatus === "em_lar_temporario";
+  const { data: lares, isPending: carregandoLares, isError: erroLares } = useLares();
+  // Só lares que podem receber o animal (a API recusa lar inativo ou cheio).
+  const laresComVaga = (lares ?? []).filter((lar) => lar.status !== "inativo" && lar.vagas > 0);
   const perdeDadosDaAdocao = animal.status === "adotado" && !!novoStatus && !vaiAdotar;
 
   // Foco no seletor ao abrir o modal.
@@ -69,6 +82,7 @@ export function AlterarStatusForm({ animal, onFechar }: AlterarStatusFormProps) 
         input: {
           status: values.status,
           // Os campos da adoção só foram validados (e só valem) quando o novo status é "adotado".
+          larId: values.status === "em_lar_temporario" ? values.larId : undefined,
           adocao: values.status === "adotado" ? paraAdocao(adocaoSchema.parse(values)) : undefined,
         },
       });
@@ -130,6 +144,41 @@ export function AlterarStatusForm({ animal, onFechar }: AlterarStatusFormProps) 
             <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             Ao tirar o animal de &quot;Adotado&quot;, os dados do adotante e da adoção são apagados.
           </p>
+        )}
+
+        {vaiParaLar && (
+          <div className="flex flex-col gap-1.5 md:col-span-2">
+            <Label htmlFor="alterar-status-lar" required>
+              Lar temporário
+            </Label>
+            <Controller
+              control={control}
+              name="larId"
+              render={({ field }) => (
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger id="alterar-status-lar" hasError={!!errors.larId}>
+                    <SelectValue placeholder={carregandoLares ? "Carregando lares..." : "Escolha o lar..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {laresComVaga.map((lar) => (
+                      <SelectItem key={lar.id} value={lar.id}>
+                        {lar.nomeResponsavel} — {lar.vagas} {lar.vagas === 1 ? "vaga" : "vagas"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <MensagemErro id="alterar-status-lar-erro" mensagem={errors.larId?.message} />
+            {erroLares && (
+              <p className="text-xs text-destructive">Não foi possível carregar os lares. Feche e tente novamente.</p>
+            )}
+            {!carregandoLares && !erroLares && laresComVaga.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Nenhum lar com vaga no momento. Cadastre um lar ou libere uma vaga primeiro.
+              </p>
+            )}
+          </div>
         )}
 
         {vaiAdotar && <CamposAdocao />}

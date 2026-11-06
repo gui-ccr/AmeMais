@@ -3,6 +3,7 @@ import { throwOnWriteError } from "@/core/supabase-errors";
 import { DatabaseError, NotFoundError } from "@/core/errors";
 import { mapAdocaoToRow, mapDadosToRow, mapRowToEntity, mapCreateDTOToRow } from "./mapper";
 import type { Animal, AnimalCreationData } from "./domain/animal.entity";
+import type { LarDoAnimalDTO } from "./animal.dto";
 
 const TABLE = "animais";
 const COLUMNS =
@@ -16,6 +17,8 @@ export interface IAnimalRepository {
   updateStatus(animal: Animal): Promise<Animal>;
   updateDados(animal: Animal): Promise<Animal>;
   remove(id: string): Promise<void>;
+  /** Nome dos lares pelos ids, para mostrar onde cada animal está. */
+  findLaresResumo(ids: string[]): Promise<Map<string, LarDoAnimalDTO>>;
 }
 
 /** Única camada que fala com o Supabase. */
@@ -55,7 +58,11 @@ export class AnimalRepository implements IAnimalRepository {
   async updateStatus(animal: Animal): Promise<Animal> {
     const { data, error } = await this.db
       .from(TABLE)
-      .update({ status_adocao: animal.status.valor, ...mapAdocaoToRow(animal) })
+      .update({
+        status_adocao: animal.status.valor,
+        lar_temporario_id: animal.larTemporarioId,
+        ...mapAdocaoToRow(animal),
+      })
       .eq("id", animal.id)
       .select(COLUMNS)
       .single();
@@ -65,6 +72,21 @@ export class AnimalRepository implements IAnimalRepository {
     // segurança, os dois viram 404.
     if (error || !data) throw new NotFoundError("Animal");
     return mapRowToEntity(data);
+  }
+
+  async findLaresResumo(ids: string[]): Promise<Map<string, LarDoAnimalDTO>> {
+    const unicos = [...new Set(ids)];
+    if (unicos.length === 0) return new Map();
+
+    const { data, error } = await this.db.from("lares_temporarios").select("id, nome_responsavel").in("id", unicos);
+    if (error) throw new DatabaseError(error);
+
+    return new Map(
+      (data ?? []).map((linha) => [
+        linha.id as string,
+        { id: linha.id as string, nomeResponsavel: linha.nome_responsavel as string },
+      ]),
+    );
   }
 
   /** Grava os dados editáveis (nome, espécie, raça, porte, faixa, idade, descrição) a partir da entidade. */

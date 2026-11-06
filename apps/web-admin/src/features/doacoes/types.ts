@@ -4,9 +4,7 @@ export const CATEGORIAS_DOACAO = ["racao", "medicamento", "higiene", "cobertores
 export type CategoriaDoacao = (typeof CATEGORIAS_DOACAO)[number];
 
 /**
- * Doação recebida pela ONG (física ou em dinheiro). Hoje é alimentada por um mock
- * (ver `doacao-service.ts`): a tabela `doacoes` do banco só tem categoria, data de
- * entrada, ponto de coleta e os 3 dados do doador — e a API não tem rota de doações.
+ * Doação recebida pela ONG (física ou em dinheiro). Vem de `/api/doacoes` (ver `doacao-service.ts`).
  */
 export interface Doacao {
   id: string;
@@ -47,13 +45,11 @@ export interface NovaDoacaoInput {
   doadorCpf: string | null;
   /** Foto escolhida (arquivo), se houver. */
   foto: File | null;
-  /** Nome de quem está cadastrando (usuário logado). */
-  registradoPor: string;
 }
 
 /**
- * O que o formulário envia ao editar: os mesmos campos do cadastro, menos
- * `registradoPor` (a auditoria não muda). Sobre a foto: `undefined` mantém a atual,
+ * O que o formulário envia ao editar: os mesmos campos do cadastro
+ * (a auditoria `registradoPor` é do servidor e não muda). Sobre a foto: `undefined` mantém a atual,
  * um arquivo troca, `null` remove.
  */
-export type EditarDoacaoInput = Omit<NovaDoacaoInput, "foto" | "registradoPor"> & { foto?: File | null };
+export type EditarDoacaoInput = Omit<NovaDoacaoInput, "foto"> & { foto?: File | null };

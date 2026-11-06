@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { ok, created, fail, lerCorpoJson } from "@/core/http";
+import { exigirNivelTotal, MODULOS_RBAC } from "@/core/acesso";
 import { requireUser } from "@/middleware/auth";
 import { avisarSiteDepois } from "@/lib/public-site";
 import { createSupabaseForUser } from "@/lib/supabase";
@@ -51,6 +52,7 @@ export class UrgencyController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.urgencias);
       const body = await lerCorpoJson(request);
       const input = createUrgencySchema.parse(body);
 
@@ -68,6 +70,7 @@ export class UrgencyController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.urgencias);
       const { id } = urgencyIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const input = updateUrgencySchema.parse(body);
@@ -86,6 +89,7 @@ export class UrgencyController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.urgencias);
       const { id } = urgencyIdParamSchema.parse(await params);
 
       const useCase = new DeleteUrgencyUseCase(new UrgencyRepository(db));
@@ -102,6 +106,7 @@ export class UrgencyController {
     try {
       const user = await requireUser(request);
       const db = createSupabaseForUser(user.accessToken);
+      await exigirNivelTotal(db, MODULOS_RBAC.urgencias);
       const { id } = urgencyIdParamSchema.parse(await params);
       const body = await lerCorpoJson(request);
       const { valor } = registerDonationSchema.parse(body);

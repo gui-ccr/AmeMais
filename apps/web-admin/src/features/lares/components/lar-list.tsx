@@ -9,6 +9,7 @@ import { mensagemDeErroDaApi } from "@/lib/api-error";
 import { FILTROS_VAZIOS, filtrarLares, type FiltrosLares } from "../filtros";
 import { useLares } from "../hooks/use-lares";
 import { STATUS_LAR_INFO } from "../opcoes";
+import { formatarContato } from "../schema";
 import type { Lar } from "../types";
 import { LarFiltros } from "./lar-filtros";
 
@@ -56,7 +57,7 @@ export function LarItem({ lar, onAbrir }: { lar: Lar; onAbrir: (id: string) => v
           </span>
           <span className="inline-flex min-w-0 items-center gap-1.5">
             <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="truncate">{lar.contato}</span>
+            <span className="truncate">{formatarContato(lar.contato)}</span>
           </span>
         </div>
 

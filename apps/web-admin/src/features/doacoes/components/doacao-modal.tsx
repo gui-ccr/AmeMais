@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SomenteEscrita } from "@/features/auth/components/somente-escrita";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatarQuantidade } from "@/features/urgencias/opcoes";
@@ -45,7 +46,7 @@ export function DoacaoDetalhes({ doacao, onEditar, onFechar }: DoacaoDetalhesPro
       </dl>
 
       {doacao.urlFoto && (
-        // Foto vinda de uma URL qualquer (ou data URL, no mock): sem domínio fixo para o next/image.
+        // Foto vinda de uma URL qualquer: sem domínio fixo para o next/image.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={doacao.urlFoto}
@@ -83,9 +84,11 @@ export function DoacaoDetalhes({ doacao, onEditar, onFechar }: DoacaoDetalhesPro
         <Button type="button" variant="outline" onClick={onFechar}>
           Fechar
         </Button>
-        <Button type="button" onClick={onEditar}>
+        <SomenteEscrita modulo="doacoes">
+          <Button type="button" onClick={onEditar}>
           Editar
         </Button>
+        </SomenteEscrita>
       </div>
     </div>
   );

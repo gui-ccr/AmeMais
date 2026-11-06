@@ -40,6 +40,8 @@ export interface AnimalDTO {
   descricao: string | null;
   urlFoto: string | null;
   larTemporarioId: string | null;
+  /** Lar onde o animal está (só vem na lista e no detalhe). */
+  lar: { id: string; nomeResponsavel: string } | null;
   adotanteId: string | null;
   adotante: { nome: string; idade: number; cep: string; localidade: string } | null;
   dataAdocao: string | null;
@@ -62,6 +64,8 @@ export interface Animal {
   descricao: string;
   /** URL pública da foto; null se o animal não tiver foto. */
   urlFoto: string | null;
+  /** Lar temporário onde o animal está; null se não estiver em nenhum. */
+  lar: { id: string; nomeResponsavel: string } | null;
   /** Quem adotou. Só existe para animais `adotado` (dado pessoal: nunca vai para o site público). */
   adotante: Adotante | null;
   /** Dia da adoção no formato AAAA-MM-DD. */
@@ -103,6 +107,11 @@ export interface NovoAnimalInput {
 /** O que a troca de status envia. `adocao` só existe (e é obrigatória) quando o novo status é `adotado`. */
 export interface AlterarStatusInput {
   status: StatusAnimal;
+  /**
+   * Obrigatório para `em_lar_temporario`: a API só aceita esse status com o animal vinculado a um lar
+   * (o vínculo grava o lar e o status juntos, por `POST /api/lares/:id/animais`).
+   */
+  larId?: string;
   adocao?: Adocao;
 }
 

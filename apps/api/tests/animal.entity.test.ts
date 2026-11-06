@@ -401,6 +401,7 @@ describe("AnimalRepository.updateStatus — grava a adoção junto com o status"
 
     expect(payload()).toEqual({
       status_adocao: "disponivel",
+      lar_temporario_id: null,
       adotante_id: null,
       adotante_nome: null,
       adotante_idade: null,
